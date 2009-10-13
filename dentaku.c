@@ -9,7 +9,6 @@
 
 
 /* TODO
- * - floating point number
  * - paren
  */
 
@@ -208,15 +207,13 @@ skip_space(char *src)
 }
 
 // if not digit or EOF: return NULL
-//
-// NOTE: only integer
 static char*
 get_digit(char *src, char *buf, size_t maxsize)
 {
     int pos;
     bool dot_pos = 0;
 
-    // check if src has digit
+    // check if top of src is digit
     for (pos = 0; src[pos]; pos++) {
         if (src[pos] == '.') {
             if (dot_pos) {
@@ -247,6 +244,7 @@ get_digit(char *src, char *buf, size_t maxsize)
     return src + pos;
 }
 
+// if EOF: return NULL
 char*
 get_token(char *src, Token *tok)
 {
