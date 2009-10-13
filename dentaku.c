@@ -214,15 +214,29 @@ static char*
 get_digit(char *src, char *buf, size_t maxsize)
 {
     int pos;
+    bool dot_pos = 0;
 
     // check if src has digit
     for (pos = 0; src[pos]; pos++) {
-        if (! isdigit(src[pos])) {
+        if (src[pos] == '.') {
+            if (dot_pos) {
+                // src has '.' already
+                WARN2("parsing error near [%s]", src);
+                return NULL;
+            }
+            dot_pos = pos;
+        }
+        else if (! isdigit(src[pos])) {
             break;
         }
     }
-    if (pos <= 0)
+    if (pos == 0) {
         return NULL;
+    }
+    if (dot_pos > 0 && (dot_pos == 0 || dot_pos == strlen(src) - 1)) {
+        WARN("'.' at the head or tail of src");
+        return NULL;
+    }
 
     if (pos > maxsize)
         pos = maxsize;
