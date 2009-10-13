@@ -504,6 +504,7 @@ dentaku_eval_stack(Dentaku *dentaku)
             WARN2("can't convert digit '%f' to string.", result);
             return;
         }
+        tok_result.type = TOK_DIGIT;
 
         stack_push(dentaku->cur_stack, &tok_result);
     }
