@@ -340,13 +340,15 @@ get_token(char *src, Token *tok)
         // digit
         if (isdigit(*src)) {
             d_printf("token - digit [%c]", *src);
+
             after_pos = get_digit(src, tok_buf, MAX_TOK_CHAR_BUF);
-            if (after_pos) {
-                src = after_pos;
-            }
-            else {
+            if (after_pos == NULL) {
                 DIE("malformed digit");
             }
+            src = after_pos;
+
+            tok->type = TOK_DIGIT;
+
             break;
         }
 
