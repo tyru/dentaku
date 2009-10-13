@@ -393,6 +393,114 @@ dentaku_read_src(Dentaku *dentaku, char *src, size_t maxsize)
 }
 
 
+static void
+dentaku_calc_op(Dentaku *dentaku, Token *tok_op, Token *tok_n, Token *tok_m)
+{
+    Token tok_result;
+    char *failed;
+    double n, m, result;
+
+    // check each token's type
+    if (! (tok_n->type == TOK_DIGIT
+        && tok_m->type == TOK_DIGIT
+        && tok_op->type == TOK_OP))
+    {
+        WARN4("expression '%s %s %s' is invalid",
+                tok_n->str, tok_op->str, tok_m->str);
+        return;
+    }
+
+
+    failed = NULL;
+    n = atod(tok_n->str, 10, &failed);
+    if (failed) {
+        WARN2("can't convert '%s' to digit", tok_n->str);
+        return;
+    }
+
+    failed = NULL;
+    m = atod(tok_m->str, 10, &failed);
+    if (failed) {
+        WARN2("can't convert '%s' to digit", tok_m->str);
+        return;
+    }
+
+    switch (*tok_op->str) {
+    case '+': result = n + m; break;
+    case '-': result = n - m; break;
+    case '*': result = n * m; break;
+    case '/': result = n / m; break;
+    default:
+        WARN2("unknown op '%s'", tok_op->str);
+        return;
+    }
+
+
+    token_init(&tok_result);
+    token_alloc(&tok_result, MAX_TOK_CHAR_BUF);
+    if (! dtoa(result, tok_result.str, MAX_TOK_CHAR_BUF, 10)) {
+        WARN2("can't convert digit '%f' to string", result);
+        return;
+    }
+    tok_result.type = TOK_DIGIT;
+
+    stack_push(dentaku->cur_stack, &tok_result);
+}
+
+
+void
+dentaku_eval_at_once(Dentaku *dentaku, char *src)
+{
+    Token tok_n, tok_m, tok_op, tok_result;
+    char *after_pos;
+    char *end_pos;
+
+    end_pos = src + strlen(src);
+
+    d_printf("dentaku_eval_at_once()");
+
+    while (*src) {
+        token_init(&tok_op);
+
+        // get one token (tok_op)
+        after_pos = get_token(src, &tok_op);
+        if (after_pos == NULL)
+            break;
+        if (after_pos >= end_pos)
+            break;
+        src = after_pos;
+
+        if (tok_op.type == TOK_OP) {
+            token_init(&tok_n);
+            token_init(&tok_m);
+
+            // get one token (tok_m)
+            after_pos = get_token(src, &tok_m);
+            if (after_pos == NULL)
+                break;
+            if (after_pos >= end_pos)
+                break;
+            src = after_pos;
+
+            // top_n - copy from top of stack
+            memcpy(&tok_n, dentaku->cur_stack->top, sizeof(Token));
+
+
+            dentaku_calc_op(dentaku, &tok_op, &tok_n, &tok_m);
+
+            token_destroy(&tok_n);
+            token_destroy(&tok_m);
+            token_destroy(&tok_op);
+        }
+        else {
+            // push one token
+            d_printf("push! [%s]", tok_op.str);
+            stack_push(dentaku->cur_stack, &tok_op);
+        }
+    }
+}
+
+
 void
 dentaku_push_all_tokens(Dentaku *dentaku, char *src)
 {
@@ -425,8 +533,6 @@ dentaku_eval_stack(Dentaku *dentaku)
 {
     Stack *stk = dentaku->cur_stack;
     Token tok_n, tok_m, tok_op, tok_result;
-    double n, m, result;
-    char *failed;
 
     d_printf("dentaku_eval_stack()");
 
@@ -459,54 +565,12 @@ dentaku_eval_stack(Dentaku *dentaku)
         memcpy(&tok_n, stk->top, sizeof(Token));
         stack_pop(stk);
 
-        // check each token's type
-        if (! (tok_n.type == TOK_DIGIT
-            && tok_m.type == TOK_DIGIT
-            && tok_op.type == TOK_OP))
-        {
-            WARN4("expression '%s %s %s' is invalid.",
-                    tok_n.str, tok_op.str, tok_m.str);
-            return;
-        }
 
+        dentaku_calc_op(dentaku, &tok_op, &tok_n, &tok_m);
 
-        failed = NULL;
-        n = atod(tok_n.str, 10, &failed);
-        if (failed) {
-            WARN2("can't convert '%s' to digit.", tok_n.str);
-            return;
-        }
         token_destroy(&tok_n);
-
-        failed = NULL;
-        m = atod(tok_m.str, 10, &failed);
-        if (failed) {
-            WARN2("can't convert '%s' to digit.", tok_m.str);
-            return;
-        }
         token_destroy(&tok_m);
-
-        switch (*tok_op.str) {
-        case '+': result = n + m; break;
-        case '-': result = n - m; break;
-        case '*': result = n * m; break;
-        case '/': result = n / m; break;
-        default:
-            WARN2("unknown op '%s'.", tok_op.str);
-            return;
-        }
         token_destroy(&tok_op);
-
-
-        token_init(&tok_result);
-        token_alloc(&tok_result, MAX_TOK_CHAR_BUF);
-        if (! dtoa(result, tok_result.str, MAX_TOK_CHAR_BUF, 10)) {
-            WARN2("can't convert digit '%f' to string.", result);
-            return;
-        }
-        tok_result.type = TOK_DIGIT;
-
-        stack_push(dentaku->cur_stack, &tok_result);
     }
 }
 
@@ -548,8 +612,9 @@ int main(int argc, char *argv[])
     dentaku_alloc(d, MAX_STACK_SIZE);
 
     while (dentaku_read_src(d, src, MAX_IN_BUF)) {
-        dentaku_push_all_tokens(d, src);
-        dentaku_eval_stack(d);
+        dentaku_eval_at_once(d, src);
+        // dentaku_push_all_tokens(d, src);
+        // dentaku_eval_stack(d);
         dentaku_show_result(d);
     }
 
