@@ -3,7 +3,7 @@
  * dentaku.c - calculator
  *
  * Written By: tyru <tyru.exe@gmail.com>
- * Last Change: 2009-10-13.
+ * Last Change: 2009-10-14.
  *
  */
 
@@ -449,14 +449,14 @@ dentaku_calc_op(Dentaku *dentaku, Token *tok_op, Token *tok_n, Token *tok_m)
 
 
 void
-dentaku_push_all_tokens(Dentaku *dentaku, char *src)
+dentaku_compile_tokens(Dentaku *dentaku, char *src)
 {
     Token cur_tok;
     char *after_pos;
     char *end_pos;
     end_pos = src + strlen(src);
 
-    d_printf("dentaku_push_all_tokens()");
+    d_printf("dentaku_compile_tokens()");
 
     while (*src) {
         token_init(&cur_tok);
@@ -476,12 +476,12 @@ dentaku_push_all_tokens(Dentaku *dentaku, char *src)
 }
 
 void
-dentaku_eval_stack(Dentaku *dentaku)
+dentaku_eval_syntree(Dentaku *dentaku)
 {
     Stack *stk = dentaku->cur_stack;
     Token tok_n, tok_m, tok_op, tok_result;
 
-    d_printf("dentaku_eval_stack()");
+    d_printf("dentaku_eval_syntree()");
 
     if (stk->top == NULL) {
         puts("no value on the stack.");
@@ -559,8 +559,8 @@ int main(int argc, char *argv[])
     dentaku_alloc(d, MAX_STACK_SIZE);
 
     while (dentaku_read_src(d, src, MAX_IN_BUF)) {
-        dentaku_push_all_tokens(d, src);
-        dentaku_eval_stack(d);
+        dentaku_compile_tokens(d, src);
+        dentaku_eval_syntree(d);
         dentaku_show_result(d);
     }
 
