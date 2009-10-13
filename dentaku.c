@@ -283,6 +283,8 @@ get_digit(char *src, char *buf, size_t maxsize)
         pos = maxsize;
     // copy
     strncpy(buf, src, pos);
+    buf[pos] = '\0';
+
     return src + pos;
 }
 
@@ -290,9 +292,9 @@ static char*
 get_token(char *src, Token *tok)
 {
     char *after_pos = NULL;
+    char tok_buf[MAX_TOK_CHAR_BUF];
 
     d_printf("get_token()");
-
 
     char *incl_src = skip_space(src);
     if (incl_src == NULL)
@@ -304,8 +306,8 @@ get_token(char *src, Token *tok)
     case '(':
         d_printf("token - (");
 
-        tok->str[0] = src[0];
-        tok->str[1] = '\0';
+        tok_buf[0] = src[0];
+        tok_buf[1] = '\0';
         tok->type = TOK_LPAREN;
 
         src++;
@@ -314,8 +316,8 @@ get_token(char *src, Token *tok)
     case ')':
         d_printf("token - )");
 
-        tok->str[0] = src[0];
-        tok->str[1] = '\0';
+        tok_buf[0] = src[0];
+        tok_buf[1] = '\0';
         tok->type = TOK_RPAREN;
 
         src++;
@@ -327,8 +329,8 @@ get_token(char *src, Token *tok)
     case '/':
         d_printf("token - op [%c]", *src);
 
-        tok->str[0] = src[0];
-        tok->str[1] = '\0';
+        tok_buf[0] = src[0];
+        tok_buf[1] = '\0';
         tok->type = TOK_OP;
 
         src++;
@@ -338,7 +340,7 @@ get_token(char *src, Token *tok)
         // digit
         if (isdigit(*src)) {
             d_printf("token - digit [%c]", *src);
-            after_pos = get_digit(src, tok->str, MAX_TOK_CHAR_BUF);
+            after_pos = get_digit(src, tok_buf, MAX_TOK_CHAR_BUF);
             if (after_pos) {
                 src = after_pos;
             }
@@ -352,6 +354,12 @@ get_token(char *src, Token *tok)
         d_printf("wtf? [%c] [%s]", *src, src);
         DIE("syntax error");
     }
+
+    // allocate just token's length
+    size_t alloc_num = strlen(tok_buf) + 1;
+    token_alloc(tok, alloc_num);
+    strncpy(tok->str, tok_buf, alloc_num);
+
     d_printf("got! [%s]", tok->str);
 
     return src;
@@ -370,8 +378,6 @@ dentaku_push_token(Dentaku *dentaku, char *src)
 
     while (*src) {
         token_init(&cur_tok);
-        // TODO allocate just token's length
-        token_alloc(&cur_tok, MAX_TOK_CHAR_BUF);
 
         // get one token
         after_pos = get_token(src, &cur_tok);
