@@ -1,6 +1,6 @@
 /* vim:ts=4:sw=4:sts=0:tw=0:set et: */
 /* 
- * dentaku.c - 電卓
+ * dentaku.c - calculator
  *
  * Written By: tyru <tyru.exe@gmail.com>
  * Last Change: 2009-10-13.
@@ -102,7 +102,6 @@ atod(const char *digit_str, int base, char **failed)
     char *end_ptr;
     double val;
 
-    // TODO support base
     UNUSED(base);
 
     errno = 0;
@@ -129,7 +128,7 @@ atod(const char *digit_str, int base, char **failed)
 bool
 dtoa(double digit, char *ascii, size_t max_size, int base)
 {
-    UNUSED(base);    // TODO support base
+    UNUSED(base);
 
     snprintf(ascii, max_size, "%f", digit);
     return true;
@@ -353,7 +352,7 @@ get_token(char *src, Token *tok)
         }
 
         // other
-        d_printf("wtf? [%c] [%s]", *src, src);
+        d_printf("[%c] [%s]", *src, src);
         DIE("syntax error");
     }
 
