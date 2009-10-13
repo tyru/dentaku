@@ -436,12 +436,12 @@ dentaku_eval_stack(Dentaku *dentaku)
     }
 
     while (true) {
-        // tok_n
-        memcpy(&tok_n, stk->top, sizeof(Token));
+        // tok_m
+        memcpy(&tok_m, stk->top, sizeof(Token));
         stack_pop(stk);
 
         if (stk->top == NULL) {
-            stack_push(stk, &tok_n);
+            stack_push(stk, &tok_m);
             return;
         }
 
@@ -451,12 +451,12 @@ dentaku_eval_stack(Dentaku *dentaku)
 
         if (stk->top == NULL) {
             WARN3("malformed expression after '%s %s ...'.",
-                                    tok_n.str, tok_op.str);
+                                    tok_m.str, tok_op.str);
             return;
         }
 
-        // tok_m
-        memcpy(&tok_m, stk->top, sizeof(Token));
+        // tok_n
+        memcpy(&tok_n, stk->top, sizeof(Token));
         stack_pop(stk);
 
         // check each token's type
