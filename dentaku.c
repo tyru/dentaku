@@ -449,59 +449,6 @@ dentaku_calc_op(Dentaku *dentaku, Token *tok_op, Token *tok_n, Token *tok_m)
 
 
 void
-dentaku_eval_at_once(Dentaku *dentaku, char *src)
-{
-    Token tok_n, tok_m, tok_op, tok_result;
-    char *after_pos;
-    char *end_pos;
-
-    end_pos = src + strlen(src);
-
-    d_printf("dentaku_eval_at_once()");
-
-    while (*src) {
-        token_init(&tok_op);
-
-        // get one token (tok_op)
-        after_pos = get_token(src, &tok_op);
-        if (after_pos == NULL)
-            break;
-        if (after_pos >= end_pos)
-            break;
-        src = after_pos;
-
-        if (tok_op.type == TOK_OP) {
-            token_init(&tok_n);
-            token_init(&tok_m);
-
-            // get one token (tok_m)
-            after_pos = get_token(src, &tok_m);
-            if (after_pos == NULL)
-                break;
-            if (after_pos >= end_pos)
-                break;
-            src = after_pos;
-
-            // top_n - copy from top of stack
-            memcpy(&tok_n, dentaku->cur_stack->top, sizeof(Token));
-
-
-            dentaku_calc_op(dentaku, &tok_op, &tok_n, &tok_m);
-
-            token_destroy(&tok_n);
-            token_destroy(&tok_m);
-            token_destroy(&tok_op);
-        }
-        else {
-            // push one token
-            d_printf("push! [%s]", tok_op.str);
-            stack_push(dentaku->cur_stack, &tok_op);
-        }
-    }
-}
-
-
-void
 dentaku_push_all_tokens(Dentaku *dentaku, char *src)
 {
     Token cur_tok;
@@ -612,9 +559,8 @@ int main(int argc, char *argv[])
     dentaku_alloc(d, MAX_STACK_SIZE);
 
     while (dentaku_read_src(d, src, MAX_IN_BUF)) {
-        dentaku_eval_at_once(d, src);
-        // dentaku_push_all_tokens(d, src);
-        // dentaku_eval_stack(d);
+        dentaku_push_all_tokens(d, src);
+        dentaku_eval_stack(d);
         dentaku_show_result(d);
     }
 
