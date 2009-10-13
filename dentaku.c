@@ -8,6 +8,13 @@
  */
 
 
+/* TODO
+ * - floating point number
+ * - paren
+ */
+
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -137,6 +144,7 @@ dtoa(double digit, char *ascii, size_t max_size, int base)
 
 
 
+
 /*** token ***/
 
 typedef enum {
@@ -184,69 +192,7 @@ token_destroy(Token *tok)
 
 
 
-typedef struct {
-    Stack   *cur_stack;    // easier to access
-    Stack   cur_stack__;
-    FILE    *f_in;
-    FILE    *f_out;
-    FILE    *f_err;
-} Dentaku;
-
-
-void
-dentaku_init(Dentaku *dentaku)
-{
-    d_printf("initializing dentaku...");
-
-    dentaku->cur_stack = &dentaku->cur_stack__;
-    dentaku->f_in  = stdin;
-    dentaku->f_out = stdout;
-    dentaku->f_err = stderr;
-}
-
-void
-dentaku_alloc(Dentaku *dentaku, size_t stack_size)
-{
-    d_printf("allocating dentaku...");
-
-    // allocate Token's stack
-    stack_ret ret = stack_init(dentaku->cur_stack, stack_size, sizeof(Token));
-    if (ret != STACK_SUCCESS) {
-        WARN("failed to initialize stack");
-        exit(EXIT_FAILURE);
-    }
-}
-
-void
-dentaku_destroy(Dentaku *dentaku)
-{
-    d_printf("destroying dentaku...");
-
-    if (stack_destruct(dentaku->cur_stack) != STACK_SUCCESS)
-        WARN("failed to destruct stack");
-}
-
-
-
-bool
-dentaku_read_src(Dentaku *dentaku, char *src, size_t maxsize)
-{
-    d_printf("dentaku_read_src()");
-
-    if (fileno(dentaku->f_in) == fileno(stdin)) {
-        fputs(PROMPT_STR, dentaku->f_out);
-        // read each line
-        if (fgets(src, maxsize, dentaku->f_in) == NULL)
-            return false;
-    }
-    else {
-    }
-
-    d_printf("read! [%s]", src);
-    return true;
-}
-
-
+/*** parser ***/
 
 // if EOF: return NULL
 // else: return the first pointer to the non-space character
@@ -287,7 +233,7 @@ get_digit(char *src, char *buf, size_t maxsize)
     return src + pos;
 }
 
-static char*
+char*
 get_token(char *src, Token *tok)
 {
     char *after_pos = NULL;
@@ -364,6 +310,74 @@ get_token(char *src, Token *tok)
     d_printf("got! [%s]", tok->str);
 
     return src;
+}
+
+
+
+
+
+/*** dentaku ***/
+
+typedef struct {
+    Stack   *cur_stack;    // easier to access
+    Stack   cur_stack__;
+    FILE    *f_in;
+    FILE    *f_out;
+    FILE    *f_err;
+} Dentaku;
+
+
+void
+dentaku_init(Dentaku *dentaku)
+{
+    d_printf("initializing dentaku...");
+
+    dentaku->cur_stack = &dentaku->cur_stack__;
+    dentaku->f_in  = stdin;
+    dentaku->f_out = stdout;
+    dentaku->f_err = stderr;
+}
+
+void
+dentaku_alloc(Dentaku *dentaku, size_t stack_size)
+{
+    d_printf("allocating dentaku...");
+
+    // allocate Token's stack
+    stack_ret ret = stack_init(dentaku->cur_stack, stack_size, sizeof(Token));
+    if (ret != STACK_SUCCESS) {
+        WARN("failed to initialize stack");
+        exit(EXIT_FAILURE);
+    }
+}
+
+void
+dentaku_destroy(Dentaku *dentaku)
+{
+    d_printf("destroying dentaku...");
+
+    if (stack_destruct(dentaku->cur_stack) != STACK_SUCCESS)
+        WARN("failed to destruct stack");
+}
+
+
+
+bool
+dentaku_read_src(Dentaku *dentaku, char *src, size_t maxsize)
+{
+    d_printf("dentaku_read_src()");
+
+    if (fileno(dentaku->f_in) == fileno(stdin)) {
+        fputs(PROMPT_STR, dentaku->f_out);
+        // read each line
+        if (fgets(src, maxsize, dentaku->f_in) == NULL)
+            return false;
+    }
+    else {
+    }
+
+    d_printf("read! [%s]", src);
+    return true;
 }
 
 
@@ -505,6 +519,8 @@ dentaku_show_result(Dentaku *dentaku)
         stack_pop(dentaku->cur_stack);
     }
 }
+
+
 
 
 
