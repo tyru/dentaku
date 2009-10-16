@@ -24,11 +24,11 @@ void
 die(int line, const char *msg);
 
 
-digit_t
-atod(const char *digit_str, int base, char **failed);
+bool
+atod(const char *digit_str, Digit *digit, int base);
 
 bool
-dtoa(digit_t digit, char *ascii, size_t max_size, int base);
+dtoa(Digit *digit, char *ascii, size_t max_size, int base);
 
 
 #endif /* UTIL_H */

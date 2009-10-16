@@ -50,13 +50,28 @@ die(int line, const char *msg)
 }
 
 
-// almost code from 'man 3 strtol'.
-// if failed, *failed is not NULL.
-digit_t
-atod(const char *digit_str, int base, char **failed)
+// on success, return true.
+bool
+double2digit(double val, Digit *digit)
+{
+    digit->i = (int)val;
+    digit->d = val - (double)digit->i;
+    return true;
+}
+
+double
+digit2double(Digit *digit)
+{
+    return (double)digit->i + digit->d;
+}
+
+
+// on success, return true.
+bool
+atod(const char *digit_str, Digit *digit, int base)
 {
     char *end_ptr;
-    digit_t val;
+    double val;
 
     UNUSED(base);
 
@@ -64,28 +79,27 @@ atod(const char *digit_str, int base, char **failed)
     val = strtod(digit_str, &end_ptr);
 
     if (errno == ERANGE || (errno != 0 && val == 0)) {
-        *failed = (char*)digit_str;
-        return (digit_t)0;
+        return false;
     }
     if (end_ptr == digit_str) {
-        *failed = (char*)digit_str;
-        return (digit_t)0;
+        return false;
     }
     if (*end_ptr != '\0') {
-        *failed = (char*)digit_str;
-        return (digit_t)0;
+        return false;
     }
 
-    return val;
+    return double2digit(val, digit);
 }
 
 
 // on success, return true.
 bool
-dtoa(digit_t digit, char *ascii, size_t max_size, int base)
+dtoa(Digit *digit, char *ascii, size_t max_size, int base)
 {
+    double val;
     UNUSED(base);
 
-    snprintf(ascii, max_size, "%f", digit);
-    return true;
+    val = digit2double(digit);
+    snprintf(ascii, max_size, "%f", val);
+    return double2digit(val, digit);
 }

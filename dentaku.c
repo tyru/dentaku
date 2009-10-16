@@ -10,6 +10,8 @@
 
 /* TODO
  * - paren
+ * - make Digit which has integer and float number separately
+ * - digit can be negative
  */
 
 
@@ -103,8 +105,9 @@ static void
 dentaku_calc_op(Dentaku *dentaku, Token *tok_op, Token *tok_n, Token *tok_m)
 {
     Token tok_result;
-    char *failed;
-    digit_t n, m, result;
+    Digit n, m, result;
+    double d_n, d_m;
+    bool success;
 
     // check each token's type
     if (! (tok_n->type == TOK_DIGIT
@@ -117,35 +120,38 @@ dentaku_calc_op(Dentaku *dentaku, Token *tok_op, Token *tok_n, Token *tok_m)
     }
 
 
-    failed = NULL;
-    n = atod(tok_n->str, 10, &failed);
-    if (failed) {
+    if (! atod(tok_n->str, &n, 10)) {
         WARN2("can't convert '%s' to digit", tok_n->str);
         return;
     }
+    d_n = (double)n.i + n.d;
 
-    failed = NULL;
-    m = atod(tok_m->str, 10, &failed);
-    if (failed) {
+    if (! atod(tok_m->str, &m, 10)) {
         WARN2("can't convert '%s' to digit", tok_m->str);
         return;
     }
+    d_m = (double)m.i + m.d;
+
 
     switch (*tok_op->str) {
-    case '+': result = n + m; break;
-    case '-': result = n - m; break;
-    case '*': result = n * m; break;
-    case '/': result = n / m; break;
+    case '+': success = double2digit(d_n + d_m, &result); break;
+    case '-': success = double2digit(d_n - d_m, &result); break;
+    case '*': success = double2digit(d_n * d_m, &result); break;
+    case '/': success = double2digit(d_n / d_m, &result); break;
     default:
         WARN2("unknown op '%s'", tok_op->str);
+        return;
+    }
+    if (! success) {
+        WARN("failed to convert double to digit");
         return;
     }
 
 
     token_init(&tok_result);
     token_alloc(&tok_result, MAX_TOK_CHAR_BUF);
-    if (! dtoa(result, tok_result.str, MAX_TOK_CHAR_BUF, 10)) {
-        WARN2("can't convert digit '%f' to string", result);
+    if (! dtoa(&result, tok_result.str, MAX_TOK_CHAR_BUF, 10)) {
+        WARN("can't convert digit to string");
         return;
     }
     tok_result.type = TOK_DIGIT;

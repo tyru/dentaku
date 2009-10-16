@@ -10,8 +10,9 @@
 #include <stdbool.h>
 
 
+#include "digit.h"
 
-typedef double digit_t;
+
 
 
 #define NDEBUG 1
