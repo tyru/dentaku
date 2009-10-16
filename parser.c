@@ -25,7 +25,7 @@ static char*
 get_digit(char *src, char *buf, size_t maxsize)
 {
     int pos;
-    bool dot_pos = 0;
+    int dot_pos = 0;
 
     // check if top of src is digit
     for (pos = 0; src[pos]; pos++) {
@@ -63,10 +63,11 @@ get_digit(char *src, char *buf, size_t maxsize)
 
 // if EOF: return NULL
 char*
-get_token(char *src, Token *tok)
+get_token(char *src, Token *tok, bool allow_signed)
 {
     char *after_pos = NULL;
     char tok_buf[MAX_TOK_CHAR_BUF];
+    char *sign_pos = NULL;
 
     d_printf("get_token()");
 
@@ -97,8 +98,6 @@ get_token(char *src, Token *tok)
         src++;
         break;
 
-    case '+':
-    case '-':
     case '*':
     case '/':
         d_printf("token - op [%c]", *src);
@@ -110,8 +109,29 @@ get_token(char *src, Token *tok)
         src++;
         break;
 
+    case '+':
+    case '-':
+        // if NOT signed digit
+        if (! allow_signed || ! isdigit(*skip_space(src + 1))) {
+            d_printf("token - op [%c]", *src);
+
+            tok_buf[0] = src[0];
+            tok_buf[1] = '\0';
+            tok->type = TOK_OP;
+
+            src++;
+            break;
+        }
+        else {
+            d_printf("token should be signed digit");
+
+            sign_pos = src;
+
+            src = skip_space(src + 1);
+            /* FALLTHROUGH */
+        }
+
     default:
-        // digit
         if (isdigit(*src)) {
             d_printf("token - digit [%c]", *src);
 
@@ -126,15 +146,23 @@ get_token(char *src, Token *tok)
             break;
         }
 
-        // other
+        // error
         d_printf("[%c] [%s]", *src, src);
         DIE("syntax error");
     }
 
     // allocate just token's length
-    size_t alloc_num = strlen(tok_buf) + 1;
+    size_t alloc_num = (sign_pos == NULL ? 0 : 1) + strlen(tok_buf) + 1;
     token_alloc(tok, alloc_num);
-    strncpy(tok->str, tok_buf, alloc_num);
+
+    if (sign_pos == NULL) {
+        strncpy(tok->str, tok_buf, alloc_num);
+    }
+    else {
+        d_printf("sign_pos [%c]", *sign_pos);
+        strncpy(tok->str, sign_pos, 1);
+        strncpy(tok->str + 1, tok_buf, alloc_num - 1);
+    }
 
     d_printf("got! [%s]", tok->str);
 

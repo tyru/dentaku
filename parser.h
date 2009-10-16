@@ -8,7 +8,7 @@
 
 
 char*
-get_token(char *src, Token *tok);
+get_token(char *src, Token *tok, bool allow_signed);
 
 
 #endif /* PARSER_H */

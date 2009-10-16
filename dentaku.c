@@ -10,8 +10,6 @@
 
 /* TODO
  * - paren
- * - make Digit which has integer and float number separately
- * - digit can be negative
  */
 
 
@@ -174,7 +172,8 @@ dentaku_compile_tokens(Dentaku *dentaku, char *src)
         token_init(&cur_tok);
 
         // get one token
-        after_pos = get_token(src, &cur_tok);
+        bool allow_signed = dentaku->cur_stack->top == NULL || ((Token*)dentaku->cur_stack->top)->type == TOK_LPAREN;    // XXX
+        after_pos = get_token(src, &cur_tok, allow_signed);
         if (after_pos == NULL)
             break;
         if (after_pos >= end_pos)
