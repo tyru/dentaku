@@ -3,7 +3,7 @@
  * dentaku.c - calculator
  *
  * Written By: tyru <tyru.exe@gmail.com>
- * Last Change: 2009-10-14.
+ * Last Change: 2009-10-16.
  *
  */
 
@@ -12,6 +12,11 @@
  * - paren
  */
 
+
+
+#include "util.h"
+#include "token.h"
+#include "parser.h"
 
 
 #include <stdio.h>
@@ -26,309 +31,10 @@
 
 
 
-#define NDEBUG 1
 
 
 
-#define PROMPT_STR  "=> "
-#define MAX_IN_BUF          1024
-#define MAX_TOK_CHAR_BUF    32
-#define MAX_STACK_SIZE      128
 
-
-#define STREQ(s1, s2)       (*(s1) == *(s2) && strcmp((s1), (s2)) == 0)
-#define ALLOCATED(ptr)      ((ptr) != NULL && errno != ENOMEM)
-#define UNUSED(x)           ((void)x)
-
-
-
-
-/*** debug ***/
-
-void
-d_printf(const char *fmt, ...)
-{
-#if NDEBUG
-    va_list ap;
-
-    fputs("[debug]::", stderr);
-
-    va_start(ap, fmt);
-    vfprintf(stderr, fmt, ap);
-    va_end(ap);
-
-    fputc('\n', stderr);
-    fflush(stderr);
-#else
-    UNUSED(fmt);
-#endif
-}
-
-
-
-
-/*** util ***/
-
-#define WARN(msg)           warn(__LINE__, msg)
-#define WARN2(msg, arg1)    warn(__LINE__, msg, arg1)
-#define WARN3(msg, arg1, arg2)    warn(__LINE__, msg, arg1, arg2)
-#define WARN4(msg, arg1, arg2, arg3)    warn(__LINE__, msg, arg1, arg2, arg3)
-
-void
-warn(int line, const char *fmt, ...)
-{
-    va_list ap;
-
-    fputs("[warning]::", stderr);
-
-    va_start(ap, fmt);
-    vfprintf(stderr, fmt, ap);
-    va_end(ap);
-
-    fputc('\n', stderr);
-    fflush(stderr);
-}
-
-
-#define DIE(msg)    die(__LINE__, msg)
-
-void
-die(int line, const char *msg)
-{
-    fprintf(stderr, "[error]::[%s] at %d\n", msg, line);
-    exit(EXIT_FAILURE);
-}
-
-
-// almost code from 'man 3 strtol'.
-// if failed, *failed is not NULL.
-double
-atod(const char *digit_str, int base, char **failed)
-{
-    char *end_ptr;
-    double val;
-
-    UNUSED(base);
-
-    errno = 0;
-    val = strtod(digit_str, &end_ptr);
-
-    if (errno == ERANGE || (errno != 0 && val == 0)) {
-        *failed = (char*)digit_str;
-        return (double)0;
-    }
-    if (end_ptr == digit_str) {
-        *failed = (char*)digit_str;
-        return (double)0;
-    }
-    if (*end_ptr != '\0') {
-        *failed = (char*)digit_str;
-        return (double)0;
-    }
-
-    return val;
-}
-
-
-// on success, return true.
-bool
-dtoa(double digit, char *ascii, size_t max_size, int base)
-{
-    UNUSED(base);
-
-    snprintf(ascii, max_size, "%f", digit);
-    return true;
-}
-
-
-
-
-
-/*** token ***/
-
-typedef enum {
-    TOK_UNDEF,
-    TOK_DIGIT,
-    TOK_OP,
-    TOK_LPAREN,
-    TOK_RPAREN,
-} TokenType;
-
-
-typedef struct {
-    char        *str;
-    TokenType   type;
-} Token;
-
-
-void
-token_init(Token *tok)
-{
-    tok->str  = NULL;
-    tok->type = TOK_UNDEF;
-}
-
-void
-token_alloc(Token *tok, size_t size)
-{
-    tok->str = malloc(size);
-    if (! ALLOCATED(tok->str)) {
-        perror("malloc");
-        exit(EXIT_FAILURE);
-    }
-}
-
-void
-token_destroy(Token *tok)
-{
-    if (tok->str) {
-        free(tok->str);
-        tok->str = NULL;
-    }
-}
-
-
-
-
-
-/*** parser ***/
-
-// if EOF: return NULL
-// else: return the first pointer to the non-space character
-static char*
-skip_space(char *src)
-{
-    while (*src)
-        if (*src == ' ' || *src == '\t' || *src == '\n')
-            src++;
-        else
-            return src;
-    return NULL;
-}
-
-// if not digit or EOF: return NULL
-static char*
-get_digit(char *src, char *buf, size_t maxsize)
-{
-    int pos;
-    bool dot_pos = 0;
-
-    // check if top of src is digit
-    for (pos = 0; src[pos]; pos++) {
-        if (src[pos] == '.') {
-            if (dot_pos) {
-                // src has '.' already
-                WARN2("parsing error near [%s]", src);
-                return NULL;
-            }
-            dot_pos = pos;
-        }
-        else if (! isdigit(src[pos])) {
-            break;
-        }
-    }
-    if (pos == 0) {
-        return NULL;
-    }
-    if (dot_pos > 0 && (dot_pos == 0 || dot_pos == strlen(src) - 1)) {
-        WARN("'.' at the head or tail of src");
-        return NULL;
-    }
-
-    if (pos > maxsize)
-        pos = maxsize;
-    // copy
-    strncpy(buf, src, pos);
-    buf[pos] = '\0';
-
-    return src + pos;
-}
-
-// if EOF: return NULL
-char*
-get_token(char *src, Token *tok)
-{
-    char *after_pos = NULL;
-    char tok_buf[MAX_TOK_CHAR_BUF];
-
-    d_printf("get_token()");
-
-    char *incl_src = skip_space(src);
-    if (incl_src == NULL)
-        return NULL;
-    src = incl_src;
-
-
-    switch (*src) {
-    case '(':
-        d_printf("token - (");
-
-        tok_buf[0] = src[0];
-        tok_buf[1] = '\0';
-        tok->type = TOK_LPAREN;
-
-        src++;
-        break;
-
-    case ')':
-        d_printf("token - )");
-
-        tok_buf[0] = src[0];
-        tok_buf[1] = '\0';
-        tok->type = TOK_RPAREN;
-
-        src++;
-        break;
-
-    case '+':
-    case '-':
-    case '*':
-    case '/':
-        d_printf("token - op [%c]", *src);
-
-        tok_buf[0] = src[0];
-        tok_buf[1] = '\0';
-        tok->type = TOK_OP;
-
-        src++;
-        break;
-
-    default:
-        // digit
-        if (isdigit(*src)) {
-            d_printf("token - digit [%c]", *src);
-
-            after_pos = get_digit(src, tok_buf, MAX_TOK_CHAR_BUF);
-            if (after_pos == NULL) {
-                DIE("malformed digit");
-            }
-            src = after_pos;
-
-            tok->type = TOK_DIGIT;
-
-            break;
-        }
-
-        // other
-        d_printf("[%c] [%s]", *src, src);
-        DIE("syntax error");
-    }
-
-    // allocate just token's length
-    size_t alloc_num = strlen(tok_buf) + 1;
-    token_alloc(tok, alloc_num);
-    strncpy(tok->str, tok_buf, alloc_num);
-
-    d_printf("got! [%s]", tok->str);
-
-    return src;
-}
-
-
-
-
-
-/*** dentaku ***/
 
 typedef struct {
     Stack   *cur_stack;    // easier to access
@@ -398,7 +104,7 @@ dentaku_calc_op(Dentaku *dentaku, Token *tok_op, Token *tok_n, Token *tok_m)
 {
     Token tok_result;
     char *failed;
-    double n, m, result;
+    digit_t n, m, result;
 
     // check each token's type
     if (! (tok_n->type == TOK_DIGIT
