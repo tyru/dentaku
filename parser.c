@@ -1,8 +1,8 @@
 
 #include "parser.h"
-
 #include "util.h"
 
+#include <ctype.h>
 
 
 
@@ -72,14 +72,16 @@ get_token(char *src, Token *tok, bool allow_signed)
     d_printf("get_token()");
 
     char *incl_src = skip_space(src);
-    if (incl_src == NULL)
+    if (incl_src == NULL) {
+        d_printf("token - EOF");
         return NULL;
+    }
     src = incl_src;
 
 
     switch (*src) {
     case '(':
-        d_printf("token - (");
+        // d_printf("token - (");
 
         tok_buf[0] = src[0];
         tok_buf[1] = '\0';
@@ -89,7 +91,7 @@ get_token(char *src, Token *tok, bool allow_signed)
         break;
 
     case ')':
-        d_printf("token - )");
+        // d_printf("token - )");
 
         tok_buf[0] = src[0];
         tok_buf[1] = '\0';
@@ -100,7 +102,7 @@ get_token(char *src, Token *tok, bool allow_signed)
 
     case '*':
     case '/':
-        d_printf("token - op [%c]", *src);
+        // d_printf("token - op [%c]", *src);
 
         tok_buf[0] = src[0];
         tok_buf[1] = '\0';
@@ -113,7 +115,7 @@ get_token(char *src, Token *tok, bool allow_signed)
     case '-':
         // if NOT signed digit
         if (! allow_signed || ! isdigit(*skip_space(src + 1))) {
-            d_printf("token - op [%c]", *src);
+            // d_printf("token - op [%c]", *src);
 
             tok_buf[0] = src[0];
             tok_buf[1] = '\0';
@@ -123,7 +125,7 @@ get_token(char *src, Token *tok, bool allow_signed)
             break;
         }
         else {
-            d_printf("token should be signed digit");
+            // d_printf("token should be signed digit");
 
             sign_pos = src;
 
@@ -133,7 +135,7 @@ get_token(char *src, Token *tok, bool allow_signed)
 
     default:
         if (isdigit(*src)) {
-            d_printf("token - digit [%c]", *src);
+            // d_printf("token - digit [%c]", *src);
 
             after_pos = get_digit(src, tok_buf, MAX_TOK_CHAR_BUF);
             if (after_pos == NULL) {

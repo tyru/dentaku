@@ -24,6 +24,15 @@ void
 die(int line, const char *msg);
 
 
+
+bool
+double2digit(double val, Digit *digit);
+
+double
+digit2double(Digit *digit);
+
+
+
 bool
 atod(const char *digit_str, Digit *digit, int base);
 
