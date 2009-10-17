@@ -71,6 +71,9 @@ get_token(char *src, Token *tok, bool allow_signed)
 
     d_printf("get_token()");
 
+    if (src == NULL)
+        return NULL;
+
     char *incl_src = skip_space(src);
     if (incl_src == NULL) {
         d_printf("token - EOF");
