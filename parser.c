@@ -157,16 +157,16 @@ get_token(char *src, Token *tok, bool allow_signed)
     }
 
     // allocate just token's length
-    size_t alloc_num = (sign_pos == NULL ? 0 : 1) + strlen(tok_buf) + 1;
-    token_alloc(tok, alloc_num);
+    // size_t alloc_num = (sign_pos == NULL ? 0 : 1) + strlen(tok_buf) + 1;
+    // token_alloc(tok, alloc_num);
 
     if (sign_pos == NULL) {
-        strncpy(tok->str, tok_buf, alloc_num);
+        strncpy(tok->str, tok_buf, MAX_TOK_CHAR_BUF);
     }
     else {
         d_printf("sign_pos [%c]", *sign_pos);
         strncpy(tok->str, sign_pos, 1);
-        strncpy(tok->str + 1, tok_buf, alloc_num - 1);
+        strncpy(tok->str + 1, tok_buf, MAX_TOK_CHAR_BUF - 1);
     }
 
     d_printf("got! [%s]", tok->str);

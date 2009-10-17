@@ -9,8 +9,9 @@
 
 
 /* TODO
- * - paren
  * - add .str's capacity size to Token
+ *   for allocating just token's characters length.
+ *   (if capacity is a fewer than needed size, use realloc())
  */
 
 
@@ -98,6 +99,7 @@ dentaku_calc_op(Dentaku *dentaku, Token *tok_result, Token *tok_n, Token *tok_op
 
 
     /* push result */
+    // XXX tok_result->str's length may not be MAX_TOK_CHAR_BUF.
     if (! dtoa(&result, tok_result->str, MAX_TOK_CHAR_BUF, 10)) {
         WARN("can't convert digit to string");
         return false;
@@ -205,8 +207,8 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
         bool allow_signed = stk->top == NULL || ((Token*)stk->top)->type == TOK_LPAREN;
         old_top = stk->top;
 
-        // token.str will be allocated in get_token().
         token_init(&got_tok);
+        token_alloc(&got_tok, MAX_TOK_CHAR_BUF);
         src = get_token(src, &got_tok, allow_signed);
         // there are no tokens on stack, and parser gets EOF.
         if (src == NULL) {
@@ -251,8 +253,10 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
                     return true;
                 }
                 else {
-                    if (((Token*)stk->top)->type == TOK_LPAREN)    // pop if top is '('
+                    if (((Token*)stk->top)->type == TOK_LPAREN) {    // pop if top is '('
+                        token_destroy(stk->top);
                         stack_pop(stk);
+                    }
                     stack_push(stk, &got_tok);
                 }
             }
@@ -264,6 +268,7 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
             // postpone '+' and '-'.
             if (*got_tok.str == '*' || *got_tok.str == '/') {
                 token_init(&got_tok);
+                token_alloc(&got_tok, MAX_TOK_CHAR_BUF);
                 src = get_token(src, &got_tok, allow_signed);
                 if (src == NULL) {
                     WARN("reaching EOF where expression is expected");
