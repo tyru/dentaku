@@ -219,7 +219,10 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
         }
 
 
-        // TODO separate each case into static functions
+        // TODO
+        // - separate each case into static functions
+        // - wrap get_token()
+        // - wrap stack_push(), stack_pop()
 
 
         if (src == NULL || got_tok.type == TOK_RPAREN) {    // EOF or ')'
