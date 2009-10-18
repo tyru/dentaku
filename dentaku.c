@@ -388,8 +388,12 @@ dentaku_alloc(Dentaku *dentaku, size_t stack_size)
     // allocate Token's stack
     stack_ret ret = stack_init(dentaku->cur_stack, stack_size, sizeof(Token));
     if (ret != STACK_SUCCESS) {
-        WARN("failed to initialize stack");
-        exit(EXIT_FAILURE);
+        DIE("failed to initialize stack");
+    }
+
+    dentaku->src = malloc(MAX_IN_BUF);
+    if (dentaku->src == NULL) {
+        DIE("failed to allocate for input string");
     }
 }
 
@@ -429,11 +433,7 @@ dentaku_read_src(Dentaku *dentaku)
     else {
     }
 
-    dentaku->src = strndup(buf, MAX_IN_BUF);
-    if (dentaku->src == NULL) {
-        WARN("can't allocate for input string!");
-        return false;
-    }
+    strncpy(dentaku->src, buf, MAX_IN_BUF);
     d_printf("read! [%s]", dentaku->src);
 
     dentaku->src_len = strlen(dentaku->src);
