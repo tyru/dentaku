@@ -167,6 +167,7 @@ dentaku_calc_op(Dentaku *dentaku, Token *tok_result, bool *done)
 
 
     /* calc */
+    d_printf("eval '%s %s %s'", tok_n.str, tok_op.str, tok_m.str);
     switch (*tok_op.str) {
     case '+': success = double2digit(d_n + d_m, &result); break;
     case '-': success = double2digit(d_n - d_m, &result); break;
@@ -359,13 +360,8 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
                     token_destroy(&tok_top);
                     return false;
                 }
-                else if (done) {
+                else if (done && src == NULL) {
                     // calculation has been done.
-                    dentaku_stack_push(dentaku, &tok_top);
-                    return true;
-                }
-                else if (stk->top == NULL) {
-                    // XXX needs this block?
                     dentaku_stack_push(dentaku, &tok_top);
                     return true;
                 }
@@ -403,13 +399,8 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
                         token_destroy(&tok_top);
                         return false;
                     }
-                    else if (done) {
+                    else if (done && src == NULL) {
                         // calculation has been done.
-                        dentaku_stack_push(dentaku, &tok_top);
-                        return true;
-                    }
-                    else if (stk->top == NULL) {
-                        // XXX needs this block?
                         dentaku_stack_push(dentaku, &tok_top);
                         return true;
                     }
