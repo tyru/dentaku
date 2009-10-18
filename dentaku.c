@@ -35,8 +35,6 @@
 
 
 
-
-
 typedef struct {
     Stack   *cur_stack;    // easier to access
     Stack   cur_stack__;
@@ -49,6 +47,49 @@ typedef struct {
     int     src_pos;
     int     src_len;
 } Dentaku;
+
+
+
+
+stack_ret
+dentaku_stack_pop(Dentaku *dentaku, Token *tok);
+
+stack_ret
+dentaku_stack_push(Dentaku *dentaku, Token *tok);
+
+bool
+dentaku_src_eof(Dentaku *dentaku);
+
+bool
+dentaku_calc_op(Dentaku *dentaku, Token *tok_result, bool *done);
+
+char*
+dentaku_get_token(Dentaku *dentaku, Token *top_tok, bool *error);
+
+
+
+void
+dentaku_init(Dentaku *dentaku);
+
+void
+dentaku_alloc(Dentaku *dentaku, size_t stack_size);
+
+void
+dentaku_destroy(Dentaku *dentaku);
+
+
+
+bool
+dentaku_read_src(Dentaku *dentaku);
+
+bool
+dentaku_eval_src(Dentaku *dentaku);
+
+void
+dentaku_clear_stack(Dentaku *dentaku);
+
+void
+dentaku_show_result(Dentaku *dentaku);
 
 
 
@@ -258,6 +299,7 @@ dentaku_init(Dentaku *dentaku)
     dentaku->src_pos = -1;
 }
 
+
 void
 dentaku_alloc(Dentaku *dentaku, size_t stack_size)
 {
@@ -270,6 +312,7 @@ dentaku_alloc(Dentaku *dentaku, size_t stack_size)
         exit(EXIT_FAILURE);
     }
 }
+
 
 void
 dentaku_destroy(Dentaku *dentaku)
@@ -284,6 +327,7 @@ dentaku_destroy(Dentaku *dentaku)
         dentaku->src = NULL;
     }
 }
+
 
 
 
