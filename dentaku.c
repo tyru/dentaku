@@ -12,6 +12,8 @@
  * - add .str's capacity size to Token
  *   for allocating just token's characters length.
  *   (if capacity is a fewer than needed size, use realloc())
+ * - replace 'destroy' with 'destruct'
+ * - can use TOKEN_ALLOCA() only if 'USE_TOKEN_ALLOCA' is defined
  */
 
 
@@ -166,6 +168,72 @@ dentaku_read_src(Dentaku *dentaku, char *src, size_t maxsize)
 
     d_printf("read! [%s]", src);
     return true;
+}
+
+
+// get one token.
+// if this gets EOF, free top_tok.
+char*
+dentaku_get_token(Dentaku *dentaku, char *src, Token *top_tok)
+{
+    Stack *stk = dentaku->cur_stack;
+    bool allow_signed = stk->top == NULL || ((Token*)stk->top)->type == TOK_LPAREN;
+
+    if (top_tok->str == NULL) {
+        token_alloc(top_tok, MAX_TOK_CHAR_BUF);
+    }
+    src = get_token(src, top_tok, allow_signed);
+    if (src == NULL) {
+        token_destroy(top_tok);
+    }
+    return src;
+}
+
+
+// this is function to
+// - copy popped token to tok.
+// - print debug message
+stack_ret
+dentaku_stack_pop(Dentaku *dentaku, Token *tok)
+{
+    Stack *stk = dentaku->cur_stack;
+
+    if (tok)
+        memcpy(tok, stk->top, sizeof(Token));
+
+    d_printf("pop! [%s]", ((Token*)stk->top)->str);
+    return stack_pop(stk);
+}
+
+
+stack_ret
+dentaku_stack_push(Dentaku *dentaku, Token *tok)
+{
+    d_printf("push! [%s]", ((Token*)dentaku->cur_stack->top)->str);
+    return stack_push(dentaku->cur_stack, tok);
+}
+
+
+void
+alloc_tokens_for_calc(Token *tok_n, Token *tok_op, Token *tok_m)
+{
+    token_init(tok_n);
+    token_alloc(tok_n, MAX_TOK_CHAR_BUF);
+
+    token_init(tok_op);
+    token_alloc(tok_op, MAX_TOK_CHAR_BUF);
+
+    token_init(tok_m);
+    token_alloc(tok_m, MAX_TOK_CHAR_BUF);
+}
+
+
+void
+destruct_tokens_for_calc(Token *tok_n, Token *tok_op, Token *tok_m)
+{
+    token_destroy(tok_n);
+    token_destroy(tok_op);
+    token_destroy(tok_m);
 }
 
 
