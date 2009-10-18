@@ -211,7 +211,7 @@ dentaku_get_token(Dentaku *dentaku, char *src, Token *top_tok, bool *error)
     bool allow_signed = stk->top == NULL || ((Token*)stk->top)->type == TOK_LPAREN;
 
     src = get_token(src, top_tok, allow_signed, error);
-    if (src == NULL) {
+    if (src == NULL || error) {
         token_destroy(top_tok);
     }
     return src;
@@ -314,11 +314,9 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
         src = dentaku_get_token(dentaku, src, &tok_top, &syntax_error);
 
         if (syntax_error) {
-            token_destroy(&tok_top);
             return false;
         }
         else if (src == NULL) {
-            token_destroy(&tok_top);
             if (stk->top == NULL)
                 // there are no tokens on stack, and parser gets EOF.
                 return false;
@@ -387,11 +385,9 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
                 src = dentaku_get_token(dentaku, src, &tok_top, &syntax_error);
 
                 if (syntax_error) {
-                    token_destroy(&tok_top);
                     return false;
                 }
                 if (src == NULL) {
-                    token_destroy(&tok_top);
                     WARN("reaching EOF where expression is expected");
                     return false;
                 }
