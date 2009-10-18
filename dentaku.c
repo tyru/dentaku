@@ -319,6 +319,7 @@ dentaku_destroy(Dentaku *dentaku)
 {
     d_printf("destroying dentaku...");
 
+    dentaku_clear_stack(dentaku);
     if (stack_destruct(dentaku->cur_stack) != STACK_SUCCESS)
         WARN("failed to destruct stack");
 
