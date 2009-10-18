@@ -292,6 +292,21 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
                 dentaku_stack_pop(dentaku, NULL);
             }
 
+            // XXX
+            // if input is '1 + 2 * (3 + 4) + 5'.
+            //
+            // when '1 + 2 * (3 + 4)':
+            //      expression should be '1 + 2 * 7'
+            //      but then it gotta get one more token.
+            //      so expression becomes '1 + 2 * 7 + 5'.
+            //      and after that,
+            //
+            //      '1 + 2 * 12'
+            //      '1 + 24'
+            //      '25'
+            //
+            //      but correct answer is '20'.
+
             while (1) {
                 dentaku_stack_pop(dentaku, &tok_m);
                 if (stk->top == NULL) {
