@@ -466,18 +466,18 @@ bool
 dentaku_eval_src(Dentaku *dentaku)
 {
     Stack *stk = dentaku->cur_stack;
-    Token tok_top;
+    Token tok_top, *tok_got;
     bool syntax_error;
     bool done_calc;
     TokenType top_type;
 
 
     while (1) {
-        Token *buf = dentaku_get_token(dentaku, &syntax_error);
-        if (syntax_error) {    // buf must be NULL.
+        tok_got = dentaku_get_token(dentaku, &syntax_error);
+        if (syntax_error) {    // tok_got must be NULL.
             return false;
         }
-        else if (buf == NULL) {    // EOF
+        else if (tok_got == NULL) {    // EOF
             if (stk->top == NULL)
                 // return with no value
                 // if there are no tokens on stack, and parser gets EOF.
@@ -488,8 +488,8 @@ dentaku_eval_src(Dentaku *dentaku)
         }
         else {
             // get new token.
-            dentaku_stack_push(dentaku, buf);
-            memcpy(&tok_top, buf, sizeof tok_top);
+            dentaku_stack_push(dentaku, tok_got);
+            memcpy(&tok_top, tok_got, sizeof tok_top);
         }
         top_type = tok_top.type;
 
@@ -550,10 +550,11 @@ dentaku_eval_src(Dentaku *dentaku)
             // postpone '+' and '-'.
             if (tok_top.str[0] == '*' || tok_top.str[0] == '/') {
                 // get and push digit token.
-                if (syntax_error) {    // buf must be NULL.
+                tok_got = dentaku_get_token(dentaku, &syntax_error);
+                if (syntax_error) {    // tok_got must be NULL.
                     return false;
                 }
-                else if (buf == NULL) {    // EOF
+                else if (tok_got == NULL) {    // EOF
                     if (stk->top == NULL)
                         // return with no value
                         // if there are no tokens on stack, and parser gets EOF.
@@ -564,8 +565,8 @@ dentaku_eval_src(Dentaku *dentaku)
                 }
                 else {
                     // get new token.
-                    dentaku_stack_push(dentaku, buf);
-                    memcpy(&tok_top, buf, sizeof tok_top);
+                    dentaku_stack_push(dentaku, tok_got);
+                    memcpy(&tok_top, tok_got, sizeof tok_top);
                 }
                 top_type = tok_top.type;
 
