@@ -40,9 +40,14 @@
 typedef struct {
     Stack   *cur_stack;    // easier to access
     Stack   cur_stack__;
+
     FILE    *f_in;
     FILE    *f_out;
     FILE    *f_err;
+
+    char    *src;
+    int     src_pos;
+    int     src_len;
 } Dentaku;
 
 
@@ -70,6 +75,14 @@ dentaku_stack_push(Dentaku *dentaku, Token *tok)
 {
     d_printf("push! [%s]", tok->str);
     return stack_push(dentaku->cur_stack, tok);
+}
+
+
+
+bool
+dentaku_src_eof(Dentaku *dentaku)
+{
+    return dentaku->src_pos >= dentaku->src_len;
 }
 
 
@@ -205,16 +218,23 @@ dentaku_calc_op(Dentaku *dentaku, Token *tok_result, bool *done)
 // get one token.
 // if this gets EOF, free top_tok.
 char*
-dentaku_get_token(Dentaku *dentaku, char *src, Token *top_tok, bool *error)
+dentaku_get_token(Dentaku *dentaku, Token *top_tok, bool *error)
 {
     Stack *stk = dentaku->cur_stack;
     bool allow_signed = stk->top == NULL || ((Token*)stk->top)->type == TOK_LPAREN;
 
-    src = get_token(src, top_tok, allow_signed, error);
-    if (src == NULL || error) {
+    char *cur_pos = dentaku->src + dentaku->src_pos;
+    char *next_pos = get_token(cur_pos, top_tok, allow_signed, error);
+    if (next_pos == NULL) {
         token_destroy(top_tok);
+        dentaku->src_pos = dentaku->src_len;    // EOF
     }
-    return src;
+    else {
+        dentaku->src_pos += next_pos - cur_pos;
+        // d_printf("rest [%s]", next_pos);
+    }
+
+    return next_pos;
 }
 
 
@@ -232,6 +252,10 @@ dentaku_init(Dentaku *dentaku)
     dentaku->f_in  = stdin;
     dentaku->f_out = stdout;
     dentaku->f_err = stderr;
+
+    dentaku->src = NULL;
+    dentaku->src_len = -1;
+    dentaku->src_pos = -1;
 }
 
 void
@@ -254,25 +278,42 @@ dentaku_destroy(Dentaku *dentaku)
 
     if (stack_destruct(dentaku->cur_stack) != STACK_SUCCESS)
         WARN("failed to destruct stack");
+
+    if (dentaku->src) {
+        free(dentaku->src);
+        dentaku->src = NULL;
+    }
 }
 
 
 
 bool
-dentaku_read_src(Dentaku *dentaku, char *src, size_t maxsize)
+dentaku_read_src(Dentaku *dentaku)
 {
+    char buf[MAX_IN_BUF];
     d_printf("dentaku_read_src()");
+
+    buf[0] = '\0';
 
     if (fileno(dentaku->f_in) == fileno(stdin)) {
         fputs(PROMPT_STR, dentaku->f_out);
         // read each line
-        if (fgets(src, maxsize, dentaku->f_in) == NULL)
+        if (fgets(buf, MAX_IN_BUF, dentaku->f_in) == NULL)
             return false;
     }
     else {
     }
 
-    d_printf("read! [%s]", src);
+    dentaku->src = strndup(buf, MAX_IN_BUF);
+    if (dentaku->src == NULL) {
+        WARN("can't allocate for input string!");
+        return false;
+    }
+    d_printf("read! [%s]", dentaku->src);
+
+    dentaku->src_len = strlen(dentaku->src);
+    dentaku->src_pos = 0;
+
     return true;
 }
 
@@ -298,7 +339,7 @@ dentaku_read_src(Dentaku *dentaku, char *src, size_t maxsize)
  *  - just push it
  */
 bool
-dentaku_eval_src(Dentaku *dentaku, char *src)
+dentaku_eval_src(Dentaku *dentaku)
 {
     Stack *stk = dentaku->cur_stack;
     Token tok_top;
@@ -311,12 +352,12 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
 
         token_init(&tok_top);
         token_alloc(&tok_top, MAX_TOK_CHAR_BUF);
-        src = dentaku_get_token(dentaku, src, &tok_top, &syntax_error);
+        dentaku_get_token(dentaku, &tok_top, &syntax_error);
 
         if (syntax_error) {
             return false;
         }
-        else if (src == NULL) {
+        else if (dentaku_src_eof(dentaku)) {
             if (stk->top == NULL)
                 // there are no tokens on stack, and parser gets EOF.
                 return false;
@@ -332,7 +373,7 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
         // - separate each case into static functions
 
 
-        if (src == NULL || tok_top.type == TOK_RPAREN) {    // EOF or ')'
+        if (dentaku_src_eof(dentaku) || tok_top.type == TOK_RPAREN) {    // EOF or ')'
             if (tok_top.type == TOK_RPAREN) {
                 token_destroy(stk->top);
                 dentaku_stack_pop(dentaku, NULL);
@@ -364,7 +405,7 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
                     token_destroy(&tok_top);
                     return false;
                 }
-                else if (done && src == NULL) {
+                else if (done && dentaku_src_eof(dentaku)) {
                     // calculation has been done.
                     dentaku_stack_push(dentaku, &tok_top);
                     return true;
@@ -382,12 +423,12 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
                 // get and push digit token.
                 token_init(&tok_top);
                 token_alloc(&tok_top, MAX_TOK_CHAR_BUF);
-                src = dentaku_get_token(dentaku, src, &tok_top, &syntax_error);
+                dentaku_get_token(dentaku, &tok_top, &syntax_error);
 
                 if (syntax_error) {
                     return false;
                 }
-                if (src == NULL) {
+                if (dentaku_src_eof(dentaku)) {
                     WARN("reaching EOF where expression is expected");
                     return false;
                 }
@@ -406,7 +447,7 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
                         token_destroy(&tok_top);
                         return false;
                     }
-                    else if (done && src == NULL) {
+                    else if (done && dentaku_src_eof(dentaku)) {
                         // calculation has been done.
                         dentaku_stack_push(dentaku, &tok_top);
                         return true;
@@ -476,15 +517,14 @@ dentaku_show_result(Dentaku *dentaku)
 
 int main(int argc, char *argv[])
 {
-    char src[MAX_IN_BUF];
     Dentaku dentaku;
     Dentaku *d = &dentaku;
 
     dentaku_init(d);
     dentaku_alloc(d, MAX_STACK_SIZE);
 
-    while (dentaku_read_src(d, src, MAX_IN_BUF)) {
-        if (dentaku_eval_src(d, src)) {
+    while (dentaku_read_src(d)) {
+        if (dentaku_eval_src(d)) {
             dentaku_show_result(d);
             dentaku_clear_stack(d);
         }
