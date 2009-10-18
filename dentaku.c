@@ -409,9 +409,9 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
         }
         else if (tok_top.type == TOK_DIGIT) {
             // syntax checking
-            if (old_tok_top && old_tok_top->type == TOK_DIGIT) {
-                WARN2("reaching '%s' where operator is expected", old_tok_top->str);
-            }
+            // if (old_tok_top && old_tok_top->type == TOK_DIGIT) {
+            //     WARN2("reaching '%s' where operator is expected", old_tok_top->str);
+            // }
         }
         else if (tok_top.type == TOK_LPAREN) {
             // nop.
