@@ -261,29 +261,25 @@ bool
 dentaku_eval_src(Dentaku *dentaku, char *src)
 {
     Stack *stk = dentaku->cur_stack;
-    Token got_tok;
-    Token *old_top;
+    Token tok_top;
+    Token *old_tok_top;
     Token tok_op, tok_n, tok_m;
 
-    // char *end_pos;
-    // end_pos = src + strlen(src);
 
-        // if (src >= end_pos)
-        //     return false;
 
     while (1) {
         bool allow_signed = stk->top == NULL || ((Token*)stk->top)->type == TOK_LPAREN;
-        old_top = stk->top;
+        old_tok_top = stk->top;
 
-        token_init(&got_tok);
-        token_alloc(&got_tok, MAX_TOK_CHAR_BUF);
-        src = get_token(src, &got_tok, allow_signed);
+        token_init(&tok_top);
+        token_alloc(&tok_top, MAX_TOK_CHAR_BUF);
+        src = get_token(src, &tok_top, allow_signed);
         // there are no tokens on stack, and parser gets EOF.
         if (src == NULL) {
             if (stk->top == NULL)
                 return false;
             else
-                memcpy(&got_tok, stk->top, sizeof got_tok);
+                memcpy(&tok_top, stk->top, sizeof tok_top);
         }
 
 
@@ -293,7 +289,7 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
         // - wrap stack_push(), stack_pop()
 
 
-        if (src == NULL || got_tok.type == TOK_RPAREN) {    // EOF or ')'
+        if (src == NULL || tok_top.type == TOK_RPAREN) {    // EOF or ')'
             while (1) {
                 memcpy(&tok_m, stk->top, sizeof tok_m);
                 stack_pop(stk);
@@ -315,12 +311,12 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
                 stack_pop(stk);
 
 
-                // got_tok is result.
-                if (! dentaku_calc_op(dentaku, &got_tok, &tok_n, &tok_op, &tok_m))
+                // tok_top is result.
+                if (! dentaku_calc_op(dentaku, &tok_top, &tok_n, &tok_op, &tok_m))
                     return false;
 
                 if (stk->top == NULL) {
-                    stack_push(stk, &got_tok);
+                    stack_push(stk, &tok_top);
                     return true;
                 }
                 else {
@@ -328,28 +324,28 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
                         token_destroy(stk->top);
                         stack_pop(stk);
                     }
-                    stack_push(stk, &got_tok);
+                    stack_push(stk, &tok_top);
                 }
             }
         }
-        else if (got_tok.type == TOK_OP) {    // '+', '-', '*', '/'
-            d_printf("push! [%s]", got_tok.str);
-            stack_push(stk, &got_tok);
+        else if (tok_top.type == TOK_OP) {    // '+', '-', '*', '/'
+            d_printf("push! [%s]", tok_top.str);
+            stack_push(stk, &tok_top);
 
             // postpone '+' and '-'.
-            if (*got_tok.str == '*' || *got_tok.str == '/') {
-                token_init(&got_tok);
-                token_alloc(&got_tok, MAX_TOK_CHAR_BUF);
-                src = get_token(src, &got_tok, allow_signed);
+            if (*tok_top.str == '*' || *tok_top.str == '/') {
+                token_init(&tok_top);
+                token_alloc(&tok_top, MAX_TOK_CHAR_BUF);
+                src = get_token(src, &tok_top, allow_signed);
                 if (src == NULL) {
                     WARN("reaching EOF where expression is expected");
                     return false;
                 }
 
-                d_printf("push! [%s]", got_tok.str);
-                stack_push(stk, &got_tok);
+                d_printf("push! [%s]", tok_top.str);
+                stack_push(stk, &tok_top);
 
-                switch (got_tok.type) {
+                switch (tok_top.type) {
                 case TOK_DIGIT:
                     // calculate if parser gets digit.
                     memcpy(&tok_m, stk->top, sizeof tok_m);
@@ -372,10 +368,10 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
                     stack_pop(stk);
 
 
-                    // got_tok is result.
-                    if (! dentaku_calc_op(dentaku, &got_tok, &tok_n, &tok_op, &tok_m))
+                    // tok_top is result.
+                    if (! dentaku_calc_op(dentaku, &tok_top, &tok_n, &tok_op, &tok_m))
                         return false;
-                    stack_push(stk, &got_tok);
+                    stack_push(stk, &tok_top);
 
                     break;
 
@@ -384,19 +380,19 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
                     WARN("reaching ')' where expression is expected");
                     return false;
                 case TOK_OP:
-                    WARN2("reaching '%c' where expression is expected", *got_tok.str);
+                    WARN2("reaching '%c' where expression is expected", *tok_top.str);
                     return false;
                 }
             }
         }
-        else if (got_tok.type == TOK_DIGIT) {
+        else if (tok_top.type == TOK_DIGIT) {
             // just push it
-            d_printf("push! [%s]", got_tok.str);
-            stack_push(stk, &got_tok);
+            d_printf("push! [%s]", tok_top.str);
+            stack_push(stk, &tok_top);
 
             // syntax checking
             if (src == NULL) {
-                if (old_top) {
+                if (old_tok_top) {
                     WARN("reaching EOF where operator is expected");
                     return false;
                 }
@@ -404,19 +400,19 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
                 return true;
             }
         }
-        else if (got_tok.type == TOK_LPAREN) {
+        else if (tok_top.type == TOK_LPAREN) {
             // syntax checking
             if (stk->top && ((Token*)stk->top)->type != TOK_OP) {
                 WARN2("reaching '%s' where operator is expected", ((Token*)stk->top)->str);
             }
 
             // just push it
-            d_printf("push! [%s]", got_tok.str);
-            stack_push(stk, &got_tok);
+            d_printf("push! [%s]", tok_top.str);
+            stack_push(stk, &tok_top);
         }
         else {
-            if (got_tok.str)
-                WARN2("unknown token '%s' found", got_tok.str);
+            if (tok_top.str)
+                WARN2("unknown token '%s' found", tok_top.str);
             else
                 WARN("unknown token found");
             return false;
