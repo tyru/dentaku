@@ -122,7 +122,15 @@ get_token(char *src, Token *tok, bool allow_signed, bool *error)
     case '+':
     case '-':
         // if NOT signed digit
-        if (! allow_signed || ! isdigit(*skip_space(src + 1))) {
+        if (allow_signed && isdigit(*skip_space(src + 1))) {
+            // d_printf("token should be signed digit");
+
+            sign_pos = src;
+
+            src = skip_space(src + 1);
+            /* FALLTHROUGH */
+        }
+        else {
             // d_printf("token - op [%c]", *src);
 
             tok_buf[0] = src[0];
@@ -131,14 +139,6 @@ get_token(char *src, Token *tok, bool allow_signed, bool *error)
 
             src++;
             break;
-        }
-        else {
-            // d_printf("token should be signed digit");
-
-            sign_pos = src;
-
-            src = skip_space(src + 1);
-            /* FALLTHROUGH */
         }
 
     default:
