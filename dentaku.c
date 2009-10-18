@@ -179,9 +179,6 @@ dentaku_get_token(Dentaku *dentaku, char *src, Token *top_tok)
     Stack *stk = dentaku->cur_stack;
     bool allow_signed = stk->top == NULL || ((Token*)stk->top)->type == TOK_LPAREN;
 
-    if (top_tok->str == NULL) {
-        token_alloc(top_tok, MAX_TOK_CHAR_BUF);
-    }
     src = get_token(src, top_tok, allow_signed);
     if (src == NULL) {
         token_destroy(top_tok);
@@ -268,12 +265,11 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
 
 
     while (1) {
-        bool allow_signed = stk->top == NULL || ((Token*)stk->top)->type == TOK_LPAREN;
         old_tok_top = stk->top;
 
         token_init(&tok_top);
         token_alloc(&tok_top, MAX_TOK_CHAR_BUF);
-        src = get_token(src, &tok_top, allow_signed);
+        src = dentaku_get_token(dentaku, src, &tok_top);
         // there are no tokens on stack, and parser gets EOF.
         if (src == NULL) {
             if (stk->top == NULL)
@@ -285,7 +281,6 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
 
         // TODO
         // - separate each case into static functions
-        // - wrap get_token()
         // - wrap stack_push(), stack_pop()
 
 
@@ -336,7 +331,7 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
             if (*tok_top.str == '*' || *tok_top.str == '/') {
                 token_init(&tok_top);
                 token_alloc(&tok_top, MAX_TOK_CHAR_BUF);
-                src = get_token(src, &tok_top, allow_signed);
+                src = dentaku_get_token(dentaku, src, &tok_top);
                 if (src == NULL) {
                     WARN("reaching EOF where expression is expected");
                     return false;
