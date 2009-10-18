@@ -206,7 +206,7 @@ dentaku_stack_pop(Dentaku *dentaku, Token *tok)
 stack_ret
 dentaku_stack_push(Dentaku *dentaku, Token *tok)
 {
-    d_printf("push! [%s]", ((Token*)dentaku->cur_stack->top)->str);
+    d_printf("push! [%s]", tok->str);
     return stack_push(dentaku->cur_stack, tok);
 }
 
@@ -290,7 +290,7 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
                 stack_pop(stk);
 
                 if (stk->top == NULL) {
-                    stack_push(stk, &tok_m);
+                    dentaku_stack_push(dentaku, &tok_m);
                     return true;
                 }
 
@@ -311,7 +311,7 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
                     return false;
 
                 if (stk->top == NULL) {
-                    stack_push(stk, &tok_top);
+                    dentaku_stack_push(dentaku, &tok_top);
                     return true;
                 }
                 else {
@@ -319,13 +319,12 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
                         token_destroy(stk->top);
                         stack_pop(stk);
                     }
-                    stack_push(stk, &tok_top);
+                    dentaku_stack_push(dentaku, &tok_top);
                 }
             }
         }
         else if (tok_top.type == TOK_OP) {    // '+', '-', '*', '/'
-            d_printf("push! [%s]", tok_top.str);
-            stack_push(stk, &tok_top);
+            dentaku_stack_push(dentaku, &tok_top);
 
             // postpone '+' and '-'.
             if (*tok_top.str == '*' || *tok_top.str == '/') {
@@ -337,8 +336,7 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
                     return false;
                 }
 
-                d_printf("push! [%s]", tok_top.str);
-                stack_push(stk, &tok_top);
+                dentaku_stack_push(dentaku, &tok_top);
 
                 switch (tok_top.type) {
                 case TOK_DIGIT:
@@ -347,7 +345,7 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
                     stack_pop(stk);
 
                     if (stk->top == NULL) {
-                        stack_push(stk, &tok_m);
+                        dentaku_stack_push(dentaku, &tok_m);
                         return true;
                     }
 
@@ -366,7 +364,7 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
                     // tok_top is result.
                     if (! dentaku_calc_op(dentaku, &tok_top, &tok_n, &tok_op, &tok_m))
                         return false;
-                    stack_push(stk, &tok_top);
+                    dentaku_stack_push(dentaku, &tok_top);
 
                     break;
 
@@ -382,8 +380,7 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
         }
         else if (tok_top.type == TOK_DIGIT) {
             // just push it
-            d_printf("push! [%s]", tok_top.str);
-            stack_push(stk, &tok_top);
+            dentaku_stack_push(dentaku, &tok_top);
 
             // syntax checking
             if (src == NULL) {
@@ -402,8 +399,7 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
             }
 
             // just push it
-            d_printf("push! [%s]", tok_top.str);
-            stack_push(stk, &tok_top);
+            dentaku_stack_push(dentaku, &tok_top);
         }
         else {
             if (tok_top.str)
