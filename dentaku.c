@@ -263,19 +263,22 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
     Token tok_op, tok_n, tok_m;
 
 
-
     while (1) {
         old_tok_top = stk->top;
 
         token_init(&tok_top);
         token_alloc(&tok_top, MAX_TOK_CHAR_BUF);
         src = dentaku_get_token(dentaku, src, &tok_top);
-        // there are no tokens on stack, and parser gets EOF.
         if (src == NULL) {
             if (stk->top == NULL)
+                // there are no tokens on stack, and parser gets EOF.
                 return false;
             else
+                // XXX why memcpy()? not but pointer assignment.
                 memcpy(&tok_top, stk->top, sizeof tok_top);
+        }
+        else {
+            dentaku_stack_push(dentaku, &tok_top);
         }
 
 
@@ -284,6 +287,9 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
 
 
         if (src == NULL || tok_top.type == TOK_RPAREN) {    // EOF or ')'
+            if (tok_top.type == TOK_RPAREN)
+                dentaku_stack_pop(dentaku, NULL);
+
             while (1) {
                 dentaku_stack_pop(dentaku, &tok_m);
                 if (stk->top == NULL) {
@@ -318,8 +324,6 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
             }
         }
         else if (tok_top.type == TOK_OP) {    // '+', '-', '*', '/'
-            dentaku_stack_push(dentaku, &tok_top);
-
             // TODO
             // - do '*' and '/' calculation when tok_top.type == TOK_DIGIT.
             // no need to look ahead digit token here.
@@ -373,27 +377,16 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
             }
         }
         else if (tok_top.type == TOK_DIGIT) {
-            // just push it
-            dentaku_stack_push(dentaku, &tok_top);
-
             // syntax checking
-            if (src == NULL) {
-                if (old_tok_top) {
-                    WARN("reaching EOF where operator is expected");
-                    return false;
-                }
-                d_printf("only one digit");
-                return true;
+            if (old_tok_top && old_tok_top->type == TOK_DIGIT) {
+                WARN2("reaching '%s' where operator is expected", old_tok_top->str);
             }
         }
         else if (tok_top.type == TOK_LPAREN) {
-            // syntax checking
-            if (stk->top && ((Token*)stk->top)->type != TOK_OP) {
-                WARN2("reaching '%s' where operator is expected", ((Token*)stk->top)->str);
-            }
-
-            // just push it
-            dentaku_stack_push(dentaku, &tok_top);
+            // nop.
+            //
+            // TODO
+            // because I want calc to assume '(expr)(expr)' as '(expr)*(expr)'.
         }
         else {
             if (tok_top.str)
