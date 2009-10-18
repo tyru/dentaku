@@ -45,7 +45,7 @@ dentaku_stack_pop(Dentaku *dentaku, Token *tok)
     if (tok)
         memcpy(tok, stk->top, sizeof(Token));
 
-    d_printf("pop! [%s]", ((Token*)stk->top)->str);
+    // d_printf("pop! [%s]", tok->str);
     return stack_pop(stk);
 }
 
@@ -53,7 +53,7 @@ dentaku_stack_pop(Dentaku *dentaku, Token *tok)
 stack_ret
 dentaku_stack_push(Dentaku *dentaku, Token *tok)
 {
-    d_printf("push! [%s]", tok->str);
+    // d_printf("push! [%s]", tok->str);
     return stack_push(dentaku->cur_stack, tok);
 }
 
@@ -82,7 +82,9 @@ dentaku_calc_expr(Dentaku *dentaku, Token *tok_result, bool *done)
     bool success;
     Stack *stk = dentaku->cur_stack;
 
-    // TODO check also stack function's return value.
+    // TODO
+    // - check also stack function's return value.
+    // - destruct 3 tokens when return.
 
 
     token_init(&tok_op);
@@ -173,7 +175,6 @@ dentaku_calc_expr(Dentaku *dentaku, Token *tok_result, bool *done)
 
 
     /* calc */
-    d_printf("eval '%s %s %s'", tok_n.str, tok_op.str, tok_m.str);
     switch (*tok_op.str) {
     case '+': success = double2digit(d_n + d_m, &result); break;
     case '-': success = double2digit(d_n - d_m, &result); break;
@@ -189,19 +190,20 @@ dentaku_calc_expr(Dentaku *dentaku, Token *tok_result, bool *done)
     }
 
 
-    // free tokens.
-    token_destroy(&tok_m);
-    token_destroy(&tok_op);
-    token_destroy(&tok_n);
-
-
-    /* push result */
-    // XXX tok_result->str's length may not be MAX_TOK_CHAR_BUF.
+    // convert result token.
     if (! dtoa(&result, tok_result->str, MAX_TOK_CHAR_BUF, 10)) {
         WARN("can't convert digit to string");
         return false;
     }
     tok_result->type = TOK_DIGIT;
+
+
+    d_printf("eval '%s %s %s' => '%s'", tok_n.str, tok_op.str, tok_m.str, tok_result->str);
+
+    // free tokens.
+    token_destroy(&tok_m);
+    token_destroy(&tok_op);
+    token_destroy(&tok_n);
 
 
     return true;
@@ -219,6 +221,9 @@ dentaku_eval_expr(Dentaku *dentaku, bool *done_eval_expr)
     bool done_calc_expr;
     bool syntax_error;
     Token tok_top;
+
+    // debug
+    dentaku_show_stack(dentaku);
 
     *done_eval_expr = false;
 
@@ -563,6 +568,31 @@ dentaku_show_result(Dentaku *dentaku)
     Token *top = dentaku->cur_stack->top;
     if (top)
         puts(top->str);
+}
+
+
+// for debug and fun.
+void
+dentaku_show_stack(Dentaku *dentaku)
+{
+    Stack *stk = dentaku->cur_stack;
+    int stk_len = stk->cur_pos + 1;
+    Token *tokens = alloca(sizeof(Stack) * stk_len);
+    int i;
+
+    d_printf("show all stack...");
+
+    for (; stk->cur_pos >= 0; ) {
+        d_printf("  pop...  %d: [%s]", stk->cur_pos, ((Token*)stk->top)->str);
+        dentaku_stack_pop(dentaku, tokens + stk->cur_pos);
+    }
+
+    for (i = 0; i < stk_len; i++) {
+        // d_printf("  push...  %d: [%s]", i, tokens[i]);
+        dentaku_stack_push(dentaku, tokens + i);
+    }
+
+    fflush(stderr);
 }
 
 
