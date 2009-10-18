@@ -287,8 +287,10 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
 
 
         if (src == NULL || tok_top.type == TOK_RPAREN) {    // EOF or ')'
-            if (tok_top.type == TOK_RPAREN)
+            if (tok_top.type == TOK_RPAREN) {
+                token_destroy(stk->top);
                 dentaku_stack_pop(dentaku, NULL);
+            }
 
             while (1) {
                 dentaku_stack_pop(dentaku, &tok_m);
