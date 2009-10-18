@@ -320,6 +320,11 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
         else if (tok_top.type == TOK_OP) {    // '+', '-', '*', '/'
             dentaku_stack_push(dentaku, &tok_top);
 
+            // TODO
+            // - do '*' and '/' calculation when tok_top.type == TOK_DIGIT.
+            // no need to look ahead digit token here.
+            // - check also stack_(push|pop)'s return value.
+
             // postpone '+' and '-'.
             if (*tok_top.str == '*' || *tok_top.str == '/') {
                 token_init(&tok_top);
