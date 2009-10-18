@@ -80,7 +80,7 @@ dentaku_stack_push(Dentaku *dentaku, Token *tok)
  * calculate top 3 elems of stack.
  * result token is tok_result.
  */
-static bool
+bool
 dentaku_calc_op(Dentaku *dentaku, Token *tok_result, bool *done)
 {
     Token tok_op, tok_n, tok_m;
