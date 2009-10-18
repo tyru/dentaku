@@ -403,13 +403,10 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
 void
 dentaku_clear_stack(Dentaku *dentaku)
 {
-    Token *top = dentaku->cur_stack->top;
+    Stack *stk = dentaku->cur_stack;
 
-    while (dentaku->cur_stack->top) {
-        top = dentaku->cur_stack->top;
-        d_printf("pop! [%s]", top->str);
-
-        token_destroy(top);
+    while (stk->top) {
+        token_destroy(stk->top);
         dentaku_stack_pop(dentaku, NULL);
     }
 }
@@ -419,12 +416,8 @@ void
 dentaku_show_result(Dentaku *dentaku)
 {
     Token *top = dentaku->cur_stack->top;
-
-    if (top == NULL)
-        return;
-
-    // show result
-    puts(top->str);
+    if (top)
+        puts(top->str);
 }
 
 
