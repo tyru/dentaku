@@ -281,29 +281,23 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
 
         // TODO
         // - separate each case into static functions
-        // - wrap stack_push(), stack_pop()
 
 
         if (src == NULL || tok_top.type == TOK_RPAREN) {    // EOF or ')'
             while (1) {
-                memcpy(&tok_m, stk->top, sizeof tok_m);
-                stack_pop(stk);
-
+                dentaku_stack_pop(dentaku, &tok_m);
                 if (stk->top == NULL) {
                     dentaku_stack_push(dentaku, &tok_m);
                     return true;
                 }
 
-                memcpy(&tok_op, stk->top, sizeof tok_op);
-                stack_pop(stk);
-
+                dentaku_stack_pop(dentaku, &tok_op);
                 if (stk->top == NULL) {
                     WARN("reaching EOF where digit is expected");
                     return false;
                 }
 
-                memcpy(&tok_n, stk->top, sizeof tok_n);
-                stack_pop(stk);
+                dentaku_stack_pop(dentaku, &tok_n);
 
 
                 // tok_top is result.
@@ -317,7 +311,7 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
                 else {
                     if (((Token*)stk->top)->type == TOK_LPAREN) {    // pop if top is '('
                         token_destroy(stk->top);
-                        stack_pop(stk);
+                        dentaku_stack_pop(dentaku, NULL);
                     }
                     dentaku_stack_push(dentaku, &tok_top);
                 }
@@ -341,24 +335,19 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
                 switch (tok_top.type) {
                 case TOK_DIGIT:
                     // calculate if parser gets digit.
-                    memcpy(&tok_m, stk->top, sizeof tok_m);
-                    stack_pop(stk);
-
+                    dentaku_stack_pop(dentaku, &tok_m);
                     if (stk->top == NULL) {
                         dentaku_stack_push(dentaku, &tok_m);
                         return true;
                     }
 
-                    memcpy(&tok_op, stk->top, sizeof tok_op);
-                    stack_pop(stk);
-
+                    dentaku_stack_pop(dentaku, &tok_op);
                     if (stk->top == NULL) {
                         WARN("reaching EOF where digit is expected");
                         return false;
                     }
 
-                    memcpy(&tok_n, stk->top, sizeof tok_n);
-                    stack_pop(stk);
+                    dentaku_stack_pop(dentaku, &tok_n);
 
 
                     // tok_top is result.
@@ -421,7 +410,7 @@ dentaku_clear_stack(Dentaku *dentaku)
         d_printf("pop! [%s]", top->str);
 
         token_destroy(top);
-        stack_pop(dentaku->cur_stack);
+        dentaku_stack_pop(dentaku, NULL);
     }
 }
 
