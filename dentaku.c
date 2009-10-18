@@ -205,12 +205,12 @@ dentaku_calc_op(Dentaku *dentaku, Token *tok_result, bool *done)
 // get one token.
 // if this gets EOF, free top_tok.
 char*
-dentaku_get_token(Dentaku *dentaku, char *src, Token *top_tok)
+dentaku_get_token(Dentaku *dentaku, char *src, Token *top_tok, bool *error)
 {
     Stack *stk = dentaku->cur_stack;
     bool allow_signed = stk->top == NULL || ((Token*)stk->top)->type == TOK_LPAREN;
 
-    src = get_token(src, top_tok, allow_signed);
+    src = get_token(src, top_tok, allow_signed, error);
     if (src == NULL) {
         token_destroy(top_tok);
     }
@@ -303,6 +303,7 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
     Stack *stk = dentaku->cur_stack;
     Token tok_top;
     Token *old_tok_top;
+    bool syntax_error;
 
 
     while (1) {
@@ -310,8 +311,13 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
 
         token_init(&tok_top);
         token_alloc(&tok_top, MAX_TOK_CHAR_BUF);
-        src = dentaku_get_token(dentaku, src, &tok_top);
-        if (src == NULL) {
+        src = dentaku_get_token(dentaku, src, &tok_top, &syntax_error);
+
+        if (syntax_error) {
+            token_destroy(&tok_top);
+            return false;
+        }
+        else if (src == NULL) {
             token_destroy(&tok_top);
             if (stk->top == NULL)
                 // there are no tokens on stack, and parser gets EOF.
@@ -378,7 +384,12 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
                 // get and push digit token.
                 token_init(&tok_top);
                 token_alloc(&tok_top, MAX_TOK_CHAR_BUF);
-                src = dentaku_get_token(dentaku, src, &tok_top);
+                src = dentaku_get_token(dentaku, src, &tok_top, &syntax_error);
+
+                if (syntax_error) {
+                    token_destroy(&tok_top);
+                    return false;
+                }
                 if (src == NULL) {
                     token_destroy(&tok_top);
                     WARN("reaching EOF where expression is expected");

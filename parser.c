@@ -63,13 +63,18 @@ get_digit(char *src, char *buf, size_t maxsize)
 
 // if EOF: return NULL
 char*
-get_token(char *src, Token *tok, bool allow_signed)
+get_token(char *src, Token *tok, bool allow_signed, bool *error)
 {
     char *after_pos = NULL;
     char tok_buf[MAX_TOK_CHAR_BUF];
     char *sign_pos = NULL;
 
     d_printf("get_token()");
+
+
+    // set true when syntax error.
+    *error = false;
+
 
     if (src == NULL)
         return NULL;
@@ -151,9 +156,11 @@ get_token(char *src, Token *tok, bool allow_signed)
             break;
         }
 
-        // error
-        d_printf("[%c] [%s]", *src, src);
-        DIE("syntax error");
+        // syntax error
+        WARN3("syntax error near [%c]%s", *src, src + 1);
+
+        *error = true;
+        return NULL;
     }
 
     // allocate just token's length
