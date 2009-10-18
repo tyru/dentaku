@@ -64,8 +64,8 @@ dentaku_src_eof(Dentaku *dentaku);
 bool
 dentaku_calc_op(Dentaku *dentaku, Token *tok_result, bool *done);
 
-char*
-dentaku_get_token(Dentaku *dentaku, Token *top_tok, bool *error);
+Token*
+dentaku_get_token(Dentaku *dentaku, bool *error);
 
 
 
@@ -270,18 +270,32 @@ dentaku_calc_op(Dentaku *dentaku, Token *tok_result, bool *done)
 }
 
 
-// get one token.
-// if this gets EOF, free top_tok.
-char*
-dentaku_get_token(Dentaku *dentaku, Token *top_tok, bool *error)
+// get and return one token.
+// if EOF, return NULL.
+Token*
+dentaku_get_token(Dentaku *dentaku, bool *error)
 {
+    Token *tok;
     Stack *stk = dentaku->cur_stack;
     bool allow_signed = stk->top == NULL || ((Token*)stk->top)->type == TOK_LPAREN;
 
+    tok = malloc(sizeof(Token));
+    if (tok == NULL) {
+        DIE("can't allocate memory for new token.");
+    }
+
+    token_init(tok);
+    token_alloc(tok, MAX_TOK_CHAR_BUF);
+
     char *cur_pos = dentaku->src + dentaku->src_pos;
-    char *next_pos = get_token(cur_pos, top_tok, allow_signed, error);
+    char *next_pos = get_token(cur_pos, tok, allow_signed, error);
+
+    // advance dentaku->src_pos.
     if (next_pos == NULL) {
-        token_destroy(top_tok);
+        token_destroy(tok);
+        free(tok);
+        tok = NULL;
+
         dentaku->src_pos = dentaku->src_len;    // EOF
     }
     else {
@@ -289,7 +303,7 @@ dentaku_get_token(Dentaku *dentaku, Token *top_tok, bool *error)
         // d_printf("rest [%s]", next_pos);
     }
 
-    return next_pos;
+    return tok;
 }
 
 
@@ -406,9 +420,9 @@ dentaku_eval_src(Dentaku *dentaku)
 
 
     while (1) {
-        token_init(&tok_top);
-        token_alloc(&tok_top, MAX_TOK_CHAR_BUF);
-        dentaku_get_token(dentaku, &tok_top, &syntax_error);
+        Token *buf = dentaku_get_token(dentaku, &syntax_error);
+        if (buf)
+            memcpy(&tok_top, buf, sizeof tok_top);
 
         if (syntax_error) {
             return false;
@@ -489,9 +503,9 @@ dentaku_eval_src(Dentaku *dentaku)
             // postpone '+' and '-'.
             if (tok_top.str[0] == '*' || tok_top.str[0] == '/') {
                 // get and push digit token.
-                token_init(&tok_top);
-                token_alloc(&tok_top, MAX_TOK_CHAR_BUF);
-                dentaku_get_token(dentaku, &tok_top, &syntax_error);
+                Token *buf = dentaku_get_token(dentaku, &syntax_error);
+                if (buf)
+                    memcpy(&tok_top, buf, sizeof tok_top);
 
                 if (syntax_error) {
                     return false;
