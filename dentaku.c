@@ -476,10 +476,22 @@ dentaku_eval_src(Dentaku *dentaku)
                     token_destroy(&tok_top);
                     return false;
                 }
-                else if (done && dentaku_src_eof(dentaku)) {
-                    // calculation has been done.
-                    dentaku_stack_push(dentaku, &tok_top);
-                    return true;
+                else if (done) {
+                    Token *buf = dentaku_get_token(dentaku, &syntax_error);
+
+                    if (syntax_error) {    // buf must be NULL.
+                        token_destroy(&tok_top);
+                        return false;
+                    }
+                    else if (buf) {
+                        dentaku_stack_push(dentaku, &tok_top);
+                        dentaku_stack_push(dentaku, buf);
+                    }
+                    else {
+                        // no more tokens. calculation has been done.
+                        dentaku_stack_push(dentaku, &tok_top);
+                        return true;
+                    }
                 }
 
                 Token *top_tmp = stk->top;
@@ -530,10 +542,22 @@ dentaku_eval_src(Dentaku *dentaku)
                             token_destroy(&tok_top);
                             return false;
                         }
-                        else if (done && dentaku_src_eof(dentaku)) {
-                            // calculation has been done.
-                            dentaku_stack_push(dentaku, &tok_top);
-                            return true;
+                        else if (done) {
+                            Token *buf = dentaku_get_token(dentaku, &syntax_error);
+
+                            if (syntax_error) {    // buf must be NULL.
+                                token_destroy(&tok_top);
+                                return false;
+                            }
+                            else if (buf) {
+                                dentaku_stack_push(dentaku, &tok_top);
+                                dentaku_stack_push(dentaku, buf);
+                            }
+                            else {
+                                // no more tokens. calculation has been done.
+                                dentaku_stack_push(dentaku, &tok_top);
+                                return true;
+                            }
                         }
 
                         // Token *top_tmp = stk->top;
