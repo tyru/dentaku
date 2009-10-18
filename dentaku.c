@@ -526,11 +526,8 @@ int main(int argc, char *argv[])
     while (dentaku_read_src(d)) {
         if (dentaku_eval_src(d)) {
             dentaku_show_result(d);
-            dentaku_clear_stack(d);
         }
-        else {
-            dentaku_clear_stack(d);
-        }
+        dentaku_clear_stack(d);
     }
 
     dentaku_destroy(d);
