@@ -270,11 +270,11 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
         token_alloc(&tok_top, MAX_TOK_CHAR_BUF);
         src = dentaku_get_token(dentaku, src, &tok_top);
         if (src == NULL) {
+            token_destroy(&tok_top);
             if (stk->top == NULL)
                 // there are no tokens on stack, and parser gets EOF.
                 return false;
             else
-                // XXX why memcpy()? not but pointer assignment.
                 memcpy(&tok_top, stk->top, sizeof tok_top);
         }
         else {
@@ -352,6 +352,7 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
                 token_alloc(&tok_top, MAX_TOK_CHAR_BUF);
                 src = dentaku_get_token(dentaku, src, &tok_top);
                 if (src == NULL) {
+                    token_destroy(&tok_top);
                     WARN("reaching EOF where expression is expected");
                     return false;
                 }
