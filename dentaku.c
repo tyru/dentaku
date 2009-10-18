@@ -474,21 +474,22 @@ dentaku_eval_src(Dentaku *dentaku)
 
     while (1) {
         Token *buf = dentaku_get_token(dentaku, &syntax_error);
-        if (buf)
-            memcpy(&tok_top, buf, sizeof tok_top);
-
-        if (syntax_error) {
+        if (syntax_error) {    // buf must be NULL.
             return false;
         }
-        else if (dentaku_src_eof(dentaku)) {
+        else if (buf == NULL) {    // EOF
             if (stk->top == NULL)
-                // there are no tokens on stack, and parser gets EOF.
+                // return with no value
+                // if there are no tokens on stack, and parser gets EOF.
                 return false;
             else
+                // copy top token of stack to tok_top.
                 memcpy(&tok_top, stk->top, sizeof tok_top);
         }
         else {
-            dentaku_stack_push(dentaku, &tok_top);
+            // get new token.
+            dentaku_stack_push(dentaku, buf);
+            memcpy(&tok_top, buf, sizeof tok_top);
         }
         top_type = tok_top.type;
 
@@ -549,18 +550,24 @@ dentaku_eval_src(Dentaku *dentaku)
             // postpone '+' and '-'.
             if (tok_top.str[0] == '*' || tok_top.str[0] == '/') {
                 // get and push digit token.
-                Token *buf = dentaku_get_token(dentaku, &syntax_error);
-                if (buf)
+                if (syntax_error) {    // buf must be NULL.
+                    return false;
+                }
+                else if (buf == NULL) {    // EOF
+                    if (stk->top == NULL)
+                        // return with no value
+                        // if there are no tokens on stack, and parser gets EOF.
+                        return false;
+                    else
+                        // copy top token of stack to tok_top.
+                        memcpy(&tok_top, stk->top, sizeof tok_top);
+                }
+                else {
+                    // get new token.
+                    dentaku_stack_push(dentaku, buf);
                     memcpy(&tok_top, buf, sizeof tok_top);
-
-                if (syntax_error) {
-                    return false;
                 }
-                if (dentaku_src_eof(dentaku)) {
-                    WARN("reaching EOF where expression is expected");
-                    return false;
-                }
-                dentaku_stack_push(dentaku, &tok_top);
+                top_type = tok_top.type;
 
 
                 switch (tok_top.type) {
