@@ -13,8 +13,18 @@
  *   for allocating just token's characters length.
  *   (if capacity is a fewer than needed size, use realloc())
  * - replace 'destroy' with 'destruct'
- * - can use TOKEN_ALLOCA() only if 'USE_TOKEN_ALLOCA' is defined
  * - check also stack_(push|pop)'s return value.
+ * - delete XXX blocks
+ * - check more stack function's return value
+ * - what's last "(null)" on stack?
+ * - let Dentaku have jmp_buf's member to escape to main()
+ *   (if implemented by recursion)
+ * - make d_printf() print when dentaku->is_debug
+ * - rename MAX_IN_BUF
+ * - make dentaku.h
+ * - use tok_got to find out if eof
+ * - make dentaku_get_token() easy to find out if dentaku want to return to main() like dentaku_eval_expr()
+ * - is tok_got necessary?
  */
 
 
