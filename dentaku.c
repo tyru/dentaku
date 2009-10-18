@@ -302,6 +302,11 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
                 dentaku_stack_pop(dentaku, &tok_op);
                 if (stk->top == NULL) {
                     WARN("reaching EOF where digit is expected");
+
+                    // other token's will be destructed at dentaku_destroy().
+                    token_destroy(&tok_m);
+                    token_destroy(&tok_op);
+
                     return false;
                 }
 
@@ -309,10 +314,20 @@ dentaku_eval_src(Dentaku *dentaku, char *src)
 
 
                 // tok_top is result.
-                if (! dentaku_calc_op(dentaku, &tok_top, &tok_n, &tok_op, &tok_m))
-                    return false;
+                token_init(&tok_top);
+                token_alloc(&tok_top, MAX_TOK_CHAR_BUF);
+                bool success = dentaku_calc_op(dentaku, &tok_top, &tok_n, &tok_op, &tok_m);
 
-                if (stk->top == NULL) {
+                token_destroy(&tok_m);
+                token_destroy(&tok_op);
+                token_destroy(&tok_n);
+
+                if (! success) {
+                    token_destroy(&tok_top);
+                    return false;
+                }
+                else if (stk->top == NULL) {
+                    // XXX needs this block?
                     dentaku_stack_push(dentaku, &tok_top);
                     return true;
                 }
