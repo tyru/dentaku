@@ -12,6 +12,12 @@
 
 
 
+typedef enum {
+    ARG_RPN_NOP = 0,
+    ARG_RPN_TO_RPN,
+    ARG_RPN_FROM_RPN,
+} ArgRPN;
+
 
 typedef struct {
     Stack   *cur_stack;    // easier to access
@@ -24,6 +30,11 @@ typedef struct {
     char    *src;
     int     src_pos;
     int     src_len;
+
+    // for arguments
+    char    *arg_f;
+    ArgRPN  arg_rpn;
+    bool    debug;
 } Dentaku;
 
 
@@ -54,6 +65,16 @@ dentaku_alloc(Dentaku *dentaku, size_t stack_size);
 
 void
 dentaku_destroy(Dentaku *dentaku);
+
+
+
+void
+dentaku_exit(Dentaku *dentaku, int status);
+
+
+
+void
+dentaku_getopt(Dentaku *dentaku, int argc, char **argv);
 
 
 

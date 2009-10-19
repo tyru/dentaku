@@ -28,6 +28,9 @@
 #include "util.h"
 #include "parser.h"
 
+#define _GNU_SOURCE
+    #include <getopt.h>
+#undef _GNU_SOURCE
 
 
 
@@ -267,6 +270,14 @@ dentaku_init(Dentaku *dentaku)
     dentaku->src = NULL;
     dentaku->src_len = -1;
     dentaku->src_pos = -1;
+
+    // rec: recursion
+    // stk: stack
+    // cmp: compile and run
+    dentaku->arg_f = "stk";
+
+    dentaku->arg_rpn = ARG_RPN_NOP;
+    dentaku->debug = false;
 }
 
 
@@ -298,6 +309,64 @@ dentaku_destroy(Dentaku *dentaku)
     if (dentaku->src) {
         free(dentaku->src);
         dentaku->src = NULL;
+    }
+}
+
+
+void
+dentaku_exit(Dentaku *dentaku, int status)
+{
+    dentaku_destroy(dentaku);
+    exit(status);
+}
+
+
+
+static void
+show_usage()
+{
+    puts("");
+    printf("Usage: %s [OPTIONS] [--] [file]\n", DENTAKU_PROG_NAME);
+    puts("  --help              show this help");
+    puts("  --debug             show debug message");
+    puts("  --to-rpn            convert infix notation to RPN of input numerical expression");
+    puts("  --from-rpn          convert RPN to infix notation of input numerical expression");
+    puts("  -f [rec,stk,cmp]    change internal behavior until dentaku shows answer");
+    puts("");
+}
+
+void
+dentaku_getopt(Dentaku *dentaku, int argc, char **argv)
+{
+    static const struct option long_opts[] = {
+        {"help", 0, NULL, 'h'},
+        {"debug", 0, NULL, 'd'},
+        {"to-rpn", 0, NULL, 0},    // TODO
+        {"from-rpn", 0, NULL, 0},    // TODO
+        {0, 0, 0, 0}
+    };
+    int opt_index = 0;
+    int c;
+
+    extern char *optarg;
+    extern int optind, opterr, optopt;
+
+    while ((c = getopt_long(argc, argv, "hdf:", long_opts, &opt_index)) != -1) {
+        switch (c) {
+            case 'd':
+                dentaku->debug = true;
+                break;
+
+            case 'f':
+                dentaku->arg_f = optarg;
+
+            case 'h':
+                show_usage();
+                dentaku_exit(dentaku, EXIT_SUCCESS);
+            case '?':
+                show_usage();
+                dentaku_exit(dentaku, EXIT_FAILURE);
+        }
     }
 }
 

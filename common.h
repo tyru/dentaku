@@ -21,7 +21,9 @@
 
 
 
-#define PROMPT_STR  "=> "
+#define PROMPT_STR          "=> "
+#define DENTAKU_PROG_NAME   "dentaku"
+
 #define MAX_IN_BUF          1024
 #define MAX_TOK_CHAR_BUF    32
 #define MAX_STACK_SIZE      128
