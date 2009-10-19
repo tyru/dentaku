@@ -36,6 +36,61 @@
 
 
 
+
+
+// for debug and fun.
+void
+dentaku_show_stack(Dentaku *dentaku)
+{
+    Stack *stk = dentaku->cur_stack;
+    int stk_len = stk->cur_pos + 1;
+    Token *tokens = alloca(sizeof(Stack) * stk_len);
+    int i;
+
+    if (! dentaku->debug)
+        return;
+
+    dentaku_printf_d(dentaku, "show all stack...");
+    if (stk->cur_pos < 0) {
+        dentaku_printf_d(dentaku, "  ...no tokens on stack.");
+        return;
+    }
+
+    for (; stk->cur_pos >= 0; ) {
+        dentaku_printf_d(dentaku, "  pop...  %d: [%s]", stk->cur_pos, ((Token*)stk->top)->str);
+        dentaku_stack_pop(dentaku, tokens + stk->cur_pos);
+    }
+
+    for (i = 0; i < stk_len; i++) {
+        dentaku_stack_push(dentaku, tokens + i);
+    }
+
+    fflush(stderr);
+}
+
+
+void
+dentaku_printf_d(Dentaku *dentaku, const char *fmt, ...)
+{
+    va_list ap;
+
+    if (! dentaku->debug)
+        return;
+
+    fputs("[debug]::", stderr);
+
+    va_start(ap, fmt);
+    vfprintf(stderr, fmt, ap);
+    va_end(ap);
+
+    fputc('\n', stderr);
+    fflush(stderr);
+}
+
+
+
+
+
 // this is function to
 // - copy popped token to tok.
 // - print debug message
@@ -650,56 +705,3 @@ dentaku_main(Dentaku *dentaku)
     dentaku_destroy(dentaku);
     return EXIT_SUCCESS;
 }
-
-
-
-
-// for debug and fun.
-void
-dentaku_show_stack(Dentaku *dentaku)
-{
-    Stack *stk = dentaku->cur_stack;
-    int stk_len = stk->cur_pos + 1;
-    Token *tokens = alloca(sizeof(Stack) * stk_len);
-    int i;
-
-    if (! dentaku->debug)
-        return;
-
-    dentaku_printf_d(dentaku, "show all stack...");
-    if (stk->cur_pos < 0) {
-        dentaku_printf_d(dentaku, "  ...no tokens on stack.");
-        return;
-    }
-
-    for (; stk->cur_pos >= 0; ) {
-        dentaku_printf_d(dentaku, "  pop...  %d: [%s]", stk->cur_pos, ((Token*)stk->top)->str);
-        dentaku_stack_pop(dentaku, tokens + stk->cur_pos);
-    }
-
-    for (i = 0; i < stk_len; i++) {
-        dentaku_stack_push(dentaku, tokens + i);
-    }
-
-    fflush(stderr);
-}
-
-
-void
-dentaku_printf_d(Dentaku *dentaku, const char *fmt, ...)
-{
-    va_list ap;
-
-    if (! dentaku->debug)
-        return;
-
-    fputs("[debug]::", stderr);
-
-    va_start(ap, fmt);
-    vfprintf(stderr, fmt, ap);
-    va_end(ap);
-
-    fputc('\n', stderr);
-    fflush(stderr);
-}
-

@@ -40,6 +40,16 @@ typedef struct {
 
 
 
+
+void
+dentaku_show_stack(Dentaku *dentaku);
+
+void
+dentaku_printf_d(Dentaku *dentaku, const char *fmt, ...);
+
+
+
+
 stack_ret
 dentaku_stack_pop(Dentaku *dentaku, Token *tok);
 
@@ -92,14 +102,6 @@ dentaku_show_result(Dentaku *dentaku);
 
 int
 dentaku_main(Dentaku *dentaku);
-
-
-
-void
-dentaku_show_stack(Dentaku *dentaku);
-
-void
-dentaku_printf_d(Dentaku *dentaku, const char *fmt, ...);
 
 
 #endif /* DENTAKU_H */
