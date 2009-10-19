@@ -31,6 +31,8 @@ warn(int line, const char *fmt, ...)
 {
     va_list ap;
 
+    UNUSED(line);
+
     fputs("[warning]::", stderr);
 
     va_start(ap, fmt);

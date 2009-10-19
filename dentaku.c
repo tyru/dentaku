@@ -390,12 +390,15 @@ dentaku_read_src(Dentaku *dentaku)
         size_t read_size = fread(buf, 1, MAX_IN_BUF, dentaku->f_in);
 
         // TODO
-        if (feof(dentaku->f_in))
+        if (feof(dentaku->f_in)) {
             ;
-        else if (ferror(dentaku->f_in))
+        }
+        else if (ferror(dentaku->f_in)) {
             ;
-        else if (read_size < MAX_IN_BUF)
+        }
+        else if (read_size < MAX_IN_BUF) {
             ;
+        }
     }
 
     strncpy(dentaku->src, buf, MAX_IN_BUF);
