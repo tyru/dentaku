@@ -18,6 +18,7 @@
  * - add Stack of jmp_buf to Dentaku. for escaping to main().
  * - rename MAX_IN_BUF
  * - DIE() and WARN() should pass filename to function
+ * - move utility functions to util.h
  */
 
 
@@ -32,6 +33,7 @@
 #undef _GNU_SOURCE
 
 #include <stdarg.h>
+#include <unistd.h>
 
 
 
@@ -429,6 +431,9 @@ dentaku_getopt(Dentaku *dentaku, int argc, char **argv)
                 dentaku_exit(dentaku, EXIT_FAILURE);
         }
     }
+
+
+    // TODO get filename and set to dentaku->f_in, dentaku->f_out, dentaku->f_err.
 }
 
 
@@ -438,28 +443,26 @@ bool
 dentaku_read_src(Dentaku *dentaku)
 {
     char buf[MAX_IN_BUF];
-    dentaku_printf_d(dentaku, "dentaku_read_src()");
+    size_t read_size;
 
-    if (fileno(dentaku->f_in) == fileno(stdin)) {
+    if (fileno(dentaku->f_in) == fileno(stdin) && isatty(0)) {
         fputs(PROMPT_STR, dentaku->f_out);
         // read each line
         if (fgets(buf, MAX_IN_BUF, dentaku->f_in) == NULL)
             return false;
     }
     else {
-        // stream
-        size_t read_size = fread(buf, 1, MAX_IN_BUF, dentaku->f_in);
+        memset(buf, 0, MAX_IN_BUF);
 
-        // TODO
-        if (feof(dentaku->f_in)) {
-            ;
-        }
-        else if (ferror(dentaku->f_in)) {
-            ;
-        }
-        else if (read_size < MAX_IN_BUF) {
-            ;
-        }
+        do {
+            // TODO when length > MAX_IN_BUF
+            read_size = fread(buf, 1, MAX_IN_BUF, dentaku->f_in);
+
+            if (ferror(dentaku->f_in)) {
+                perror("fread");
+                dentaku_exit(dentaku, EXIT_FAILURE);
+            }
+        } while (! (feof(dentaku->f_in) || read_size < MAX_IN_BUF));
     }
 
     strncpy(dentaku->src, buf, MAX_IN_BUF);
@@ -468,6 +471,8 @@ dentaku_read_src(Dentaku *dentaku)
     dentaku->src_len = strlen(dentaku->src);
     dentaku->src_pos = 0;
 
+    if (feof(dentaku->f_in) && dentaku->src_len == 0)
+        return false;
     return true;
 }
 
