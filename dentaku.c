@@ -369,7 +369,7 @@ dentaku_eval_src(Dentaku *dentaku)
 {
     Stack *stk = dentaku->cur_stack;
     Token tok_top, *tok_got;
-    bool new_token, no_op;
+    bool new_token, no_op, added_mul = false;
 
 
     while (1) {
@@ -405,7 +405,7 @@ dentaku_eval_src(Dentaku *dentaku)
 
                 Token *top_buf = stk->top;
                 if (top_buf == NULL) {
-                    if (top_type == TOK_RPAREN) {
+                    if (top_type == TOK_RPAREN && ! added_mul) {
                         // token was ')' at first, but got EOF.
                         token_destroy(result);
                         WARN("extra close parenthesis");
@@ -439,20 +439,44 @@ dentaku_eval_src(Dentaku *dentaku)
                     top_buf = stk->top;
                     bool mul_or_div = top_buf && (top_buf->str[0] == '*'
                                                || top_buf->str[0] == '/');
+                    bool is_digit = top_buf && top_buf->type == TOK_DIGIT;
 
-                    dentaku_stack_push(dentaku, result);
-
-                    if (top_buf == NULL && dentaku_src_eof(dentaku))
+                    if (top_buf == NULL && dentaku_src_eof(dentaku)) {
                         // end.
+                        dentaku_stack_push(dentaku, result);
                         return true;
-                    if (top_type == TOK_RPAREN && mul_or_div) {
-                        // I have already gotten correspond '('.
-                        // set this value for above's if block. see it.
-                        top_type = TOK_UNDEF;
+                    }
+                    if (top_type == TOK_RPAREN && is_digit) {
+                        Token tok_mul;
+                        token_init(&tok_mul);
+                        token_alloc(&tok_mul, MAX_TOK_CHAR_BUF);
+                        strncpy(tok_mul.str, "*", 2);
+                        tok_mul.type = TOK_OP;
+
+                        // push "*"
+                        d_printf("add '*' between '(...)' and '(...)'");
+                        dentaku_stack_push(dentaku, &tok_mul);
+                        // push result.
+                        dentaku_stack_push(dentaku, result);
+
+                        // forbid empty stack with top_type == TOK_RPAREN.
+                        // because '1+2)' is not valid expression.
+                        // set this value to through the checking.
+                        added_mul = true;
+
                         continue;
                     }
-                    else
+                    if (top_type == TOK_RPAREN && mul_or_div) {
+                        // same as above.
+                        added_mul = true;
+
+                        dentaku_stack_push(dentaku, result);
+                        continue;
+                    }
+                    else {
+                        dentaku_stack_push(dentaku, result);
                         break;
+                    }
                 }
 
                 // push for next operator.
