@@ -356,9 +356,7 @@ dentaku_alloc(Dentaku *dentaku, size_t stack_size)
 {
     d_printf("allocating dentaku...");
 
-    // allocate Token's stack
-    stack_ret ret = stack_init(dentaku->cur_stack, stack_size, sizeof(Token));
-    if (ret != STACK_SUCCESS) {
+    if (stack_init(dentaku->cur_stack, stack_size, sizeof(Token)) != STACK_SUCCESS) {
         DIE("failed to initialize stack");
     }
 
@@ -393,8 +391,6 @@ dentaku_read_src(Dentaku *dentaku)
     char buf[MAX_IN_BUF];
     d_printf("dentaku_read_src()");
 
-    buf[0] = '\0';
-
     if (fileno(dentaku->f_in) == fileno(stdin)) {
         fputs(PROMPT_STR, dentaku->f_out);
         // read each line
@@ -402,6 +398,16 @@ dentaku_read_src(Dentaku *dentaku)
             return false;
     }
     else {
+        // stream
+        size_t read_size = fread(buf, 1, MAX_IN_BUF, dentaku->f_in);
+
+        // TODO
+        if (feof(dentaku->f_in))
+            ;
+        else if (ferror(dentaku->f_in))
+            ;
+        else if (read_size < MAX_IN_BUF)
+            ;
     }
 
     strncpy(dentaku->src, buf, MAX_IN_BUF);
