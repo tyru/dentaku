@@ -638,6 +638,20 @@ dentaku_show_result(Dentaku *dentaku)
 }
 
 
+int
+dentaku_main(Dentaku *dentaku)
+{
+    while (dentaku_read_src(dentaku)) {
+        if (dentaku_eval_src(dentaku)) {
+            dentaku_show_result(dentaku);
+        }
+        dentaku_clear_stack(dentaku);
+    }
+    dentaku_destroy(dentaku);
+    return EXIT_SUCCESS;
+}
+
+
 
 
 // for debug and fun.

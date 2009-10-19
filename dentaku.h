@@ -90,6 +90,11 @@ dentaku_clear_stack(Dentaku *dentaku);
 void
 dentaku_show_result(Dentaku *dentaku);
 
+int
+dentaku_main(Dentaku *dentaku);
+
+
+
 void
 dentaku_show_stack(Dentaku *dentaku);
 
