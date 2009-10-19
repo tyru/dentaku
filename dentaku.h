@@ -5,14 +5,8 @@
 
 #include "common.h"
 
-#include "util.h"
 #include "token.h"
-#include "parser.h"
-
 #include "mylib/stack.h"
-
-
-#include <stdarg.h>
 
 
 
