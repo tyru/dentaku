@@ -23,7 +23,7 @@
  * - rename MAX_IN_BUF
  * - make dentaku.h
  * - use tok_got to find out if eof
- * - make dentaku_get_token() easy to find out if dentaku want to return to main() like dentaku_eval_expr()
+ * - make dentaku_get_token() easy to find out if dentaku want to return to main() like dentaku_calc_expr()
  * - is tok_got necessary?
  */
 
@@ -75,11 +75,14 @@ dentaku_src_eof(Dentaku *dentaku)
 /*
  * calculate top 3 elems of stack.
  * result token is tok_result.
+ *
+ * return result of token.
+ * if return value is NULL: error occured
  */
-bool
-dentaku_calc_expr(Dentaku *dentaku, Token *tok_result, bool *done)
+Token*
+dentaku_calc_expr(Dentaku *dentaku, bool *no_op)
 {
-    Token tok_op, tok_n, tok_m;
+    Token tok_op, tok_n, tok_m, *tok_result;
     Digit n, m, result;
     double d_n, d_m;
     bool success;
@@ -89,13 +92,19 @@ dentaku_calc_expr(Dentaku *dentaku, Token *tok_result, bool *done)
     // - check also stack function's return value.
     // - destruct 3 tokens when return.
 
+    d_printf("before calculation");
+    dentaku_show_stack(dentaku);
+
+    *no_op = false;
 
     token_init(&tok_op);
     token_init(&tok_n);
     token_init(&tok_m);
 
-    *done = false;
-
+    tok_result = malloc(sizeof(Token));
+    if (tok_result == NULL) {
+        DIE("can't allocate memory for result token!");
+    }
     if (stk->top == NULL) {
         // NOTE: don't call when top is NULL!!
         DIE("wtf?");
@@ -109,12 +118,9 @@ dentaku_calc_expr(Dentaku *dentaku, Token *tok_result, bool *done)
 
     if (stk->top == NULL) {
         // no more tokens on stack. calculation has been done.
-        strncpy(tok_result->str, tok_m.str, MAX_TOK_CHAR_BUF);
-        tok_result->type = tok_m.type;
-        token_destroy(&tok_m);
-
-        *done = true;
-        return true;
+        memcpy(tok_result, &tok_m, sizeof(Token));
+        *no_op = true;
+        return tok_result;
     }
 
 
@@ -130,18 +136,13 @@ dentaku_calc_expr(Dentaku *dentaku, Token *tok_result, bool *done)
         token_destroy(&tok_m);
         token_destroy(&tok_op);
 
-        return false;
+        return NULL;
     }
 
 
     // 3rd. pop 'n' of expression 'n <op> m'.
     token_alloc(&tok_n, MAX_TOK_CHAR_BUF);
     dentaku_stack_pop(dentaku, &tok_n);
-
-    // back to main() after this calculation.
-    if (stk->top == NULL) {
-        *done = true;
-    }
 
 
     /* check each token's type */
@@ -151,20 +152,20 @@ dentaku_calc_expr(Dentaku *dentaku, Token *tok_result, bool *done)
     {
         WARN4("expression '%s %s %s' is invalid",
                 tok_n.str, tok_op.str, tok_m.str);
-        return false;
+        return NULL;
     }
 
 
     /* convert */
     if (! atod(tok_n.str, &n, 10)) {
         WARN2("can't convert '%s' to digit", tok_n.str);
-        return false;
+        return NULL;
     }
     d_n = digit2double(&n);
 
     if (! atod(tok_m.str, &m, 10)) {
         WARN2("can't convert '%s' to digit", tok_m.str);
-        return false;
+        return NULL;
     }
     d_m = (double)m.i + m.d;
 
@@ -177,18 +178,20 @@ dentaku_calc_expr(Dentaku *dentaku, Token *tok_result, bool *done)
     case '/': success = double2digit(d_n / d_m, &result); break;
     default:
         WARN2("unknown op '%s'", tok_op.str);
-        return false;
+        return NULL;
     }
     if (! success) {
         WARN("failed to convert double to digit");
-        return false;
+        return NULL;
     }
 
 
-    // convert result token.
+    /* convert result token */
+    token_init(tok_result);
+    token_alloc(tok_result, MAX_TOK_CHAR_BUF);
     if (! dtoa(&result, tok_result->str, MAX_TOK_CHAR_BUF, 10)) {
         WARN("can't convert digit to string");
-        return false;
+        return NULL;
     }
     tok_result->type = TOK_DIGIT;
 
@@ -201,61 +204,7 @@ dentaku_calc_expr(Dentaku *dentaku, Token *tok_result, bool *done)
     token_destroy(&tok_n);
 
 
-    return true;
-}
-
-
-// return true on success.
-// return false on failure.
-//
-// if return value is true,
-// result is pushed to top of stack.
-bool
-dentaku_eval_expr(Dentaku *dentaku, bool *done_eval_expr)
-{
-    bool done_calc_expr;
-    bool new_token;
-    Token tok_top;
-
-    // debug
-    dentaku_show_stack(dentaku);
-
-    *done_eval_expr = false;
-
-    token_init(&tok_top);
-    token_alloc(&tok_top, MAX_TOK_CHAR_BUF);
-
-
-    // tok_top is result.
-    if (! dentaku_calc_expr(dentaku, &tok_top, &done_calc_expr)) {
-        // error.
-        token_destroy(&tok_top);
-        return false;
-    }
-    else if (done_calc_expr) {
-        Token *buf;
-        if ((buf = dentaku_get_token(dentaku, &new_token)) == NULL) {
-            // error
-            token_destroy(&tok_top);
-            return false;
-        }
-        else if (new_token) {
-            dentaku_stack_push(dentaku, &tok_top);
-            dentaku_stack_push(dentaku, buf);
-            // return and continue calculating...
-        }
-        else {
-            // no more tokens. calculation has been done.
-            dentaku_stack_push(dentaku, &tok_top);
-            *done_eval_expr = true;
-            return true;
-        }
-    }
-    else {
-        dentaku_stack_push(dentaku, &tok_top);
-    }
-
-    return true;
+    return tok_result;
 }
 
 
@@ -272,9 +221,8 @@ dentaku_get_token(Dentaku *dentaku, bool *got_new_token)
     *got_new_token = false;
 
     tok = malloc(sizeof(Token));
-    if (tok == NULL) {
-        DIE("can't allocate memory for new token.");
-    }
+    if (tok == NULL)
+        DIE("can't allocate memory for new token!");
 
     token_init(tok);
     token_alloc(tok, MAX_TOK_CHAR_BUF);
@@ -421,8 +369,7 @@ dentaku_eval_src(Dentaku *dentaku)
 {
     Stack *stk = dentaku->cur_stack;
     Token tok_top, *tok_got;
-    bool new_token;
-    bool done_calc;
+    bool new_token, no_op;
 
 
     while (1) {
@@ -430,12 +377,11 @@ dentaku_eval_src(Dentaku *dentaku)
             // couldn't get token.
             return false;
 
-        if (new_token){
+        if (new_token) {
             // push new token.
             dentaku_stack_push(dentaku, tok_got);
         }
         memcpy(&tok_top, tok_got, sizeof tok_top);
-
 
         if (dentaku_src_eof(dentaku) || tok_top.type == TOK_RPAREN) {    // EOF or ')'
             TokenType top_type;
@@ -448,25 +394,37 @@ dentaku_eval_src(Dentaku *dentaku)
             else
                 top_type = TOK_UNDEF;
 
+            // calculate until expression becomes 1 token
+            // or top is correspond '(' and next is neither '*' nor '/'.
             while (1) {
-                if (! dentaku_eval_expr(dentaku, &done_calc))
+                Token *result;
+                if ((result = dentaku_calc_expr(dentaku, &no_op)) == NULL)
                     return false;
-                else if (done_calc) {
-                    // I have not gotten correspond '('.
-                    WARN("extra close parenthesis");
-                    return false;
-                }
+                d_printf("after calculation");
+                dentaku_show_stack(dentaku);
 
-                // stash result's digit.
-                dentaku_stack_pop(dentaku, &tok_top);
-
-                if (stk->top == NULL) {
-                    DIE("why done_calc is not set?");
-                }
                 Token *top_buf = stk->top;
-                if (top_buf->type == TOK_LPAREN) {
+                if (top_buf == NULL) {
+                    if (top_type == TOK_RPAREN) {
+                        // token was ')' at first, but got EOF.
+                        token_destroy(result);
+                        WARN("extra close parenthesis");
+                        return false;
+                    }
+                    dentaku_stack_push(dentaku, result);
+
+                    if (dentaku_src_eof(dentaku))
+                        // end.
+                        return true;
+                    else
+                        // no more tokens on stack.
+                        // so I will get tokens from dentaku->src.
+                        break;
+                }
+                else if (top_buf->type == TOK_LPAREN) {
                     if (top_type == TOK_UNDEF) {
-                        token_destroy(&tok_top);
+                        // token was EOF at first, but got '('.
+                        token_destroy(result);
                         WARN("extra open parenthesis");
                         return false;
                     }
@@ -475,21 +433,30 @@ dentaku_eval_src(Dentaku *dentaku)
                     token_destroy(stk->top);
                     dentaku_stack_pop(dentaku, NULL);
 
+                    // unless top is '*' or '/',
                     // finish calculation of one expression in parenthesis.
-                    // unless top is '*' or '/'.
+                    // because I got correspond '('.
                     top_buf = stk->top;
                     bool mul_or_div = top_buf && (top_buf->str[0] == '*'
-                                            || top_buf->str[0] == '/');
+                                               || top_buf->str[0] == '/');
 
-                    // restore digit.
-                    dentaku_stack_push(dentaku, &tok_top);
+                    dentaku_stack_push(dentaku, result);
 
-                    if (! (top_type == TOK_RPAREN && mul_or_div))
+                    if (top_buf == NULL && dentaku_src_eof(dentaku))
+                        // end.
+                        return true;
+                    if (top_type == TOK_RPAREN && mul_or_div) {
+                        // I have already gotten correspond '('.
+                        // set this value for above's if block. see it.
+                        top_type = TOK_UNDEF;
+                        continue;
+                    }
+                    else
                         break;
                 }
 
-                // restore digit.
-                dentaku_stack_push(dentaku, &tok_top);
+                // push for next operator.
+                dentaku_stack_push(dentaku, result);
             }
         }
         else if (tok_top.type == TOK_OP) {    // '+', '-', '*', '/'
@@ -509,11 +476,14 @@ dentaku_eval_src(Dentaku *dentaku)
 
                 switch (tok_top.type) {
                 case TOK_DIGIT:
-                    if (! dentaku_eval_expr(dentaku, &done_calc))
-                        return false;
-                    if (done_calc)
-                        return true;
-
+                    {
+                        Token *result;
+                        if ((result = dentaku_calc_expr(dentaku, &no_op)) == NULL)
+                            return false;
+                        dentaku_stack_push(dentaku, result);
+                        if (no_op)
+                            return true;
+                    }
                     break;
 
                 // syntax checking
@@ -579,6 +549,10 @@ dentaku_show_stack(Dentaku *dentaku)
     int i;
 
     d_printf("show all stack...");
+    if (stk->cur_pos < 0) {
+        d_printf("  ...no tokens on stack.");
+        return;
+    }
 
     for (; stk->cur_pos >= 0; ) {
         d_printf("  pop...  %d: [%s]", stk->cur_pos, ((Token*)stk->top)->str);
