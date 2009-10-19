@@ -5,9 +5,6 @@
 
 
 
-void
-d_printf(const char *fmt, ...);
-
 
 #define WARN(msg)           warn(__LINE__, msg)
 #define WARN2(msg, arg1)    warn(__LINE__, msg, arg1)

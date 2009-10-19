@@ -16,9 +16,8 @@
  * - check also stack_(push|pop)'s return value.
  * - check more stack function's return value
  * - add Stack of jmp_buf to Dentaku. for escaping to main().
- * - rename d_printf() dentaku_printf_d().
- *   make d_printf() print when dentaku->is_debug
  * - rename MAX_IN_BUF
+ * - DIE() and WARN() should pass filename to function
  */
 
 
@@ -31,6 +30,9 @@
 #define _GNU_SOURCE
     #include <getopt.h>
 #undef _GNU_SOURCE
+
+#include <stdarg.h>
+
 
 
 
@@ -45,7 +47,7 @@ dentaku_stack_pop(Dentaku *dentaku, Token *tok)
     if (tok)
         memcpy(tok, stk->top, sizeof(Token));
 
-    // d_printf("pop! [%s]", tok->str);
+    // dentaku_printf_d(dentaku, "pop! [%s]", tok->str);
     return stack_pop(stk);
 }
 
@@ -53,7 +55,7 @@ dentaku_stack_pop(Dentaku *dentaku, Token *tok)
 stack_ret
 dentaku_stack_push(Dentaku *dentaku, Token *tok)
 {
-    // d_printf("push! [%s]", tok->str);
+    // dentaku_printf_d(dentaku, "push! [%s]", tok->str);
     return stack_push(dentaku->cur_stack, tok);
 }
 
@@ -89,8 +91,10 @@ dentaku_calc_expr(Dentaku *dentaku, bool *no_op)
     // - check also stack function's return value.
     // - destruct 3 tokens when return.
 
-    d_printf("before calculation");
-    dentaku_show_stack(dentaku);
+    if (dentaku->debug) {
+        dentaku_printf_d(dentaku, "before calculation");
+        dentaku_show_stack(dentaku);
+    }
 
     *no_op = false;
 
@@ -104,7 +108,7 @@ dentaku_calc_expr(Dentaku *dentaku, bool *no_op)
     }
     if (stk->top == NULL) {
         // NOTE: don't call when top is NULL!!
-        DIE("wtf?");
+        DIE("internal error");
     }
 
 
@@ -193,7 +197,7 @@ dentaku_calc_expr(Dentaku *dentaku, bool *no_op)
     tok_result->type = TOK_DIGIT;
 
 
-    d_printf("eval '%s %s %s' => '%s'", tok_n.str, tok_op.str, tok_m.str, tok_result->str);
+    dentaku_printf_d(dentaku, "eval '%s %s %s' => '%s'", tok_n.str, tok_op.str, tok_m.str, tok_result->str);
 
     // free tokens.
     token_destroy(&tok_m);
@@ -245,6 +249,8 @@ dentaku_get_token(Dentaku *dentaku, bool *got_new_token)
             return stk->top;
     }
     else {
+        dentaku_printf_d(dentaku, "got! [%s]", tok->str);
+
         dentaku->src_pos += next_pos - cur_pos;
         *got_new_token = true;
         return tok;
@@ -260,7 +266,7 @@ dentaku_get_token(Dentaku *dentaku, bool *got_new_token)
 void
 dentaku_init(Dentaku *dentaku)
 {
-    d_printf("initializing dentaku...");
+    dentaku_printf_d(dentaku, "initializing dentaku...");
 
     dentaku->cur_stack = &dentaku->cur_stack__;
     dentaku->f_in  = stdin;
@@ -284,7 +290,7 @@ dentaku_init(Dentaku *dentaku)
 void
 dentaku_alloc(Dentaku *dentaku, size_t stack_size)
 {
-    d_printf("allocating dentaku...");
+    dentaku_printf_d(dentaku, "allocating dentaku...");
 
     if (stack_init(dentaku->cur_stack, stack_size, sizeof(Token)) != STACK_SUCCESS) {
         DIE("failed to initialize stack");
@@ -300,7 +306,7 @@ dentaku_alloc(Dentaku *dentaku, size_t stack_size)
 void
 dentaku_destroy(Dentaku *dentaku)
 {
-    d_printf("destroying dentaku...");
+    dentaku_printf_d(dentaku, "destroying dentaku...");
 
     dentaku_clear_stack(dentaku);
     if (stack_destruct(dentaku->cur_stack) != STACK_SUCCESS)
@@ -377,7 +383,7 @@ bool
 dentaku_read_src(Dentaku *dentaku)
 {
     char buf[MAX_IN_BUF];
-    d_printf("dentaku_read_src()");
+    dentaku_printf_d(dentaku, "dentaku_read_src()");
 
     if (fileno(dentaku->f_in) == fileno(stdin)) {
         fputs(PROMPT_STR, dentaku->f_out);
@@ -402,7 +408,7 @@ dentaku_read_src(Dentaku *dentaku)
     }
 
     strncpy(dentaku->src, buf, MAX_IN_BUF);
-    d_printf("read! [%s]", dentaku->src);
+    dentaku_printf_d(dentaku, "read! [%s]", dentaku->src);
 
     dentaku->src_len = strlen(dentaku->src);
     dentaku->src_pos = 0;
@@ -466,8 +472,11 @@ dentaku_eval_src(Dentaku *dentaku)
                 Token *result;
                 if ((result = dentaku_calc_expr(dentaku, &no_op)) == NULL)
                     return false;
-                d_printf("after calculation");
-                dentaku_show_stack(dentaku);
+
+                if (dentaku->debug) {
+                    dentaku_printf_d(dentaku, "after calculation");
+                    dentaku_show_stack(dentaku);
+                }
 
                 Token *top_buf = stk->top;
                 if (top_buf == NULL) {
@@ -520,7 +529,7 @@ dentaku_eval_src(Dentaku *dentaku)
                         tok_mul.type = TOK_OP;
 
                         // push "*"
-                        d_printf("add '*' between '(...)' and '(...)'");
+                        dentaku_printf_d(dentaku, "add '*' between '(...)' and '(...)'");
                         dentaku_stack_push(dentaku, &tok_mul);
                         // push result.
                         dentaku_stack_push(dentaku, result);
@@ -629,6 +638,8 @@ dentaku_show_result(Dentaku *dentaku)
 }
 
 
+
+
 // for debug and fun.
 void
 dentaku_show_stack(Dentaku *dentaku)
@@ -638,23 +649,43 @@ dentaku_show_stack(Dentaku *dentaku)
     Token *tokens = alloca(sizeof(Stack) * stk_len);
     int i;
 
-    d_printf("show all stack...");
+    if (! dentaku->debug)
+        return;
+
+    dentaku_printf_d(dentaku, "show all stack...");
     if (stk->cur_pos < 0) {
-        d_printf("  ...no tokens on stack.");
+        dentaku_printf_d(dentaku, "  ...no tokens on stack.");
         return;
     }
 
     for (; stk->cur_pos >= 0; ) {
-        d_printf("  pop...  %d: [%s]", stk->cur_pos, ((Token*)stk->top)->str);
+        dentaku_printf_d(dentaku, "  pop...  %d: [%s]", stk->cur_pos, ((Token*)stk->top)->str);
         dentaku_stack_pop(dentaku, tokens + stk->cur_pos);
     }
 
     for (i = 0; i < stk_len; i++) {
-        // d_printf("  push...  %d: [%s]", i, tokens[i]);
         dentaku_stack_push(dentaku, tokens + i);
     }
 
     fflush(stderr);
 }
 
+
+void
+dentaku_printf_d(Dentaku *dentaku, const char *fmt, ...)
+{
+    va_list ap;
+
+    if (! dentaku->debug)
+        return;
+
+    fputs("[debug]::", stderr);
+
+    va_start(ap, fmt);
+    vfprintf(stderr, fmt, ap);
+    va_end(ap);
+
+    fputc('\n', stderr);
+    fflush(stderr);
+}
 

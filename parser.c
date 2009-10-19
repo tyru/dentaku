@@ -69,8 +69,6 @@ get_token(char *src, Token *tok, bool allow_signed, bool *error)
     char tok_buf[MAX_TOK_CHAR_BUF];
     char *sign_pos = NULL;
 
-    d_printf("get_token()");
-
 
     // set true when syntax error.
     *error = false;
@@ -81,7 +79,6 @@ get_token(char *src, Token *tok, bool allow_signed, bool *error)
 
     char *incl_src = skip_space(src);
     if (incl_src == NULL) {
-        d_printf("token - EOF");
         return NULL;
     }
     src = incl_src;
@@ -89,7 +86,6 @@ get_token(char *src, Token *tok, bool allow_signed, bool *error)
 
     switch (*src) {
     case '(':
-        // d_printf("token - (");
 
         tok_buf[0] = src[0];
         tok_buf[1] = '\0';
@@ -99,7 +95,6 @@ get_token(char *src, Token *tok, bool allow_signed, bool *error)
         break;
 
     case ')':
-        // d_printf("token - )");
 
         tok_buf[0] = src[0];
         tok_buf[1] = '\0';
@@ -110,7 +105,6 @@ get_token(char *src, Token *tok, bool allow_signed, bool *error)
 
     case '*':
     case '/':
-        // d_printf("token - op [%c]", *src);
 
         tok_buf[0] = src[0];
         tok_buf[1] = '\0';
@@ -123,16 +117,11 @@ get_token(char *src, Token *tok, bool allow_signed, bool *error)
     case '-':
         // if NOT signed digit
         if (allow_signed && isdigit(*skip_space(src + 1))) {
-            // d_printf("token should be signed digit");
-
             sign_pos = src;
-
             src = skip_space(src + 1);
             /* FALLTHROUGH */
         }
         else {
-            // d_printf("token - op [%c]", *src);
-
             tok_buf[0] = src[0];
             tok_buf[1] = '\0';
             tok->type = TOK_OP;
@@ -143,8 +132,6 @@ get_token(char *src, Token *tok, bool allow_signed, bool *error)
 
     default:
         if (isdigit(*src)) {
-            // d_printf("token - digit [%c]", *src);
-
             after_pos = get_digit(src, tok_buf, MAX_TOK_CHAR_BUF);
             if (after_pos == NULL) {
                 WARN2("malformed digit [%s]", src);
@@ -173,12 +160,10 @@ get_token(char *src, Token *tok, bool allow_signed, bool *error)
         strncpy(tok->str, tok_buf, MAX_TOK_CHAR_BUF);
     }
     else {
-        d_printf("sign_pos [%c]", *sign_pos);
         strncpy(tok->str, sign_pos, 1);
         strncpy(tok->str + 1, tok_buf, MAX_TOK_CHAR_BUF - 1);
     }
 
-    d_printf("got! [%s]", tok->str);
 
     return src;
 }

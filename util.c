@@ -7,26 +7,6 @@
 
 
 void
-d_printf(const char *fmt, ...)
-{
-#if NDEBUG
-    va_list ap;
-
-    fputs("[debug]::", stderr);
-
-    va_start(ap, fmt);
-    vfprintf(stderr, fmt, ap);
-    va_end(ap);
-
-    fputc('\n', stderr);
-    fflush(stderr);
-#else
-    UNUSED(fmt);
-#endif
-}
-
-
-void
 warn(int line, const char *fmt, ...)
 {
     va_list ap;
