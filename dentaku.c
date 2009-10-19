@@ -376,7 +376,7 @@ dentaku_destroy(Dentaku *dentaku)
 }
 
 
-void
+NORETURN void
 dentaku_exit(Dentaku *dentaku, int status)
 {
     dentaku_destroy(dentaku);

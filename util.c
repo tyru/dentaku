@@ -24,7 +24,7 @@ warn(int line, const char *fmt, ...)
 }
 
 
-void
+NORETURN void
 die(int line, const char *msg)
 {
     fprintf(stderr, "[error]::[%s] at %d\n", msg, line);

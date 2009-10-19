@@ -34,4 +34,12 @@
 #define UNUSED(x)           ((void)x)
 
 
+
+#ifdef __GNUC__
+    #define NORETURN __attribute__((__noreturn__))
+#else
+    #define NORETURN
+#endif
+
+
 #endif /* COMMON_H */

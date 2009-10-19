@@ -17,7 +17,7 @@ warn(int line, const char *fmt, ...);
 
 #define DIE(msg)    die(__LINE__, msg)
 
-void
+NORETURN void
 die(int line, const char *msg);
 
 
