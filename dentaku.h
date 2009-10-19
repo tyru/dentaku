@@ -45,7 +45,7 @@ bool
 dentaku_eval_expr(Dentaku *dentaku, bool *done_eval_expr);
 
 Token*
-dentaku_get_token(Dentaku *dentaku, bool *error);
+dentaku_get_token(Dentaku *dentaku, bool *got_new_token);
 
 
 

@@ -214,7 +214,7 @@ bool
 dentaku_eval_expr(Dentaku *dentaku, bool *done_eval_expr)
 {
     bool done_calc_expr;
-    bool syntax_error;
+    bool new_token;
     Token tok_top;
 
     // debug
@@ -233,13 +233,13 @@ dentaku_eval_expr(Dentaku *dentaku, bool *done_eval_expr)
         return false;
     }
     else if (done_calc_expr) {
-        Token *buf = dentaku_get_token(dentaku, &syntax_error);
-
-        if (syntax_error) {    // buf must be NULL.
+        Token *buf;
+        if ((buf = dentaku_get_token(dentaku, &new_token)) == NULL) {
+            // error
             token_destroy(&tok_top);
             return false;
         }
-        else if (buf) {
+        else if (new_token) {
             dentaku_stack_push(dentaku, &tok_top);
             dentaku_stack_push(dentaku, buf);
             // return and continue calculating...
@@ -259,14 +259,17 @@ dentaku_eval_expr(Dentaku *dentaku, bool *done_eval_expr)
 }
 
 
-// get and return one token.
-// if EOF, return NULL.
+// get one token from dentaku->src or dentaku->cur_stack->top.
+// if error occured, return NULL.
 Token*
-dentaku_get_token(Dentaku *dentaku, bool *error)
+dentaku_get_token(Dentaku *dentaku, bool *got_new_token)
 {
+    bool syntax_error;
     Token *tok;
     Stack *stk = dentaku->cur_stack;
     bool allow_signed = stk->top == NULL || ((Token*)stk->top)->type == TOK_LPAREN;
+
+    *got_new_token = false;
 
     tok = malloc(sizeof(Token));
     if (tok == NULL) {
@@ -277,22 +280,30 @@ dentaku_get_token(Dentaku *dentaku, bool *error)
     token_alloc(tok, MAX_TOK_CHAR_BUF);
 
     char *cur_pos = dentaku->src + dentaku->src_pos;
-    char *next_pos = get_token(cur_pos, tok, allow_signed, error);
+    char *next_pos = get_token(cur_pos, tok, allow_signed, &syntax_error);
 
-    // advance dentaku->src_pos.
     if (next_pos == NULL) {
+        // EOF or syntax error.
         token_destroy(tok);
         free(tok);
         tok = NULL;
 
-        dentaku->src_pos = dentaku->src_len;    // EOF
+        // set to EOF.
+        dentaku->src_pos = dentaku->src_len;
+
+        if (syntax_error)
+            return NULL;
+        else if (stk->top == NULL)
+            // stk->top is NULL and reached EOF.
+            return NULL;
+        else
+            return stk->top;
     }
     else {
         dentaku->src_pos += next_pos - cur_pos;
-        // d_printf("rest [%s]", next_pos);
+        *got_new_token = true;
+        return tok;
     }
-
-    return tok;
 }
 
 
@@ -410,41 +421,32 @@ dentaku_eval_src(Dentaku *dentaku)
 {
     Stack *stk = dentaku->cur_stack;
     Token tok_top, *tok_got;
-    bool syntax_error;
+    bool new_token;
     bool done_calc;
-    TokenType top_type;
 
 
     while (1) {
-        tok_got = dentaku_get_token(dentaku, &syntax_error);
-        if (syntax_error) {    // tok_got must be NULL.
+        if ((tok_got = dentaku_get_token(dentaku, &new_token)) == NULL)
+            // couldn't get token.
             return false;
-        }
-        else if (tok_got == NULL) {    // EOF
-            if (stk->top == NULL)
-                // return with no value
-                // if there are no tokens on stack, and parser gets EOF.
-                return false;
-            else {
-                // copy top token of stack to tok_top.
-                memcpy(&tok_top, stk->top, sizeof tok_top);
-                top_type = TOK_UNDEF;
-            }
-        }
-        else {
-            // get new token.
+
+        if (new_token){
+            // push new token.
             dentaku_stack_push(dentaku, tok_got);
-            memcpy(&tok_top, tok_got, sizeof tok_top);
-            top_type = tok_top.type;
         }
+        memcpy(&tok_top, tok_got, sizeof tok_top);
 
 
         if (dentaku_src_eof(dentaku) || tok_top.type == TOK_RPAREN) {    // EOF or ')'
+            TokenType top_type;
             if (tok_top.type == TOK_RPAREN) {
                 // pop ')'
                 token_destroy(stk->top);
                 dentaku_stack_pop(dentaku, NULL);
+                top_type = tok_top.type;
             }
+            else
+                top_type = TOK_UNDEF;
 
             while (1) {
                 if (! dentaku_eval_expr(dentaku, &done_calc))
@@ -467,9 +469,6 @@ dentaku_eval_src(Dentaku *dentaku)
                         token_destroy(&tok_top);
                         WARN("extra open parenthesis");
                         return false;
-                    }
-                    else if (top_type != TOK_RPAREN) {
-                        DIE("wtf?");
                     }
 
                     // pop '('
@@ -496,26 +495,16 @@ dentaku_eval_src(Dentaku *dentaku)
         else if (tok_top.type == TOK_OP) {    // '+', '-', '*', '/'
             // postpone '+' and '-'.
             if (tok_top.str[0] == '*' || tok_top.str[0] == '/') {
-                // get and push digit token.
-                tok_got = dentaku_get_token(dentaku, &syntax_error);
-                if (syntax_error) {    // tok_got must be NULL.
+                // get and push right hand operand.
+                if ((tok_got = dentaku_get_token(dentaku, &new_token)) == NULL)
+                    // couldn't get token.
                     return false;
-                }
-                else if (tok_got == NULL) {    // EOF
-                    if (stk->top == NULL)
-                        // return with no value
-                        // if there are no tokens on stack, and parser gets EOF.
-                        return false;
-                    else
-                        // copy top token of stack to tok_top.
-                        memcpy(&tok_top, stk->top, sizeof tok_top);
-                }
-                else {
-                    // get new token.
+
+                if (new_token){
+                    // push new token.
                     dentaku_stack_push(dentaku, tok_got);
-                    memcpy(&tok_top, tok_got, sizeof tok_top);
                 }
-                top_type = tok_top.type;
+                memcpy(&tok_top, tok_got, sizeof tok_top);
 
 
                 switch (tok_top.type) {
