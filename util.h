@@ -15,10 +15,10 @@ void
 warn(int line, const char *fmt, ...);
 
 
-#define DIE(msg)    die(__LINE__, msg)
+#define DIE(msg)    die(__FILE__, __LINE__, msg)
 
 NORETURN void
-die(int line, const char *msg);
+die(const char *filename, int line, const char *msg);
 
 
 

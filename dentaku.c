@@ -17,7 +17,6 @@
  * - check more stack function's return value
  * - add Stack of jmp_buf to Dentaku. for escaping to main().
  * - rename MAX_IN_BUF
- * - DIE() and WARN() should pass filename to function
  * - move utility functions to util.h
  */
 
@@ -165,7 +164,7 @@ dentaku_calc_expr(Dentaku *dentaku, bool *no_op)
     }
     if (stk->top == NULL) {
         // NOTE: don't call when top is NULL!!
-        DIE("internal error");
+        DIE("no more items on stack.");
     }
 
 

@@ -24,12 +24,18 @@ warn(int line, const char *fmt, ...)
 }
 
 
+// Note that this does not call dentaku_destroy().
 NORETURN void
-die(int line, const char *msg)
+die(const char *filename, int line, const char *msg)
 {
-    fprintf(stderr, "[error]::[%s] at %d\n", msg, line);
+    fprintf(stderr,
+            "\n\ninternal error:\n[%s] at %s, line %d.\n",
+            msg, filename, line);
     exit(EXIT_FAILURE);
 }
+
+
+
 
 
 // on success, return true.
