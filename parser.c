@@ -147,7 +147,9 @@ get_token(char *src, Token *tok, bool allow_signed, bool *error)
 
             after_pos = get_digit(src, tok_buf, MAX_TOK_CHAR_BUF);
             if (after_pos == NULL) {
-                DIE("malformed digit");
+                WARN2("malformed digit [%s]", src);
+                *error = true;
+                return NULL;
             }
             src = after_pos;
 
