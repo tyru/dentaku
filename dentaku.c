@@ -12,12 +12,10 @@
  * - add .str's capacity size to Token
  *   for allocating just token's characters length.
  *   (if capacity is a fewer than needed size, use realloc())
- * - replace 'destroy' with 'destruct'
  * - check also stack_(push|pop)'s return value.
  * - check more stack function's return value
  * - add Stack of jmp_buf to Dentaku. for escaping to main().
- * - rename MAX_IN_BUF
- * - move utility functions to util.h
+ * - use GC
  */
 
 
@@ -142,10 +140,6 @@ dentaku_calc_expr(Dentaku *dentaku, bool *no_op)
     double d_n, d_m;
     bool success;
     Stack *stk = dentaku->cur_stack;
-
-    // TODO
-    // - check also stack function's return value.
-    // - destruct 3 tokens when return.
 
     if (dentaku->debug) {
         dentaku_printf_d(dentaku, "before calculation");
@@ -661,9 +655,6 @@ dentaku_eval_src(Dentaku *dentaku)
         }
         else if (tok_top.type == TOK_LPAREN) {
             // nop.
-            //
-            // TODO
-            // because I want calc to assume '(expr)(expr)' as '(expr)*(expr)'.
         }
         else {
             if (tok_top.str)
