@@ -534,6 +534,8 @@ dentaku_eval_src(Dentaku *dentaku)
                 case TOK_OP:
                     WARN2("reaching '%c' where expression is expected", *tok_top.str);
                     return false;
+                default:
+                    break;    // to satisfy gcc.
                 }
             }
         }

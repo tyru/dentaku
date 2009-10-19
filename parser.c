@@ -44,12 +44,12 @@ get_digit(char *src, char *buf, size_t maxsize)
     if (pos == 0) {
         return NULL;
     }
-    if (dot_pos > 0 && (dot_pos == 0 || dot_pos == strlen(src) - 1)) {
+    if (dot_pos > 0 && (dot_pos == 0 || (size_t)dot_pos == strlen(src) - 1)) {
         WARN("'.' at the head or tail of src");
         return NULL;
     }
 
-    if (pos > maxsize)
+    if (pos > (int)maxsize)
         pos = maxsize;
     // copy
     strncpy(buf, src, pos);
