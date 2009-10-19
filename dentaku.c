@@ -3,7 +3,7 @@
  * dentaku.c - calculator
  *
  * Written By: tyru <tyru.exe@gmail.com>
- * Last Change: 2009-10-19.
+ * Last Change: 2009-10-20.
  *
  */
 
@@ -386,7 +386,7 @@ dentaku_exit(Dentaku *dentaku, int status)
 
 
 static void
-show_usage()
+show_usage(void)
 {
     puts("");
     printf("Usage: %s [OPTIONS] [--] [file]\n", DENTAKU_PROG_NAME);
