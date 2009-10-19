@@ -93,6 +93,7 @@ atod(const char *digit_str, Digit *digit, int base)
 
 
 // on success, return true.
+// FIXME don't leave zeros ("1.0000....") of tail of ascii.
 bool
 dtoa(Digit *digit, char *ascii, size_t max_size, int base)
 {
