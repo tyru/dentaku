@@ -384,15 +384,15 @@ dentaku_eval_src(Dentaku *dentaku)
         memcpy(&tok_top, tok_got, sizeof tok_top);
 
         if (dentaku_src_eof(dentaku) || tok_top.type == TOK_RPAREN) {    // EOF or ')'
-            TokenType top_type;
+            const TokenType top_type =
+                tok_top.type == TOK_RPAREN ?
+                    TOK_RPAREN
+                    : TOK_UNDEF;
             if (tok_top.type == TOK_RPAREN) {
                 // pop ')'
                 token_destroy(stk->top);
                 dentaku_stack_pop(dentaku, NULL);
-                top_type = tok_top.type;
             }
-            else
-                top_type = TOK_UNDEF;
 
             // calculate until expression becomes 1 token
             // or top is correspond '(' and next is neither '*' nor '/'.
