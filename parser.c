@@ -49,9 +49,11 @@ get_digit(char *src, char *buf, size_t maxsize)
         return NULL;
     }
 
-    if (pos > (int)maxsize)
-        pos = maxsize;
-    // copy
+    if (pos > (int)maxsize) {
+        WARN("too large number");
+        return NULL;
+    }
+
     strncpy(buf, src, pos);
     buf[pos] = '\0';
 
