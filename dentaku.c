@@ -3,18 +3,23 @@
  * dentaku.c - calculator
  *
  * Written By: tyru <tyru.exe@gmail.com>
- * Last Change: 2009-10-22.
+ * Last Change: 2009-10-23.
  *
  */
 
 
-/* TODO
+/* TODO && FIXME
  * - add .str's capacity size to Token
  *   for allocating just token's characters length.
  *   (if capacity is a fewer than needed size, use realloc())
  * - check also stack_(push|pop)'s return value.
  * - check more stack function's return value
  * - use GC
+ * - use siglongjmp() when error occured
+ * - token_alloc() should call token_init()
+ *   not to write 'token_init(), token_alloc()' ...
+ * - memcpy() しない関数(stack.cのrefer_top())がstack.hにいてくれると助かる
+ *   現在refer_top()をそのままcommon.hに持ってきてる...
  */
 
 
@@ -62,27 +67,29 @@ dentaku_printf_d(Dentaku *dentaku, const char *fmt, ...)
 void
 dentaku_show_stack(Dentaku *dentaku)
 {
-    Stack *stk = dentaku->data_stack;
-    int stk_len = stk->cur_pos + 1;
-    Token *tokens = alloca(sizeof(Stack) * stk_len);
-    int i;
+    stack_t *stk = dentaku->data_stack;
+    size_t stk_len = stack_size(stk);
+    Token *tokens = alloca(sizeof(stack_t) * stk_len);
 
     if (! dentaku->debug)
         return;
 
     dentaku_printf_d(dentaku, "show all stack...");
-    if (stk->cur_pos < 0) {
+    if (stk_len == 0) {
         dentaku_printf_d(dentaku, "  ...no tokens on stack.");
         return;
     }
-
-    for (; stk->cur_pos >= 0; ) {
-        dentaku_printf_d(dentaku, "  pop...  %d: [%s]", stk->cur_pos, ((Token*)stk->top)->str);
-        dentaku_stack_pop(dentaku, tokens + stk->cur_pos);
+    // push all current stack to tokens.
+    while (stack_empty(stk)) {
+        size_t cur_size = stack_size(stk);
+        dentaku_stack_pop(dentaku, tokens + cur_size);
+        dentaku_printf_d(dentaku, "  pop...  %d: [%s]",
+                        cur_size, tokens[cur_size].str);
     }
 
-    for (i = 0; i < stk_len; i++) {
-        dentaku_stack_push(dentaku, tokens + i);
+    // restore
+    while (stack_size(stk) < stk_len) {
+        dentaku_stack_push(dentaku, tokens + stack_size(stk));
     }
 
     fflush(stderr);
@@ -98,13 +105,8 @@ dentaku_show_stack(Dentaku *dentaku)
 stack_ret
 dentaku_stack_pop(Dentaku *dentaku, Token *tok)
 {
-    Stack *stk = dentaku->data_stack;
-
-    if (tok)
-        memcpy(tok, stk->top, sizeof(Token));
-
     // dentaku_printf_d(dentaku, "pop! [%s]", tok->str);
-    return stack_pop(stk);
+    return stack_pop(dentaku->data_stack, tok);
 }
 
 
@@ -141,7 +143,13 @@ dentaku_calc_expr(Dentaku *dentaku, bool *no_op)
     Digit n, m, result;
     double d_n, d_m;
     bool success;
-    Stack *stk = dentaku->data_stack;
+    stack_t *stk = dentaku->data_stack;
+    Token top;
+
+
+    // NOTE: too ugly...
+
+
 
     if (dentaku->debug) {
         dentaku_printf_d(dentaku, "before calculation");
@@ -158,20 +166,24 @@ dentaku_calc_expr(Dentaku *dentaku, bool *no_op)
     if (tok_result == NULL) {
         DIE("can't allocate memory for result token!");
     }
-    if (stk->top == NULL) {
+    if (stack_empty(stk)) {
         // NOTE: don't call when top is NULL!!
         DIE("no more items on stack.");
     }
 
+    // TODO
+    // do 'pop' and 'check' if it failed.
+    // now 'check' and 'pop'.
+
 
     // 1st. pop 'm' of expression 'n <op> m'.
     token_alloc(&tok_m, MAX_TOK_CHAR_BUF);
-    dentaku_printf_d(dentaku, "pop 'm' of 'n <op> m'... [%s]",
-                                    ((Token*)stk->top)->str);
     dentaku_stack_pop(dentaku, &tok_m);
+    dentaku_printf_d(dentaku, "pop 'm' of 'n <op> m'... [%s]", tok_m.str);
 
 
-    if (stk->top == NULL || ((Token*)stk->top)->type == TOK_LPAREN) {
+    stack_top(stk, &top);
+    if (stack_empty(stk) || top.type == TOK_LPAREN) {
         // no more tokens on stack. calculation has been done.
         memcpy(tok_result, &tok_m, sizeof(Token));
         *no_op = true;
@@ -181,12 +193,11 @@ dentaku_calc_expr(Dentaku *dentaku, bool *no_op)
 
     // 2nd. pop '<op>' of expression 'n <op> m'.
     token_alloc(&tok_op, MAX_TOK_CHAR_BUF);
-    dentaku_printf_d(dentaku, "pop '<op>' of 'n <op> m'... [%s]",
-                                        ((Token*)stk->top)->str);
     dentaku_stack_pop(dentaku, &tok_op);
+    dentaku_printf_d(dentaku, "pop '<op>' of 'n <op> m'... [%s]", tok_op.str);
 
 
-    if (stk->top == NULL) {
+    if (stack_empty(stk)) {
         WARN("reaching EOF where digit is expected");
 
         // other token's will be destructed at dentaku_destroy().
@@ -199,9 +210,8 @@ dentaku_calc_expr(Dentaku *dentaku, bool *no_op)
 
     // 3rd. pop 'n' of expression 'n <op> m'.
     token_alloc(&tok_n, MAX_TOK_CHAR_BUF);
-    dentaku_printf_d(dentaku, "pop 'n' of 'n <op> m'... [%s]",
-                                        ((Token*)stk->top)->str);
     dentaku_stack_pop(dentaku, &tok_n);
+    dentaku_printf_d(dentaku, "pop 'n' of 'n <op> m'... [%s]", tok_n.str);
 
 
     /* check each token's type */
@@ -273,45 +283,53 @@ Token*
 dentaku_get_token(Dentaku *dentaku, bool *got_new_token)
 {
     bool syntax_error;
-    Token *tok;
-    Stack *stk = dentaku->data_stack;
-    bool allow_signed = stk->top == NULL || ((Token*)stk->top)->type == TOK_LPAREN;
+    Token *result_tok;
+    bool allow_signed;
+    Token top;
+    stack_t *stk = dentaku->data_stack;
+
+    stack_top(stk, &top);
+    // allow '+' or '-' before digit
+    // when stack is empty or '(' is on the top.
+    allow_signed = stack_empty(stk) || top.type == TOK_LPAREN;
 
     *got_new_token = false;
 
-    tok = malloc(sizeof(Token));
-    if (tok == NULL)
+    result_tok = malloc(sizeof(Token));
+    if (result_tok == NULL)
         DIE("can't allocate memory for new token!");
 
-    token_init(tok);
-    token_alloc(tok, MAX_TOK_CHAR_BUF);
+    token_init(result_tok);
+    token_alloc(result_tok, MAX_TOK_CHAR_BUF);
 
     char *cur_pos = dentaku->src + dentaku->src_pos;
-    char *next_pos = get_token(cur_pos, tok, allow_signed, &syntax_error);
+    char *next_pos = get_token(cur_pos, result_tok, allow_signed, &syntax_error);
 
     if (next_pos == NULL) {
         // EOF or syntax error.
-        token_destroy(tok);
-        free(tok);
-        tok = NULL;
+        token_destroy(result_tok);
+        free(result_tok);
+        result_tok = NULL;
 
         // set to EOF.
         dentaku->src_pos = dentaku->src_len;
 
         if (syntax_error)
             return NULL;
-        else if (stk->top == NULL)
+        else if (stack_empty(stk))
             // stk->top is NULL and reached EOF.
             return NULL;
-        else
-            return stk->top;
+        else {
+            // FIXME see line 21 of this file
+            return refer_top(stk);
+        }
     }
     else {
-        dentaku_printf_d(dentaku, "got! [%s]", tok->str);
+        dentaku_printf_d(dentaku, "got! [%s]", result_tok->str);
 
         dentaku->src_pos += next_pos - cur_pos;
         *got_new_token = true;
-        return tok;
+        return result_tok;
     }
 }
 
@@ -326,7 +344,7 @@ dentaku_init(Dentaku *dentaku)
 {
     dentaku_printf_d(dentaku, "initializing dentaku...");
 
-    dentaku->data_stack = &dentaku->data_stack__;
+    dentaku->data_stack = NULL;
 
     dentaku->main_jmp_buf = NULL;
 
@@ -349,11 +367,15 @@ dentaku_init(Dentaku *dentaku)
 
 
 void
-dentaku_alloc(Dentaku *dentaku, size_t stack_size)
+dentaku_alloc(Dentaku *dentaku)
 {
     dentaku_printf_d(dentaku, "allocating dentaku...");
 
-    if (stack_init(dentaku->data_stack, stack_size, sizeof(Token)) != STACK_SUCCESS) {
+    dentaku->data_stack = stack_initialize(
+        sizeof(Token),
+        (void (*)(void *))token_destroy
+    );
+    if (! dentaku->data_stack) {
         DIE("failed to initialize stack");
     }
 
@@ -370,8 +392,7 @@ dentaku_destroy(Dentaku *dentaku)
     dentaku_printf_d(dentaku, "destroying dentaku...");
 
     dentaku_clear_stack(dentaku);
-    if (stack_destruct(dentaku->data_stack) != STACK_SUCCESS)
-        WARN("failed to destruct stack");
+    stack_release(dentaku->data_stack);
 
     if (dentaku->src) {
         free(dentaku->src);
@@ -485,14 +506,16 @@ dentaku_read_src(Dentaku *dentaku)
 static bool
 eval_when_eof_or_rparen(Dentaku *dentaku, const TokenType top_type, bool *back_to_main)
 {
-    Stack *stk = dentaku->data_stack;
+    stack_t *stk = dentaku->data_stack;
     bool no_op, added_mul = false;
+    Token top_buf;
 
     *back_to_main = true;
 
     if (top_type == TOK_RPAREN) {
         // pop ')'
-        token_destroy(stk->top);
+        // FIXME see line 21 of this file
+        token_destroy(refer_top(stk));
         dentaku_stack_pop(dentaku, NULL);
     }
 
@@ -515,8 +538,9 @@ eval_when_eof_or_rparen(Dentaku *dentaku, const TokenType top_type, bool *back_t
         }
 
 
-        Token *top_buf = stk->top;
-        if (top_buf == NULL) {
+        stack_top(stk, &top_buf);
+
+        if (stack_empty(stk)) {
             if (top_type == TOK_RPAREN && ! added_mul) {
                 // token was ')' at first, but got EOF.
                 token_destroy(result);
@@ -533,7 +557,7 @@ eval_when_eof_or_rparen(Dentaku *dentaku, const TokenType top_type, bool *back_t
                 // so I will get tokens from dentaku->src.
                 break;
         }
-        else if (top_buf->type == TOK_LPAREN) {
+        else if (top_buf.type == TOK_LPAREN) {
             if (top_type == TOK_UNDEF) {
                 // token was EOF at first, but got '('.
                 token_destroy(result);
@@ -542,18 +566,21 @@ eval_when_eof_or_rparen(Dentaku *dentaku, const TokenType top_type, bool *back_t
             }
 
             // pop '('
-            token_destroy(stk->top);
+            // FIXME see line 21 of this file
+            token_destroy(refer_top(stk));
             dentaku_stack_pop(dentaku, NULL);
 
             // unless top is '*' or '/',
             // finish calculation of one expression in parenthesis.
             // because I got correspond '('.
-            top_buf = stk->top;
-            bool mul_or_div = top_buf && (top_buf->str[0] == '*'
-                                        || top_buf->str[0] == '/');
-            bool is_digit = top_buf && top_buf->type == TOK_DIGIT;
+            stack_top(stk, &top_buf);
+            bool mul_or_div = ! stack_empty(stk)
+                                && (top_buf.str[0] == '*'
+                                ||  top_buf.str[0] == '/');
+            bool is_digit = ! stack_empty(stk)
+                            && top_buf.type == TOK_DIGIT;
 
-            if (top_buf == NULL && dentaku_src_eof(dentaku)) {
+            if (stack_empty(stk) && dentaku_src_eof(dentaku)) {
                 // end.
                 dentaku_stack_push(dentaku, result);
                 return true;
@@ -666,7 +693,6 @@ eval_when_mul_or_div(Dentaku *dentaku, bool *back_to_main)
 NORETURN void
 dentaku_eval_src(Dentaku *dentaku)
 {
-    Stack *stk = dentaku->data_stack;
     Token *tok_got;
     bool new_token, back_to_main;
 
@@ -719,13 +745,15 @@ dentaku_eval_src(Dentaku *dentaku)
 void
 dentaku_clear_stack(Dentaku *dentaku)
 {
-    // TODO use stack_clear()
+    // TODO free and pop each top
 
-    Stack *stk = dentaku->data_stack;
+    stack_release(dentaku->data_stack);
 
-    while (stk->top) {
-        token_destroy(stk->top);
-        dentaku_stack_pop(dentaku, NULL);
+    dentaku->data_stack = stack_initialize(
+            sizeof(Token),
+            (void (*)(void *))token_destroy);
+    if (! dentaku->data_stack) {
+        DIE("failed to initialize stack");
     }
 }
 
@@ -741,8 +769,8 @@ dentaku_register_main_cont(Dentaku *dentaku, sigjmp_buf *cont)
 void
 dentaku_show_result(Dentaku *dentaku)
 {
-    Token *top = dentaku->data_stack->top;
-    if (top)
-        puts(top->str);
+    Token top;
+    if (stack_top(dentaku->data_stack, &top) == STACK_SUCCESS)
+        puts(top.str);
 }
 

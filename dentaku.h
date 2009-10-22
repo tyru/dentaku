@@ -6,7 +6,7 @@
 #include "common.h"
 
 #include "token.h"
-#include "mylib/stack.h"
+#include "libdatastruct/stack.h"
 
 #include <setjmp.h>
 
@@ -21,8 +21,7 @@ typedef enum {
 
 
 typedef struct {
-    Stack   *data_stack;
-    Stack   data_stack__;
+    stack_t *data_stack;
 
     sigjmp_buf  *main_jmp_buf;
 
@@ -71,7 +70,7 @@ void
 dentaku_init(Dentaku *dentaku);
 
 void
-dentaku_alloc(Dentaku *dentaku, size_t stack_size);
+dentaku_alloc(Dentaku *dentaku);
 
 void
 dentaku_destroy(Dentaku *dentaku);

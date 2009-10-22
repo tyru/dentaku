@@ -21,6 +21,28 @@
 
 
 
+typedef unsigned int    stack_ret;
+
+// from libdatastruct/stack.c
+#define __void_pointer_addition(pointer,number) \
+    ((void *)((char *)pointer+number))
+
+#define __refer_by_offset(stack,offset) \
+    (__void_pointer_addition((stack)->array,(stack)->element_size*(offset)))
+
+#define __refer_by_offset_from_bottom(stack,offset) \
+    (__refer_by_offset((stack),(offset)))
+
+#define __refer_by_offset_from_top(stack,offset) \
+    (__refer_by_offset((stack),stack_size(stack)-1-(offset)))
+
+#define __refer_bottom(stack) \
+    ((stack)->array)
+
+#define refer_top(stack) \
+    __refer_by_offset((stack),(stack)->size-1)
+
+
 
 
 #define PROMPT_STR          "=> "
