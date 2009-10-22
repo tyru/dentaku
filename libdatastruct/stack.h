@@ -50,13 +50,14 @@
 
 typedef struct stack stack_t;
 
-struct stack
+typedef struct stack
 {
 	void *array;
 	size_t size;
 	size_t element_size;
 	size_t array_size;
 	void (*release_function)(void *);
+	void *(*copy_function)(void *, const void *, size_t);
 };
 
 /*******************************************************************************
@@ -74,7 +75,7 @@ struct stack
 *******************************************************************************/
 
 extern stack_t *stack_initialize
-    (const size_t,void (*)(void *));
+    (const size_t,void (*release_function)(void *),void *(*copy_function)(void *, const void *, size_t));
 extern void stack_release
     (stack_t *);
 extern unsigned int stack_bottom

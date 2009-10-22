@@ -357,7 +357,8 @@ dentaku_alloc(Dentaku *dentaku)
 
     dentaku->data_stack = stack_initialize(
         sizeof(Token),
-        (void (*)(void *))token_destroy
+        (void (*)(void *))token_destroy,
+        (void *(*)(void*, const void*, size_t))token_copy
     );
     if (! dentaku->data_stack) {
         DIE("failed to initialize stack");
@@ -732,8 +733,10 @@ dentaku_clear_stack(Dentaku *dentaku)
     stack_release(dentaku->data_stack);
 
     dentaku->data_stack = stack_initialize(
-            sizeof(Token),
-            (void (*)(void *))token_destroy);
+        sizeof(Token),
+        (void (*)(void*))token_destroy,
+        (void *(*)(void*, const void*, size_t))token_copy
+    );
     if (! dentaku->data_stack) {
         DIE("failed to initialize stack");
     }

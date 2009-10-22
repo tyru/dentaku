@@ -30,6 +30,9 @@ token_alloc(Token *tok, size_t size);
 void
 token_destroy(Token *tok);
 
+Token*
+token_copy(Token *dest, const Token *src, size_t n);
+
 
 
 

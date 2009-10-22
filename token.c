@@ -30,3 +30,15 @@ token_destroy(Token *tok)
         tok->str = NULL;
     }
 }
+
+// copy constructor for stack_initialize().
+Token*
+token_copy(Token *dest, const Token *src, size_t n)
+{
+    token_init(dest);
+    token_alloc(dest, strlen(src->str) + 1);
+
+    strcpy(dest->str, src->str);
+    dest->type = src->type;
+    return dest;
+}

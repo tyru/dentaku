@@ -37,7 +37,7 @@
 *******************************************************************************/
 
 #define void_pointer_addition(pointer,number) \
-    ((void *)((char *)pointer+number))
+    ((void *)((char *)(pointer)+(number)))
 
 #define refer_by_offset(stack,offset) \
     (void_pointer_addition((stack)->array,(stack)->element_size*(offset)))
@@ -59,7 +59,8 @@
 *******************************************************************************/
 
 stack_t *stack_initialize(const size_t element_size
-    ,void (*release_function)(void *))
+    ,void (*release_function)(void *)
+    ,void *(*copy_function)(void *, const void *, size_t))
 {
 	stack_t *stack = malloc(sizeof(stack_t));
 	if(!stack){
@@ -70,6 +71,7 @@ stack_t *stack_initialize(const size_t element_size
 	stack->element_size = element_size;
 	stack->array_size = 0;
 	stack->release_function = release_function;
+	stack->copy_function = copy_function == 0 ? memcpy : copy_function;
 	return stack;
 }
 
@@ -94,7 +96,7 @@ unsigned int stack_bottom(stack_t *stack,void *output)
 		return STACK_EMPTY;
 	}
 	if(output){
-		memcpy(output,refer_bottom(stack),stack->element_size);
+		stack->copy_function(output,refer_bottom(stack),stack->element_size);
 	}
 	return STACK_SUCCESS;
 }
@@ -105,7 +107,7 @@ unsigned int stack_top(stack_t *stack,void *output)
 		return STACK_EMPTY;
 	}
 	if(output){
-		memcpy(output,refer_top(stack),stack->element_size);
+		stack->copy_function(output,refer_top(stack),stack->element_size);
 	}
 	return STACK_SUCCESS;
 }
@@ -117,7 +119,7 @@ unsigned int stack_refer_from_bottom
 		return STACK_OFFSET_IS_TOO_LARGE;
 	}
 	if(output){
-		memcpy(output,refer_by_offset_from_bottom(stack,offset)
+		stack->copy_function(output,refer_by_offset_from_bottom(stack,offset)
 		    ,stack->element_size);
 	}
 	return STACK_SUCCESS;
@@ -130,7 +132,7 @@ unsigned int stack_refer_from_top
 		return STACK_OFFSET_IS_TOO_LARGE;
 	}
 	if(output){
-		memcpy(output,refer_by_offset_from_top(stack,offset)
+		stack->copy_function(output,refer_by_offset_from_top(stack,offset)
 		    ,stack->element_size);
 	}
 	return STACK_SUCCESS;
@@ -152,7 +154,7 @@ unsigned int stack_refer_many_elements_from_bottom
 			offset_small = offset_b;
 			offset_big = offset_a;
 		}
-		memcpy(output,refer_by_offset_from_bottom(stack,offset_small)
+		stack->copy_function(output,refer_by_offset_from_bottom(stack,offset_small)
 		    ,stack->element_size*(offset_big-offset_small+1));
 	}
 	return STACK_SUCCESS;
@@ -176,7 +178,7 @@ unsigned int stack_refer_many_elements_from_top
 		}
 		area_size = offset_big-offset_small+1;
 		while(counter != area_size){
-			memcpy(void_pointer_addition(output,stack->element_size*counter)
+			stack->copy_function(void_pointer_addition(output,stack->element_size*counter)
 			    ,refer_by_offset_from_top(stack,offset_small+counter)
 			    ,stack->element_size);
 			counter++;
@@ -196,7 +198,7 @@ unsigned int stack_push(stack_t *stack,const void *input)
 		stack->array = temp;
 		stack->array_size = stack->array_size+STACK_MEMORY_ALLOCATION_UNIT_SIZE;
 	}
-	memcpy(refer_by_offset(stack,stack->size),input,stack->element_size);
+	stack->copy_function(refer_by_offset(stack,stack->size),input,stack->element_size);
 	stack->size++;
 	return STACK_SUCCESS;
 }
@@ -208,7 +210,7 @@ unsigned int stack_pop(stack_t *stack,void *output)
 	}
 	stack->size--;
 	if(output){
-		memcpy(output,refer_by_offset(stack,stack->size),stack->element_size);
+		stack->copy_function(output,refer_by_offset(stack,stack->size),stack->element_size);
 	}
 	if(STACK_MEMORY_ALLOCATION_UNIT_SIZE*2 <= stack->array_size-stack->size){
 		void *temp = realloc(stack->array,stack->element_size
@@ -235,7 +237,7 @@ unsigned int stack_push_many_elements
 		stack->array = temp;
 		stack->array_size = new_size;
 	}
-	memcpy(refer_by_offset(stack,stack->size)
+	stack->copy_function(refer_by_offset(stack,stack->size)
 	    ,input,stack->element_size*push_size);
 	stack->size += push_size;
 	return STACK_SUCCESS;
@@ -250,7 +252,7 @@ unsigned int stack_pop_many_elements
 	if(output){
 		size_t counter = pop_size;
 		while(counter){
-			memcpy(void_pointer_addition(output
+			stack->copy_function(void_pointer_addition(output
 			    ,stack->element_size*(pop_size-counter))
 			    ,refer_by_offset_from_top(stack,pop_size-counter)
 			    ,stack->element_size);
