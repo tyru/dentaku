@@ -537,6 +537,13 @@ dentaku_eval_src(Dentaku *dentaku)
                     dentaku_show_stack(dentaku);
                 }
 
+                if (! no_op) {
+                    // dentaku has more tokens.
+                    dentaku_stack_push(dentaku, result);
+                    continue;
+                }
+
+
                 Token *top_buf = stk->top;
                 if (top_buf == NULL) {
                     if (top_type == TOK_RPAREN && ! added_mul) {
@@ -612,9 +619,6 @@ dentaku_eval_src(Dentaku *dentaku)
                         break;
                     }
                 }
-
-                // push for next operator.
-                dentaku_stack_push(dentaku, result);
             }
         }
         else if (tok_top.type == TOK_OP) {    // '+', '-', '*', '/'
