@@ -14,7 +14,6 @@
  *   (if capacity is a fewer than needed size, use realloc())
  * - check also stack_(push|pop)'s return value.
  * - check more stack function's return value
- * - add Stack of jmp_buf to Dentaku. for escaping to main().
  * - use GC
  */
 
@@ -63,7 +62,7 @@ dentaku_printf_d(Dentaku *dentaku, const char *fmt, ...)
 void
 dentaku_show_stack(Dentaku *dentaku)
 {
-    Stack *stk = dentaku->cur_stack;
+    Stack *stk = dentaku->data_stack;
     int stk_len = stk->cur_pos + 1;
     Token *tokens = alloca(sizeof(Stack) * stk_len);
     int i;
@@ -99,7 +98,7 @@ dentaku_show_stack(Dentaku *dentaku)
 stack_ret
 dentaku_stack_pop(Dentaku *dentaku, Token *tok)
 {
-    Stack *stk = dentaku->cur_stack;
+    Stack *stk = dentaku->data_stack;
 
     if (tok)
         memcpy(tok, stk->top, sizeof(Token));
@@ -113,7 +112,7 @@ stack_ret
 dentaku_stack_push(Dentaku *dentaku, Token *tok)
 {
     // dentaku_printf_d(dentaku, "push! [%s]", tok->str);
-    return stack_push(dentaku->cur_stack, tok);
+    return stack_push(dentaku->data_stack, tok);
 }
 
 
@@ -142,7 +141,7 @@ dentaku_calc_expr(Dentaku *dentaku, bool *no_op)
     Digit n, m, result;
     double d_n, d_m;
     bool success;
-    Stack *stk = dentaku->cur_stack;
+    Stack *stk = dentaku->data_stack;
 
     if (dentaku->debug) {
         dentaku_printf_d(dentaku, "before calculation");
@@ -268,14 +267,14 @@ dentaku_calc_expr(Dentaku *dentaku, bool *no_op)
 }
 
 
-// get one token from dentaku->src or dentaku->cur_stack->top.
+// get one token from dentaku->src or dentaku->data_stack->top.
 // if error occured, return NULL.
 Token*
 dentaku_get_token(Dentaku *dentaku, bool *got_new_token)
 {
     bool syntax_error;
     Token *tok;
-    Stack *stk = dentaku->cur_stack;
+    Stack *stk = dentaku->data_stack;
     bool allow_signed = stk->top == NULL || ((Token*)stk->top)->type == TOK_LPAREN;
 
     *got_new_token = false;
@@ -327,7 +326,10 @@ dentaku_init(Dentaku *dentaku)
 {
     dentaku_printf_d(dentaku, "initializing dentaku...");
 
-    dentaku->cur_stack = &dentaku->cur_stack__;
+    dentaku->data_stack = &dentaku->data_stack__;
+
+    dentaku->main_jmp_buf = NULL;
+
     dentaku->f_in  = stdin;
     dentaku->f_out = stdout;
     dentaku->f_err = stderr;
@@ -351,7 +353,7 @@ dentaku_alloc(Dentaku *dentaku, size_t stack_size)
 {
     dentaku_printf_d(dentaku, "allocating dentaku...");
 
-    if (stack_init(dentaku->cur_stack, stack_size, sizeof(Token)) != STACK_SUCCESS) {
+    if (stack_init(dentaku->data_stack, stack_size, sizeof(Token)) != STACK_SUCCESS) {
         DIE("failed to initialize stack");
     }
 
@@ -368,7 +370,7 @@ dentaku_destroy(Dentaku *dentaku)
     dentaku_printf_d(dentaku, "destroying dentaku...");
 
     dentaku_clear_stack(dentaku);
-    if (stack_destruct(dentaku->cur_stack) != STACK_SUCCESS)
+    if (stack_destruct(dentaku->data_stack) != STACK_SUCCESS)
         WARN("failed to destruct stack");
 
     if (dentaku->src) {
@@ -483,7 +485,7 @@ dentaku_read_src(Dentaku *dentaku)
 static bool
 eval_when_eof_or_rparen(Dentaku *dentaku, const TokenType top_type, bool *back_to_main)
 {
-    Stack *stk = dentaku->cur_stack;
+    Stack *stk = dentaku->data_stack;
     bool no_op, added_mul = false;
 
     *back_to_main = true;
@@ -661,10 +663,10 @@ eval_when_mul_or_div(Dentaku *dentaku, bool *back_to_main)
  * TOK_LPAREN:
  *  - nop
  */
-bool
+NORETURN void
 dentaku_eval_src(Dentaku *dentaku)
 {
-    Stack *stk = dentaku->cur_stack;
+    Stack *stk = dentaku->data_stack;
     Token *tok_got;
     bool new_token, back_to_main;
 
@@ -672,7 +674,7 @@ dentaku_eval_src(Dentaku *dentaku)
     while (1) {
         if ((tok_got = dentaku_get_token(dentaku, &new_token)) == NULL)
             // couldn't get token.
-            return false;
+            siglongjmp(*dentaku->main_jmp_buf, JMP_RET_ERR);
         if (new_token) {
             // push new token.
             dentaku_stack_push(dentaku, tok_got);
@@ -684,14 +686,14 @@ dentaku_eval_src(Dentaku *dentaku)
                     (tok_got->type == TOK_RPAREN ? TOK_RPAREN : TOK_UNDEF),
                     &back_to_main);
             if (back_to_main)
-                return ret_val;
+                siglongjmp(*dentaku->main_jmp_buf, ret_val ? JMP_RET_OK : JMP_RET_ERR);
         }
         else if (tok_got->type == TOK_OP) {    // '+', '-', '*', '/'
             // postpone '+' and '-'.
             if (tok_got->str[0] == '*' || tok_got->str[0] == '/') {
                 bool ret_val = eval_when_mul_or_div(dentaku, &back_to_main);
                 if (back_to_main)
-                    return ret_val;
+                    siglongjmp(*dentaku->main_jmp_buf, ret_val ? JMP_RET_OK : JMP_RET_ERR);
             }
         }
         else if (tok_got->type == TOK_DIGIT) {
@@ -705,7 +707,7 @@ dentaku_eval_src(Dentaku *dentaku)
                 WARN2("unknown token '%s' found", tok_got->str);
             else
                 WARN("unknown token found");
-            return false;
+            siglongjmp(*dentaku->main_jmp_buf, JMP_RET_ERR);
         }
     }
 }
@@ -717,7 +719,9 @@ dentaku_eval_src(Dentaku *dentaku)
 void
 dentaku_clear_stack(Dentaku *dentaku)
 {
-    Stack *stk = dentaku->cur_stack;
+    // TODO use stack_clear()
+
+    Stack *stk = dentaku->data_stack;
 
     while (stk->top) {
         token_destroy(stk->top);
@@ -726,10 +730,18 @@ dentaku_clear_stack(Dentaku *dentaku)
 }
 
 
+bool
+dentaku_register_main_cont(Dentaku *dentaku, sigjmp_buf *cont)
+{
+    dentaku->main_jmp_buf = cont;
+    return true;
+}
+
+
 void
 dentaku_show_result(Dentaku *dentaku)
 {
-    Token *top = dentaku->cur_stack->top;
+    Token *top = dentaku->data_stack->top;
     if (top)
         puts(top->str);
 }
@@ -740,12 +752,34 @@ dentaku_show_result(Dentaku *dentaku)
 int
 dentaku_main(Dentaku *dentaku)
 {
-    while (dentaku_read_src(dentaku)) {
-        if (dentaku_eval_src(dentaku)) {
-            dentaku_show_result(dentaku);
-        }
+    sigjmp_buf jbuf;
+    int ret;
+
+    while (1) {
         dentaku_clear_stack(dentaku);
+
+        if (! dentaku_read_src(dentaku))
+            break;    // EOF
+
+        switch (sigsetjmp(jbuf, 1)) {
+        case 0:
+            // set jbuf
+            if (! dentaku_register_main_cont(dentaku, &jbuf)) {
+                DIE("can't register jmp_buf");
+            }
+            // evaluation
+            dentaku_eval_src(dentaku);
+
+            /* NOTREACHED */
+            assert(0);
+
+        case JMP_RET_OK:
+            // evaluation has done.
+            dentaku_show_result(dentaku);
+            break;
+        }
     }
+
     dentaku_destroy(dentaku);
     return EXIT_SUCCESS;
 }

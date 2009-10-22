@@ -8,6 +8,7 @@
 #include "token.h"
 #include "mylib/stack.h"
 
+#include <setjmp.h>
 
 
 
@@ -20,8 +21,10 @@ typedef enum {
 
 
 typedef struct {
-    Stack   *cur_stack;    // easier to access
-    Stack   cur_stack__;
+    Stack   *data_stack;
+    Stack   data_stack__;
+
+    sigjmp_buf  *main_jmp_buf;
 
     FILE    *f_in;
     FILE    *f_out;
@@ -88,11 +91,14 @@ dentaku_getopt(Dentaku *dentaku, int argc, char **argv);
 bool
 dentaku_read_src(Dentaku *dentaku);
 
-bool
+NORETURN void
 dentaku_eval_src(Dentaku *dentaku);
 
 void
 dentaku_clear_stack(Dentaku *dentaku);
+
+bool
+dentaku_register_main_cont(Dentaku *dentaku, sigjmp_buf *cont);
 
 void
 dentaku_show_result(Dentaku *dentaku);

@@ -2,7 +2,13 @@
 #define COMMON_H
 
 
-#define _GNU_SOURCE
+
+// #define NDEBUG
+
+// #define _GNU_SOURCE
+
+
+#include "digit.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,13 +17,9 @@
 
 #include <stdbool.h>
 
-
-#include "digit.h"
-
+#include <assert.h>
 
 
-
-#define NDEBUG 1
 
 
 
@@ -27,6 +29,9 @@
 #define MAX_IN_BUF          1024
 #define MAX_TOK_CHAR_BUF    32
 #define MAX_STACK_SIZE      128
+
+#define JMP_RET_OK          1
+#define JMP_RET_ERR         2
 
 
 #define STREQ(s1, s2)       (*(s1) == *(s2) && strcmp((s1), (s2)) == 0)
