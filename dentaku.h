@@ -103,8 +103,5 @@ dentaku_register_main_cont(Dentaku *dentaku, sigjmp_buf *cont);
 void
 dentaku_show_result(Dentaku *dentaku);
 
-int
-dentaku_main(Dentaku *dentaku);
-
 
 #endif /* DENTAKU_H */
