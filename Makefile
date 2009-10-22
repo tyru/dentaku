@@ -13,7 +13,7 @@ all: $(PROG)
 
 test: $(PROG) leak-test
 leak-test:
-	\valgrind ./$(PROG)
+	\valgrind --leak-check=full ./$(PROG)
 
 
 debug: $(PROG)
