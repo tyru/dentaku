@@ -476,6 +476,169 @@ dentaku_read_src(Dentaku *dentaku)
 }
 
 
+
+static bool
+eval_when_eof_or_rparen(Dentaku *dentaku, const TokenType top_type, bool *back_to_main)
+{
+    Stack *stk = dentaku->cur_stack;
+    bool no_op, added_mul = false;
+
+    *back_to_main = true;
+
+    if (top_type == TOK_RPAREN) {
+        // pop ')'
+        token_destroy(stk->top);
+        dentaku_stack_pop(dentaku, NULL);
+    }
+
+    // calculate until expression becomes 1 token
+    // or top is correspond '(' and next is neither '*' nor '/'.
+    while (1) {
+        Token *result;
+        if ((result = dentaku_calc_expr(dentaku, &no_op)) == NULL)
+            return false;
+
+        if (dentaku->debug) {
+            dentaku_printf_d(dentaku, "after calculation");
+            dentaku_show_stack(dentaku);
+        }
+
+        if (! no_op) {
+            // dentaku has more tokens.
+            dentaku_stack_push(dentaku, result);
+            continue;
+        }
+
+
+        Token *top_buf = stk->top;
+        if (top_buf == NULL) {
+            if (top_type == TOK_RPAREN && ! added_mul) {
+                // token was ')' at first, but got EOF.
+                token_destroy(result);
+                WARN("extra close parenthesis");
+                return false;
+            }
+            dentaku_stack_push(dentaku, result);
+
+            if (dentaku_src_eof(dentaku))
+                // end.
+                return true;
+            else
+                // no more tokens on stack.
+                // so I will get tokens from dentaku->src.
+                break;
+        }
+        else if (top_buf->type == TOK_LPAREN) {
+            if (top_type == TOK_UNDEF) {
+                // token was EOF at first, but got '('.
+                token_destroy(result);
+                WARN("extra open parenthesis");
+                return false;
+            }
+
+            // pop '('
+            token_destroy(stk->top);
+            dentaku_stack_pop(dentaku, NULL);
+
+            // unless top is '*' or '/',
+            // finish calculation of one expression in parenthesis.
+            // because I got correspond '('.
+            top_buf = stk->top;
+            bool mul_or_div = top_buf && (top_buf->str[0] == '*'
+                                        || top_buf->str[0] == '/');
+            bool is_digit = top_buf && top_buf->type == TOK_DIGIT;
+
+            if (top_buf == NULL && dentaku_src_eof(dentaku)) {
+                // end.
+                dentaku_stack_push(dentaku, result);
+                return true;
+            }
+            if (top_type == TOK_RPAREN && is_digit) {
+                Token tok_mul;
+                token_init(&tok_mul);
+                token_alloc(&tok_mul, MAX_TOK_CHAR_BUF);
+                strncpy(tok_mul.str, "*", 2);
+                tok_mul.type = TOK_OP;
+
+                // push "*"
+                dentaku_printf_d(dentaku, "add '*' between '(...)' and '(...)'");
+                dentaku_stack_push(dentaku, &tok_mul);
+                // push result.
+                dentaku_stack_push(dentaku, result);
+
+                // forbid empty stack with top_type == TOK_RPAREN.
+                // because '1+2)' is not valid expression.
+                // set this value to through the checking.
+                added_mul = true;
+
+                continue;
+            }
+            if (top_type == TOK_RPAREN && mul_or_div) {
+                // same as above.
+                added_mul = true;
+
+                dentaku_stack_push(dentaku, result);
+                continue;
+            }
+            else {
+                dentaku_stack_push(dentaku, result);
+                break;
+            }
+        }
+    }
+
+    *back_to_main = false;
+    return true;
+}
+
+
+static bool
+eval_when_mul_or_div(Dentaku *dentaku, bool *back_to_main)
+{
+    bool no_op, new_token;
+    Token *tok_got;
+
+    *back_to_main = true;
+
+    // get and push right hand operand.
+    if ((tok_got = dentaku_get_token(dentaku, &new_token)) == NULL)
+        // couldn't get token.
+        return false;
+    if (new_token) {
+        // push new token.
+        dentaku_stack_push(dentaku, tok_got);
+    }
+
+
+    switch (tok_got->type) {
+    case TOK_DIGIT:
+        {
+            Token *result;
+            if ((result = dentaku_calc_expr(dentaku, &no_op)) == NULL)
+                return false;
+            dentaku_stack_push(dentaku, result);
+            if (no_op)
+                return true;
+        }
+        break;
+
+    // syntax checking
+    case TOK_RPAREN:
+        WARN("reaching ')' where expression is expected");
+        return false;
+    case TOK_OP:
+        WARN2("reaching '%c' where expression is expected", *tok_got->str);
+        return false;
+    default:
+        break;    // to satisfy gcc.
+    }
+
+    *back_to_main = false;
+    return true;
+}
+
+
+
 /*
  * TOK_RPAREN or EOF:
  *  - pop if TOK_RPAREN
@@ -499,176 +662,44 @@ bool
 dentaku_eval_src(Dentaku *dentaku)
 {
     Stack *stk = dentaku->cur_stack;
-    Token tok_top, *tok_got;
-    bool new_token, no_op, added_mul = false;
+    Token *tok_got;
+    bool new_token, back_to_main;
 
 
     while (1) {
         if ((tok_got = dentaku_get_token(dentaku, &new_token)) == NULL)
             // couldn't get token.
             return false;
-
         if (new_token) {
             // push new token.
             dentaku_stack_push(dentaku, tok_got);
         }
-        memcpy(&tok_top, tok_got, sizeof tok_top);
 
-        if (dentaku_src_eof(dentaku) || tok_top.type == TOK_RPAREN) {    // EOF or ')'
-            const TokenType top_type =
-                tok_top.type == TOK_RPAREN ?
-                    TOK_RPAREN
-                    : TOK_UNDEF;
-            if (tok_top.type == TOK_RPAREN) {
-                // pop ')'
-                token_destroy(stk->top);
-                dentaku_stack_pop(dentaku, NULL);
-            }
-
-            // calculate until expression becomes 1 token
-            // or top is correspond '(' and next is neither '*' nor '/'.
-            while (1) {
-                Token *result;
-                if ((result = dentaku_calc_expr(dentaku, &no_op)) == NULL)
-                    return false;
-
-                if (dentaku->debug) {
-                    dentaku_printf_d(dentaku, "after calculation");
-                    dentaku_show_stack(dentaku);
-                }
-
-                if (! no_op) {
-                    // dentaku has more tokens.
-                    dentaku_stack_push(dentaku, result);
-                    continue;
-                }
-
-
-                Token *top_buf = stk->top;
-                if (top_buf == NULL) {
-                    if (top_type == TOK_RPAREN && ! added_mul) {
-                        // token was ')' at first, but got EOF.
-                        token_destroy(result);
-                        WARN("extra close parenthesis");
-                        return false;
-                    }
-                    dentaku_stack_push(dentaku, result);
-
-                    if (dentaku_src_eof(dentaku))
-                        // end.
-                        return true;
-                    else
-                        // no more tokens on stack.
-                        // so I will get tokens from dentaku->src.
-                        break;
-                }
-                else if (top_buf->type == TOK_LPAREN) {
-                    if (top_type == TOK_UNDEF) {
-                        // token was EOF at first, but got '('.
-                        token_destroy(result);
-                        WARN("extra open parenthesis");
-                        return false;
-                    }
-
-                    // pop '('
-                    token_destroy(stk->top);
-                    dentaku_stack_pop(dentaku, NULL);
-
-                    // unless top is '*' or '/',
-                    // finish calculation of one expression in parenthesis.
-                    // because I got correspond '('.
-                    top_buf = stk->top;
-                    bool mul_or_div = top_buf && (top_buf->str[0] == '*'
-                                               || top_buf->str[0] == '/');
-                    bool is_digit = top_buf && top_buf->type == TOK_DIGIT;
-
-                    if (top_buf == NULL && dentaku_src_eof(dentaku)) {
-                        // end.
-                        dentaku_stack_push(dentaku, result);
-                        return true;
-                    }
-                    if (top_type == TOK_RPAREN && is_digit) {
-                        Token tok_mul;
-                        token_init(&tok_mul);
-                        token_alloc(&tok_mul, MAX_TOK_CHAR_BUF);
-                        strncpy(tok_mul.str, "*", 2);
-                        tok_mul.type = TOK_OP;
-
-                        // push "*"
-                        dentaku_printf_d(dentaku, "add '*' between '(...)' and '(...)'");
-                        dentaku_stack_push(dentaku, &tok_mul);
-                        // push result.
-                        dentaku_stack_push(dentaku, result);
-
-                        // forbid empty stack with top_type == TOK_RPAREN.
-                        // because '1+2)' is not valid expression.
-                        // set this value to through the checking.
-                        added_mul = true;
-
-                        continue;
-                    }
-                    if (top_type == TOK_RPAREN && mul_or_div) {
-                        // same as above.
-                        added_mul = true;
-
-                        dentaku_stack_push(dentaku, result);
-                        continue;
-                    }
-                    else {
-                        dentaku_stack_push(dentaku, result);
-                        break;
-                    }
-                }
-            }
+        if (dentaku_src_eof(dentaku) || tok_got->type == TOK_RPAREN) {    // EOF or ')'
+            bool ret_val = eval_when_eof_or_rparen(
+                    dentaku,
+                    (tok_got->type == TOK_RPAREN ? TOK_RPAREN : TOK_UNDEF),
+                    &back_to_main);
+            if (back_to_main)
+                return ret_val;
         }
-        else if (tok_top.type == TOK_OP) {    // '+', '-', '*', '/'
+        else if (tok_got->type == TOK_OP) {    // '+', '-', '*', '/'
             // postpone '+' and '-'.
-            if (tok_top.str[0] == '*' || tok_top.str[0] == '/') {
-                // get and push right hand operand.
-                if ((tok_got = dentaku_get_token(dentaku, &new_token)) == NULL)
-                    // couldn't get token.
-                    return false;
-
-                if (new_token){
-                    // push new token.
-                    dentaku_stack_push(dentaku, tok_got);
-                }
-                memcpy(&tok_top, tok_got, sizeof tok_top);
-
-
-                switch (tok_top.type) {
-                case TOK_DIGIT:
-                    {
-                        Token *result;
-                        if ((result = dentaku_calc_expr(dentaku, &no_op)) == NULL)
-                            return false;
-                        dentaku_stack_push(dentaku, result);
-                        if (no_op)
-                            return true;
-                    }
-                    break;
-
-                // syntax checking
-                case TOK_RPAREN:
-                    WARN("reaching ')' where expression is expected");
-                    return false;
-                case TOK_OP:
-                    WARN2("reaching '%c' where expression is expected", *tok_top.str);
-                    return false;
-                default:
-                    break;    // to satisfy gcc.
-                }
+            if (tok_got->str[0] == '*' || tok_got->str[0] == '/') {
+                bool ret_val = eval_when_mul_or_div(dentaku, &back_to_main);
+                if (back_to_main)
+                    return ret_val;
             }
         }
-        else if (tok_top.type == TOK_DIGIT) {
+        else if (tok_got->type == TOK_DIGIT) {
             // nop.
         }
-        else if (tok_top.type == TOK_LPAREN) {
+        else if (tok_got->type == TOK_LPAREN) {
             // nop.
         }
         else {
-            if (tok_top.str)
-                WARN2("unknown token '%s' found", tok_top.str);
+            if (tok_got->str)
+                WARN2("unknown token '%s' found", tok_got->str);
             else
                 WARN("unknown token found");
             return false;
