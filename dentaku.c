@@ -20,6 +20,7 @@
  *   not to write 'token_init(), token_alloc()' ...
  * - memcpy() しない関数(stack.cのrefer_top())がstack.hにいてくれると助かる
  *   現在refer_top()をそのままcommon.hに持ってきてる...
+ * - add more ops. (e.g.: '^', 'log', 'exp')
  */
 
 
@@ -158,10 +159,6 @@ dentaku_calc_expr(Dentaku *dentaku, bool *no_op)
 
     *no_op = false;
 
-    token_init(&tok_op);
-    token_init(&tok_n);
-    token_init(&tok_m);
-
     tok_result = malloc(sizeof(Token));
     if (tok_result == NULL) {
         DIE("can't allocate memory for result token!");
@@ -177,7 +174,6 @@ dentaku_calc_expr(Dentaku *dentaku, bool *no_op)
 
 
     // 1st. pop 'm' of expression 'n <op> m'.
-    token_alloc(&tok_m, MAX_TOK_CHAR_BUF);
     dentaku_stack_pop(dentaku, &tok_m);
     dentaku_printf_d(dentaku, "pop 'm' of 'n <op> m'... [%s]", tok_m.str);
 
@@ -192,24 +188,17 @@ dentaku_calc_expr(Dentaku *dentaku, bool *no_op)
 
 
     // 2nd. pop '<op>' of expression 'n <op> m'.
-    token_alloc(&tok_op, MAX_TOK_CHAR_BUF);
     dentaku_stack_pop(dentaku, &tok_op);
     dentaku_printf_d(dentaku, "pop '<op>' of 'n <op> m'... [%s]", tok_op.str);
 
 
     if (stack_empty(stk)) {
         WARN("reaching EOF where digit is expected");
-
-        // other token's will be destructed at dentaku_destroy().
-        token_destroy(&tok_m);
-        token_destroy(&tok_op);
-
         return NULL;
     }
 
 
     // 3rd. pop 'n' of expression 'n <op> m'.
-    token_alloc(&tok_n, MAX_TOK_CHAR_BUF);
     dentaku_stack_pop(dentaku, &tok_n);
     dentaku_printf_d(dentaku, "pop 'n' of 'n <op> m'... [%s]", tok_n.str);
 
@@ -266,11 +255,6 @@ dentaku_calc_expr(Dentaku *dentaku, bool *no_op)
 
 
     dentaku_printf_d(dentaku, "eval '%s %s %s' => '%s'", tok_n.str, tok_op.str, tok_m.str, tok_result->str);
-
-    // free tokens.
-    token_destroy(&tok_m);
-    token_destroy(&tok_op);
-    token_destroy(&tok_n);
 
 
     return tok_result;
@@ -515,7 +499,6 @@ eval_when_eof_or_rparen(Dentaku *dentaku, const TokenType top_type, bool *back_t
     if (top_type == TOK_RPAREN) {
         // pop ')'
         // FIXME see line 21 of this file
-        token_destroy(refer_top(stk));
         dentaku_stack_pop(dentaku, NULL);
     }
 
@@ -567,7 +550,6 @@ eval_when_eof_or_rparen(Dentaku *dentaku, const TokenType top_type, bool *back_t
 
             // pop '('
             // FIXME see line 21 of this file
-            token_destroy(refer_top(stk));
             dentaku_stack_pop(dentaku, NULL);
 
             // unless top is '*' or '/',
@@ -589,7 +571,7 @@ eval_when_eof_or_rparen(Dentaku *dentaku, const TokenType top_type, bool *back_t
                 Token tok_mul;
                 token_init(&tok_mul);
                 token_alloc(&tok_mul, MAX_TOK_CHAR_BUF);
-                strncpy(tok_mul.str, "*", 2);
+                strcpy(tok_mul.str, "*");
                 tok_mul.type = TOK_OP;
 
                 // push "*"
