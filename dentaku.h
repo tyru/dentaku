@@ -44,9 +44,6 @@ typedef struct {
 void
 dentaku_show_stack(Dentaku *dentaku);
 
-void
-dentaku_printf_d(Dentaku *dentaku, const char *fmt, ...);
-
 
 
 

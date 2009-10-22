@@ -36,6 +36,28 @@
 
 
 
+static void
+dentaku_printf_d(Dentaku *dentaku, const char *fmt, ...)
+{
+    va_list ap;
+
+    if (! dentaku->debug)
+        return;
+
+    fputs("[debug]::", stderr);
+
+    va_start(ap, fmt);
+    vfprintf(stderr, fmt, ap);
+    va_end(ap);
+
+    fputc('\n', stderr);
+    fflush(stderr);
+}
+
+
+
+
+
 
 // for debug and fun.
 void
@@ -64,25 +86,6 @@ dentaku_show_stack(Dentaku *dentaku)
         dentaku_stack_push(dentaku, tokens + i);
     }
 
-    fflush(stderr);
-}
-
-
-void
-dentaku_printf_d(Dentaku *dentaku, const char *fmt, ...)
-{
-    va_list ap;
-
-    if (! dentaku->debug)
-        return;
-
-    fputs("[debug]::", stderr);
-
-    va_start(ap, fmt);
-    vfprintf(stderr, fmt, ap);
-    va_end(ap);
-
-    fputc('\n', stderr);
     fflush(stderr);
 }
 
@@ -708,6 +711,9 @@ dentaku_eval_src(Dentaku *dentaku)
 }
 
 
+
+
+
 void
 dentaku_clear_stack(Dentaku *dentaku)
 {
@@ -727,6 +733,8 @@ dentaku_show_result(Dentaku *dentaku)
     if (top)
         puts(top->str);
 }
+
+
 
 
 int
