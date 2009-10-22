@@ -3,7 +3,7 @@
  * dentaku.c - calculator
  *
  * Written By: tyru <tyru.exe@gmail.com>
- * Last Change: 2009-10-20.
+ * Last Change: 2009-10-22.
  *
  */
 
@@ -164,10 +164,12 @@ dentaku_calc_expr(Dentaku *dentaku, bool *no_op)
 
     // 1st. pop 'm' of expression 'n <op> m'.
     token_alloc(&tok_m, MAX_TOK_CHAR_BUF);
+    dentaku_printf_d(dentaku, "pop 'm' of 'n <op> m'... [%s]",
+                                    ((Token*)stk->top)->str);
     dentaku_stack_pop(dentaku, &tok_m);
 
 
-    if (stk->top == NULL) {
+    if (stk->top == NULL || ((Token*)stk->top)->type == TOK_LPAREN) {
         // no more tokens on stack. calculation has been done.
         memcpy(tok_result, &tok_m, sizeof(Token));
         *no_op = true;
@@ -177,6 +179,8 @@ dentaku_calc_expr(Dentaku *dentaku, bool *no_op)
 
     // 2nd. pop '<op>' of expression 'n <op> m'.
     token_alloc(&tok_op, MAX_TOK_CHAR_BUF);
+    dentaku_printf_d(dentaku, "pop '<op>' of 'n <op> m'... [%s]",
+                                        ((Token*)stk->top)->str);
     dentaku_stack_pop(dentaku, &tok_op);
 
 
@@ -193,6 +197,8 @@ dentaku_calc_expr(Dentaku *dentaku, bool *no_op)
 
     // 3rd. pop 'n' of expression 'n <op> m'.
     token_alloc(&tok_n, MAX_TOK_CHAR_BUF);
+    dentaku_printf_d(dentaku, "pop 'n' of 'n <op> m'... [%s]",
+                                        ((Token*)stk->top)->str);
     dentaku_stack_pop(dentaku, &tok_n);
 
 
