@@ -118,7 +118,7 @@ dentaku_src_eof(Dentaku *dentaku)
 void
 dentaku_calc_expr(Dentaku *dentaku)
 {
-    Token tok_op, tok_n, tok_m, tok_result;
+    Token tok_n, tok_op, tok_m, tok_result;
     Digit n, m, result;
     double d_n, d_m;
     bool success;
@@ -129,56 +129,51 @@ dentaku_calc_expr(Dentaku *dentaku)
         dentaku_printf_d(dentaku, "before calculation");
         dentaku_show_stack(dentaku);
     }
-
-
-    // TODO
-    // do 'pop' and 'check' if it failed.
-    // now 'check' and 'pop'.
+    if (stack_empty(stk)) {
+        // don't call when top is NULL!!
+        DIE("no more items on stack.");
+    }
 
     token_init(&tok_n);
     token_init(&tok_op);
     token_init(&tok_m);
 
-    switch (stack_size(stk)) {
-        case 0:
-            // NOTE: don't call when top is NULL!!
-            DIE("no more items on stack.");
-        case 1:
-            goto ok;
-    }
-
-    // size is 2 or greater.
-
 
     // 1st. pop 'm' of expression 'n <op> m'.
-    ret = stack_pop(stk, &tok_m);
-    dentaku_printf_d(dentaku, "pop 'm' of 'n <op> m'... [%s]", tok_m.str);
-    if (ret != STACK_SUCCESS) {
+    switch (ret = stack_pop(stk, &tok_m)) {
+    case STACK_SUCCESS:
+        dentaku_printf_d(dentaku, "pop 'm' of 'n <op> m'... [%s]", tok_m.str);
+        break;
+    default:
         WARN2("something wrong stack_pop(stk, &tok_m) == %d", ret);
     }
 
     // 2nd. pop '<op>' of expression 'n <op> m'.
-    ret = stack_pop(stk, &tok_op);
+    // '<op>' or '( <op>'
+    if ((ret = stack_pop(stk, &tok_op)) == STACK_EMPTY
+     || (ret == STACK_SUCCESS && tok_op.type == TOK_LPAREN))
+    {
+        if (ret != STACK_EMPTY)
+            stack_push(stk, &tok_op);
+        stack_push(stk, &tok_m);
+        goto just_ret;
+    }
     dentaku_printf_d(dentaku, "pop '<op>' of 'n <op> m'... [%s]", tok_op.str);
     if (ret != STACK_SUCCESS) {
         WARN2("something wrong stack_pop(stk, &tok_m) == %d", ret);
     }
-    // '( <op>'
-    if (tok_op.type == TOK_LPAREN) {
-        // no more tokens on stack. calculation has been done.
-        stack_push(stk, &tok_op);
-        stack_push(stk, &tok_m);
-        goto ok;
-    }
 
 
     // 3rd. pop 'n' of expression 'n <op> m'.
-    ret = stack_pop(stk, &tok_n);
-    dentaku_printf_d(dentaku, "pop 'n' of 'n <op> m'... [%s]", tok_n.str);
-
-    if (ret == STACK_EMPTY) {
+    switch (ret = stack_pop(stk, &tok_n)) {
+    case STACK_SUCCESS:
+        dentaku_printf_d(dentaku, "pop 'n' of 'n <op> m'... [%s]", tok_n.str);
+        break;
+    case STACK_EMPTY:
         WARN("reaching EOF where digit is expected");
         goto error;
+    default:
+        WARN2("something wrong stack_pop(stk, &tok_m) == %d", ret);
     }
 
 
@@ -251,11 +246,10 @@ error:
     token_destroy(&tok_op);
     token_destroy(&tok_m);
     siglongjmp(*dentaku->main_jmp_buf, JMP_RET_ERR);
-ok:
+just_ret:
     token_destroy(&tok_n);
     token_destroy(&tok_op);
     token_destroy(&tok_m);
-    siglongjmp(*dentaku->main_jmp_buf, JMP_RET_OK);
 }
 
 
@@ -293,6 +287,7 @@ dentaku_get_token(Dentaku *dentaku)
 
         // set to EOF.
         dentaku->src_pos = dentaku->src_len;
+        dentaku_printf_d(dentaku, "reach EOF");
 
         if (syntax_error)
             siglongjmp(*dentaku->main_jmp_buf, JMP_RET_ERR);
@@ -479,31 +474,32 @@ dentaku_read_src(Dentaku *dentaku)
 
 
 
-static bool
-eval_when_eof_or_rparen(Dentaku *dentaku, const TokenType top_type)
+static void
+eval_when_eof_or_rparen(Dentaku *dentaku)
 {
     stack_t *stk = dentaku->data_stack;
-    bool added_mul = false;
-    Token top_buf;
+    bool top_op_is_mul_div = false;    // continue evaluating when op is '*' or '/'.
+    Token top_buf, result;
+    const TokenType top_type = (dentaku_src_eof(dentaku) ? TOK_UNDEF : TOK_RPAREN);
 
     if (top_type == TOK_RPAREN) {
         // pop ')'
         stack_pop(stk, NULL);
     }
+    dentaku_printf_d(dentaku, "top is %s", top_type == TOK_RPAREN ? "')'" : "eof");
 
     // calculate until expression becomes 1 token
     // or top is correspond '(' and next is neither '*' nor '/'.
-    while (1) {
-        Token result;
+    for (; ; token_destroy(&result)) {
         dentaku_calc_expr(dentaku);
         stack_pop(stk, &result);
-        stack_top(stk, &top_buf);
+        dentaku_printf_d(dentaku, "result [%s]", result.str);
 
-        if (stack_empty(stk)) {
-            if (top_type == TOK_RPAREN && ! added_mul) {
+
+        if (stack_top(stk, &top_buf) == STACK_EMPTY) {
+            if (top_type == TOK_RPAREN && ! top_op_is_mul_div) {
                 // token was ')' at first, but got EOF.
                 token_destroy(&result);
-                token_destroy(&top_buf);
                 WARN("extra close parenthesis");
                 siglongjmp(*dentaku->main_jmp_buf, JMP_RET_ERR);
             }
@@ -532,6 +528,7 @@ eval_when_eof_or_rparen(Dentaku *dentaku, const TokenType top_type)
             // unless top is '*' or '/',
             // finish calculation of one expression in parenthesis.
             // because I got correspond '('.
+            token_destroy(&top_buf);
             stack_top(stk, &top_buf);
             bool mul_or_div = ! stack_empty(stk)
                             && (top_buf.str[0] == '*'
@@ -542,41 +539,43 @@ eval_when_eof_or_rparen(Dentaku *dentaku, const TokenType top_type)
             if (stack_empty(stk) && dentaku_src_eof(dentaku)) {
                 // end.
                 stack_push(stk, &result);
+                token_destroy(&result);
                 siglongjmp(*dentaku->main_jmp_buf, JMP_RET_OK);
             }
             else if (top_type == TOK_RPAREN && is_digit) {
-                const Token tok_mul;
+                dentaku_printf_d(dentaku, "add '*' between '(...)' and '(...)'");
+                // push "*"
+                Token tok_mul;
                 tok_mul.str = "*";
                 tok_mul.type = TOK_OP;
-
-                // push "*"
-                dentaku_printf_d(dentaku, "add '*' between '(...)' and '(...)'");
                 stack_push(stk, &tok_mul);
                 // push result.
                 stack_push(stk, &result);
 
+                token_destroy(&result);
                 // forbid empty stack with top_type == TOK_RPAREN.
                 // because '1+2)' is not valid expression.
                 // set this value to through the checking.
-                added_mul = true;
-
+                top_op_is_mul_div = true;
                 continue;
             }
             else if (top_type == TOK_RPAREN && mul_or_div) {
                 // same as above.
-                added_mul = true;
-
                 stack_push(stk, &result);
+
+                top_op_is_mul_div = true;
+                token_destroy(&result);
                 continue;
             }
             else {
                 stack_push(stk, &result);
+                token_destroy(&result);
                 break;
             }
         }
     }
-
-    return true;
+    token_destroy(&result);
+    token_destroy(&top_buf);
 }
 
 
@@ -642,11 +641,10 @@ dentaku_eval_src(Dentaku *dentaku)
     while (1) {
         dentaku_get_token(dentaku);
         stack_top(stk, &tok_got);
+        dentaku_printf_d(dentaku, "dispatch! [%s]", tok_got.str);
 
         if (dentaku_src_eof(dentaku) || tok_got.type == TOK_RPAREN) {    // EOF or ')'
-            eval_when_eof_or_rparen(
-                    dentaku,
-                    (tok_got.type == TOK_RPAREN ? TOK_RPAREN : TOK_UNDEF));
+            eval_when_eof_or_rparen(dentaku);
         }
         else if (tok_got.type == TOK_OP) {    // '+', '-', '*', '/'
             // postpone '+' and '-'.
