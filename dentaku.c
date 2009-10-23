@@ -192,6 +192,20 @@ dentaku_calc_expr(Dentaku *dentaku)
     }
     d_m = (double)m.i + m.d;
 
+    if (stack_top(stk, &tok_result) == STACK_SUCCESS) {
+        // fix for the case that '-1-1-1' results in '-1'.
+        // 1 - 1 => 0
+        // -1 - 0 => -1
+        if (tok_result.str[0] == '-') {
+            stack_pop(stk, NULL);
+            Token tok_plus;
+            tok_plus.str = "+";
+            tok_plus.type = TOK_OP;
+            stack_push(stk, &tok_plus);
+            d_n = -d_n;
+        }
+        token_destroy(&tok_result);
+    }
 
     /* calc */
     switch (*tok_op.str) {
@@ -217,12 +231,11 @@ dentaku_calc_expr(Dentaku *dentaku)
     }
     tok_result.type = TOK_DIGIT;
 
-    dentaku_printf_d(dentaku, "eval '%s %s %s' => '%s'",
-        tok_n.str, tok_op.str, tok_m.str, tok_result.str);
+    dentaku_printf_d(dentaku, "eval '%f %s %f' => '%s'",
+        d_n, tok_op.str, d_m, tok_result.str);
 
+    // push result.
     stack_push(stk, &tok_result);
-
-
     token_destroy(&tok_result);
     goto just_ret;
 
