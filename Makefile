@@ -11,8 +11,10 @@ OBJS = $(SRC:.c=.o)
 all: $(PROG)
 
 
-test: $(PROG) leak-test
-leak-test:
+test: $(PROG)
+	\perl test.pl
+
+leak-test: $(PROG)
 	\valgrind --leak-check=full ./$(PROG)
 
 
