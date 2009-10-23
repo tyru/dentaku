@@ -58,11 +58,11 @@ dentaku_stack_push(Dentaku *dentaku, Token *tok);
 bool
 dentaku_src_eof(Dentaku *dentaku);
 
-Token*
-dentaku_calc_expr(Dentaku *dentaku, bool *no_op);
+void
+dentaku_calc_expr(Dentaku *dentaku);
 
-Token*
-dentaku_get_token(Dentaku *dentaku, bool *got_new_token);
+void
+dentaku_get_token(Dentaku *dentaku);
 
 
 
