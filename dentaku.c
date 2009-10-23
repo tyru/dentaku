@@ -491,9 +491,11 @@ eval_when_eof_or_rparen(Dentaku *dentaku)
             }
             stack_push(stk, &result);
 
-            if (dentaku_src_eof(dentaku))
+            if (dentaku_src_eof(dentaku)) {
                 // end.
-                siglongjmp(*dentaku->main_jmp_buf, JMP_RET_ERR);
+                token_destroy(&result);
+                siglongjmp(*dentaku->main_jmp_buf, JMP_RET_OK);
+            }
             else
                 // no more tokens on stack.
                 // so I will get tokens from dentaku->src.
