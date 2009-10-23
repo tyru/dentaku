@@ -479,12 +479,13 @@ eval_when_eof_or_rparen(Dentaku *dentaku)
     bool top_op_is_mul_div = false;    // continue evaluating when op is '*' or '/'.
     Token top_buf, result;
     const TokenType top_type = (dentaku_src_eof(dentaku) ? TOK_UNDEF : TOK_RPAREN);
+    const char *top_type_str = top_type == TOK_RPAREN ? "')'" : "eof";
 
     if (top_type == TOK_RPAREN) {
         // pop ')'
         stack_pop(stk, NULL);
     }
-    dentaku_printf_d(dentaku, "top is %s", top_type == TOK_RPAREN ? "')'" : "eof");
+    dentaku_printf_d(dentaku, "top is %s", top_type_str);
 
     // calculate until expression becomes 1 token
     // or top is correspond '(' and next is neither '*' nor '/'.
@@ -493,8 +494,14 @@ eval_when_eof_or_rparen(Dentaku *dentaku)
         stack_pop(stk, &result);
         dentaku_printf_d(dentaku, "result [%s]", result.str);
 
+        stack_ret ret = stack_top(stk, &top_buf);
+        dentaku_printf_d(dentaku,
+                "dispatched %s: top is %s.",
+                top_type_str,
+                ret == STACK_SUCCESS ? top_buf.str : "empty");
 
-        if (stack_top(stk, &top_buf) == STACK_EMPTY) {
+
+        if (stack_empty(stk)) {
             if (top_type == TOK_RPAREN && ! top_op_is_mul_div) {
                 // token was ')' at first, but got EOF.
                 token_destroy(&result);
@@ -537,13 +544,17 @@ eval_when_eof_or_rparen(Dentaku *dentaku)
                            && top_buf.type == TOK_DIGIT;
 
             if (stack_empty(stk) && dentaku_src_eof(dentaku)) {
-                // end.
+                dentaku_printf_d(dentaku,
+                        "no more tokens. just push the result [%s].",
+                        result.str);
+
                 stack_push(stk, &result);
                 token_destroy(&result);
                 siglongjmp(*dentaku->main_jmp_buf, JMP_RET_OK);
             }
             else if (top_type == TOK_RPAREN && is_digit) {
                 dentaku_printf_d(dentaku, "add '*' between '(...)' and '(...)'");
+
                 // push "*"
                 Token tok_mul;
                 tok_mul.str = "*";
@@ -560,6 +571,9 @@ eval_when_eof_or_rparen(Dentaku *dentaku)
                 continue;
             }
             else if (top_type == TOK_RPAREN && mul_or_div) {
+                dentaku_printf_d(dentaku,
+                        "next op is '*' or '/'. continue evaluating...");
+
                 // same as above.
                 stack_push(stk, &result);
 
@@ -568,10 +582,17 @@ eval_when_eof_or_rparen(Dentaku *dentaku)
                 continue;
             }
             else {
+                dentaku_printf_d(dentaku, "else! wtf?");
+
                 stack_push(stk, &result);
                 token_destroy(&result);
                 break;
             }
+        }
+        else if (top_buf.type == TOK_OP) {
+            stack_push(stk, &result);
+            if (top_buf.str[0] == '+' || top_buf.str[0] == '-')
+                break;
         }
         else
             stack_push(stk, &result);

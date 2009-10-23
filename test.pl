@@ -24,6 +24,7 @@ sub rx_int {
 sub rx_float {
     my $float = shift;
     my ($i, $f) = split /\./, "$float";
+    $f = 0 unless defined $f;
     $float > 0 ? 
         qr/\A \+ ? $i \. $f 0* \Z/x
       : qr/\A      $i \. $f 0* \Z/x
@@ -63,6 +64,27 @@ my @tests = (
     },
     sub {
         calc_int("1+2*(3+4)+5", 20);
+    },
+    sub {
+        calc_int("1+2+(3+4)*5", 38);
+    },
+    sub {
+        calc_int("1*2-(3+4)*5", -33);
+    },
+    sub {
+        calc_int("2*((3+4)*5)", 70);
+    },
+    sub {
+        calc_int("2+((3+4)*5)", 37);
+    },
+    sub {
+        calc_float("7/((3+4*1)*5)", 0.2);
+    },
+    sub {
+        calc_int("7/(3+4)*5", 5);
+    },
+    sub {
+        calc_float("1-7/(3+4)*5", -4);
     },
     sub {
         calc_int("-1-1-1", -3);
