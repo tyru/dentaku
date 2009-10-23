@@ -5,8 +5,6 @@
 
 // #define NDEBUG
 
-// #define _GNU_SOURCE
-
 
 #include "digit.h"
 

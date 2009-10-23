@@ -14,6 +14,7 @@
  *   (if capacity is a fewer than needed size, use realloc())
  * - use GC
  * - add more ops. (e.g.: '^', 'log', 'exp')
+ * - too ugly
  */
 
 
@@ -23,9 +24,7 @@
 #include "util.h"
 #include "parser.h"
 
-#define _GNU_SOURCE
-    #include <getopt.h>
-#undef _GNU_SOURCE
+#include <getopt.h>
 
 #include <stdarg.h>
 #include <unistd.h>
