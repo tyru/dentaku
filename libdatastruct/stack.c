@@ -68,10 +68,11 @@ stack_t *stack_initialize(const size_t element_size
 	}
 	stack->array = NULL;
 	stack->size = 0;
+	stack->max_used_size = 0;
 	stack->element_size = element_size;
 	stack->array_size = 0;
 	stack->release_function = release_function;
-	stack->copy_function = copy_function == 0 ? memcpy : copy_function;
+	stack->copy_function = copy_function == NULL ? memcpy : copy_function;
 	return stack;
 }
 
@@ -80,7 +81,7 @@ void stack_release(stack_t *stack)
 	if(stack){
 		if(stack->release_function){
 			size_t counter = 0;
-			while(counter != stack->size){
+			while(counter != stack->max_used_size){
 				stack->release_function(refer_by_offset(stack,counter));
 				counter++;
 			}
@@ -198,8 +199,14 @@ unsigned int stack_push(stack_t *stack,const void *input)
 		stack->array = temp;
 		stack->array_size = stack->array_size+STACK_MEMORY_ALLOCATION_UNIT_SIZE;
 	}
+	if(stack->size < stack->max_used_size && stack->release_function){
+		stack->release_function(refer_by_offset(stack,stack->size));
+	}
 	stack->copy_function(refer_by_offset(stack,stack->size),input,stack->element_size);
 	stack->size++;
+	if(stack->max_used_size < stack->size){
+		stack->max_used_size = stack->size;
+	}
 	return STACK_SUCCESS;
 }
 
@@ -213,12 +220,19 @@ unsigned int stack_pop(stack_t *stack,void *output)
 		stack->copy_function(output,refer_by_offset(stack,stack->size),stack->element_size);
 	}
 	if(STACK_MEMORY_ALLOCATION_UNIT_SIZE*2 <= stack->array_size-stack->size){
-		void *temp = realloc(stack->array,stack->element_size
-		    *(stack->array_size-STACK_MEMORY_ALLOCATION_UNIT_SIZE));
+		const size_t next_array_size = stack->array_size-STACK_MEMORY_ALLOCATION_UNIT_SIZE;
+		if (stack->release_function) {
+			size_t counter = next_array_size;
+			while (counter < stack->max_used_size) {
+				stack->release_function(refer_by_offset(stack,counter));
+				counter++;
+			}
+		}
+		void *temp = realloc(stack->array,stack->element_size*next_array_size);
 		if(temp){
+			stack->max_used_size = next_array_size;
 			stack->array = temp;
-			stack->array_size
-			    = stack->array_size-STACK_MEMORY_ALLOCATION_UNIT_SIZE;
+			stack->array_size = next_array_size;
 		}
 	}
 	return STACK_SUCCESS;
@@ -227,6 +241,7 @@ unsigned int stack_pop(stack_t *stack,void *output)
 unsigned int stack_push_many_elements
     (stack_t *stack,const size_t push_size,const void *input)
 {
+	size_t counter;
 	if(stack->size+push_size > stack->array_size){
 		size_t new_size = STACK_MEMORY_ALLOCATION_UNIT_SIZE*((size_t)
 		    ((stack->size+push_size)/STACK_MEMORY_ALLOCATION_UNIT_SIZE)+1);
@@ -237,9 +252,25 @@ unsigned int stack_push_many_elements
 		stack->array = temp;
 		stack->array_size = new_size;
 	}
-	stack->copy_function(refer_by_offset(stack,stack->size)
-	    ,input,stack->element_size*push_size);
+	if(stack->size < stack->max_used_size && stack->release_function){
+		counter = stack->size;
+		while (counter < stack->max_used_size) {
+			stack->release_function(refer_by_offset(stack,counter));
+			counter++;
+		}
+		stack->max_used_size = stack->size;
+	}
+	counter = 0;
+	while (counter < push_size) {
+		stack->copy_function(refer_by_offset(stack,stack->size+counter)
+			,void_pointer_addition(input, stack->element_size*counter)
+			,stack->element_size);
+		counter++;
+	}
 	stack->size += push_size;
+	if(stack->max_used_size < stack->size){
+		stack->max_used_size = stack->size;
+	}
 	return STACK_SUCCESS;
 }
 
