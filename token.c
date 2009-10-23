@@ -5,6 +5,7 @@
 
 
 
+// initialize.
 void
 token_init(Token *tok)
 {
@@ -12,9 +13,11 @@ token_init(Token *tok)
     tok->type = TOK_UNDEF;
 }
 
+// initialize and allocate.
 void
 token_alloc(Token *tok, size_t size)
 {
+    token_init(tok);
     tok->str = malloc(size);
     if (! ALLOCATED(tok->str)) {
         perror("malloc");
@@ -35,7 +38,6 @@ token_destroy(Token *tok)
 Token*
 token_copy(Token *dest, const Token *src, size_t n)
 {
-    token_init(dest);
     token_alloc(dest, strlen(src->str) + 1);
 
     strcpy(dest->str, src->str);

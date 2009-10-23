@@ -15,9 +15,6 @@
  * - check also stack_(push|pop)'s return value.
  * - check more stack function's return value
  * - use GC
- * - use siglongjmp() when error occured
- * - token_alloc() should call token_init()
- *   not to write 'token_init(), token_alloc()' ...
  * - memcpy() しない関数(stack.cのrefer_top())がstack.hにいてくれると助かる
  *   現在refer_top()をそのままcommon.hに持ってきてる...
  * - add more ops. (e.g.: '^', 'log', 'exp')
@@ -219,7 +216,6 @@ dentaku_calc_expr(Dentaku *dentaku)
 
 
     /* convert result token */
-    token_init(&tok_result);
     token_alloc(&tok_result, MAX_TOK_CHAR_BUF);
     if (! dtoa(&result, tok_result.str, MAX_TOK_CHAR_BUF, 10)) {
         WARN("can't convert digit to string");
@@ -233,12 +229,8 @@ dentaku_calc_expr(Dentaku *dentaku)
     stack_push(stk, &tok_result);
 
 
-    // FIXME ugly...
     token_destroy(&tok_result);
-    token_destroy(&tok_n);
-    token_destroy(&tok_op);
-    token_destroy(&tok_m);
-    return;
+    goto just_ret;
 
 
 error:
@@ -273,7 +265,6 @@ dentaku_get_token(Dentaku *dentaku)
     if (result_tok == NULL)
         DIE("can't allocate memory for new token!");
 
-    token_init(result_tok);
     token_alloc(result_tok, MAX_TOK_CHAR_BUF);
 
     char *cur_pos = dentaku->src + dentaku->src_pos;
