@@ -12,11 +12,7 @@
  * - add .str's capacity size to Token
  *   for allocating just token's characters length.
  *   (if capacity is a fewer than needed size, use realloc())
- * - check also stack_(push|pop)'s return value.
- * - check more stack function's return value
  * - use GC
- * - memcpy() しない関数(stack.cのrefer_top())がstack.hにいてくれると助かる
- *   現在refer_top()をそのままcommon.hに持ってきてる...
  * - add more ops. (e.g.: '^', 'log', 'exp')
  */
 
@@ -89,7 +85,6 @@ dentaku_show_stack(Dentaku *dentaku)
     while (stack_size(stk) < stk_len) {
         stack_push(stk, tokens + stack_size(stk));
     }
-    dentaku_printf_d(dentaku, "  top is [%s]", ((Token*)refer_top(stk))->str);
 
     fflush(stderr);
 }
