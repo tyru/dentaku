@@ -560,6 +560,8 @@ eval_when_eof_or_rparen(Dentaku *dentaku)
                 break;
             }
         }
+        else
+            stack_push(stk, &result);
     }
     token_destroy(&result);
     token_destroy(&top_buf);
