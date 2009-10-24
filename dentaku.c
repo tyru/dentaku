@@ -87,6 +87,38 @@ dentaku_show_stack(Dentaku *dentaku)
 
 
 
+NORETURN void
+dentaku_die(Dentaku *dentaku, const char *errmsg)
+{
+    if (errmsg)
+        fputs(errmsg, stderr);
+    dentaku_exit(dentaku, EXIT_FAILURE);
+}
+
+
+NORETURN void
+dentaku_dief(Dentaku *dentaku, const char *fmt, ...)
+{
+    va_list ap;
+    if (fmt) {
+        va_start(ap, fmt);
+        vfprintf(stderr, fmt, ap);
+        va_end(ap);
+    }
+    dentaku_exit(dentaku, EXIT_FAILURE);
+}
+
+
+NORETURN void
+dentaku_exit(Dentaku *dentaku, int status)
+{
+    dentaku_destroy(dentaku);
+    exit(status);
+}
+
+
+
+
 
 bool
 dentaku_src_eof(Dentaku *dentaku)
@@ -362,37 +394,6 @@ dentaku_destroy(Dentaku *dentaku)
     }
 }
 
-
-
-
-NORETURN void
-dentaku_die(Dentaku *dentaku, const char *errmsg)
-{
-    if (errmsg)
-        fputs(errmsg, stderr);
-    dentaku_exit(dentaku, EXIT_FAILURE);
-}
-
-
-NORETURN void
-dentaku_dief(Dentaku *dentaku, const char *fmt, ...)
-{
-    va_list ap;
-    if (fmt) {
-        va_start(ap, fmt);
-        vfprintf(stderr, fmt, ap);
-        va_end(ap);
-    }
-    dentaku_exit(dentaku, EXIT_FAILURE);
-}
-
-
-NORETURN void
-dentaku_exit(Dentaku *dentaku, int status)
-{
-    dentaku_destroy(dentaku);
-    exit(status);
-}
 
 
 
