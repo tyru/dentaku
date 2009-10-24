@@ -224,6 +224,7 @@ dentaku_calc_expr(Dentaku *dentaku)
 
 
     /* convert result token */
+    token_init(&tok_result);
     token_alloc(&tok_result, MAX_TOK_CHAR_BUF);
     if (! dtoa(&result, tok_result.str, MAX_TOK_CHAR_BUF, 10)) {
         WARN("can't convert digit to string");
@@ -268,6 +269,7 @@ dentaku_get_token(Dentaku *dentaku)
     // when stack is empty or '(' is on the top.
     allow_signed = stack_empty(stk) || top.type == TOK_LPAREN;
 
+    token_init(&tok_result);
     token_alloc(&tok_result, MAX_TOK_CHAR_BUF);
 
     char *cur_pos = dentaku->src + dentaku->src_pos;

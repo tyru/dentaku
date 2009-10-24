@@ -17,7 +17,6 @@ token_init(Token *tok)
 void
 token_alloc(Token *tok, size_t size)
 {
-    token_init(tok);
     tok->str = malloc(size);
     if (! ALLOCATED(tok->str)) {
         perror("malloc");
