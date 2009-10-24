@@ -258,7 +258,7 @@ void
 dentaku_get_token(Dentaku *dentaku)
 {
     bool syntax_error;
-    Token *result_tok;
+    Token tok_result;
     bool allow_signed;
     Token top;
     stack_t *stk = dentaku->data_stack;
@@ -268,20 +268,14 @@ dentaku_get_token(Dentaku *dentaku)
     // when stack is empty or '(' is on the top.
     allow_signed = stack_empty(stk) || top.type == TOK_LPAREN;
 
-    result_tok = malloc(sizeof(Token));
-    if (result_tok == NULL)
-        DIE("can't allocate memory for new token!");
-
-    token_alloc(result_tok, MAX_TOK_CHAR_BUF);
+    token_alloc(&tok_result, MAX_TOK_CHAR_BUF);
 
     char *cur_pos = dentaku->src + dentaku->src_pos;
-    char *next_pos = get_token(cur_pos, result_tok, allow_signed, &syntax_error);
+    char *next_pos = get_token(cur_pos, &tok_result, allow_signed, &syntax_error);
 
     if (next_pos == NULL) {
         // EOF or syntax error.
-        token_destroy(result_tok);
-        free(result_tok);
-        result_tok = NULL;
+        token_destroy(&tok_result);
 
         // set to EOF.
         dentaku->src_pos = dentaku->src_len;
@@ -294,10 +288,10 @@ dentaku_get_token(Dentaku *dentaku)
             siglongjmp(*dentaku->main_jmp_buf, JMP_RET_ERR);
     }
     else {
-        dentaku_printf_d(dentaku, "got! [%s]", result_tok->str);
+        dentaku_printf_d(dentaku, "got! [%s]", tok_result.str);
 
         dentaku->src_pos += next_pos - cur_pos;
-        stack_push(stk, result_tok);
+        stack_push(stk, &tok_result);
     }
 }
 
