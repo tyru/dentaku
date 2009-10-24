@@ -107,6 +107,7 @@ get_token(char *src, Token *tok, bool allow_signed, bool *error)
 
     case '*':
     case '/':
+    case '^':
 
         tok_buf[0] = src[0];
         tok_buf[1] = '\0';

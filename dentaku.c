@@ -3,7 +3,7 @@
  * dentaku.c - calculator
  *
  * Written By: tyru <tyru.exe@gmail.com>
- * Last Change: 2009-10-24.
+ * Last Change: 2009-10-25.
  *
  */
 
@@ -25,9 +25,9 @@
 #include "parser.h"
 
 #include <getopt.h>
-
 #include <stdarg.h>
 #include <unistd.h>
+#include <math.h>
 
 
 
@@ -213,6 +213,7 @@ dentaku_calc_expr(Dentaku *dentaku)
     case '-': success = double2digit(d_n - d_m, &result); break;
     case '*': success = double2digit(d_n * d_m, &result); break;
     case '/': success = double2digit(d_n / d_m, &result); break;
+    case '^': success = double2digit(pow(d_n, d_m), &result); break;
     default:
         WARN2("unknown op '%s'", tok_op.str);
         goto error;
@@ -535,7 +536,8 @@ eval_when_eof_or_rparen(Dentaku *dentaku)
             stack_top(stk, &top_buf);
             bool mul_or_div = ! stack_empty(stk)
                             && (top_buf.str[0] == '*'
-                            ||  top_buf.str[0] == '/');
+                            ||  top_buf.str[0] == '/'
+                            ||  top_buf.str[0] == '^');
             bool is_digit = ! stack_empty(stk)
                            && top_buf.type == TOK_DIGIT;
 
@@ -568,7 +570,7 @@ eval_when_eof_or_rparen(Dentaku *dentaku)
             }
             else if (top_type == TOK_RPAREN && mul_or_div) {
                 dentaku_printf_d(dentaku,
-                        "next op is '*' or '/'. continue evaluating...");
+                        "next op is '*' or '/' or '^'. continue evaluating...");
 
                 // same as above.
                 stack_push(stk, &result);
@@ -578,8 +580,6 @@ eval_when_eof_or_rparen(Dentaku *dentaku)
                 continue;
             }
             else {
-                dentaku_printf_d(dentaku, "else! wtf?");
-
                 stack_push(stk, &result);
                 token_destroy(&result);
                 break;

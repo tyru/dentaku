@@ -3,6 +3,7 @@
 CC = gcc
 PROG = dentaku
 CFLAGS = -g -W -Wall -std=gnu99
+LDFLAGS = -lm
 
 SRC = main.c dentaku.c parser.c token.c util.c
 OBJS = $(SRC:.c=.o)
