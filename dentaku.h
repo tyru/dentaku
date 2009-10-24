@@ -42,18 +42,14 @@ typedef struct {
 
 
 
+/* for debug */
+void
+dentaku_printf_d(Dentaku *dentaku, const char *fmt, ...);
 
 void
 dentaku_show_stack(Dentaku *dentaku);
 
 
-
-
-stack_ret
-dentaku_stack_pop(Dentaku *dentaku, Token *tok);
-
-stack_ret
-dentaku_stack_push(Dentaku *dentaku, Token *tok);
 
 bool
 dentaku_src_eof(Dentaku *dentaku);
@@ -78,6 +74,12 @@ dentaku_destroy(Dentaku *dentaku);
 
 
 NORETURN void
+dentaku_die(Dentaku *dentaku, const char *errmsg);
+
+NORETURN void
+dentaku_dief(Dentaku *dentaku, const char *fmt, ...);
+
+NORETURN void
 dentaku_exit(Dentaku *dentaku, int status);
 
 
@@ -91,7 +93,7 @@ bool
 dentaku_read_src(Dentaku *dentaku);
 
 NORETURN void
-dentaku_eval_src(Dentaku *dentaku);
+dentaku_dispatch(Dentaku *dentaku);
 
 void
 dentaku_clear_stack(Dentaku *dentaku);

@@ -28,7 +28,7 @@ main(int argc, char *argv[])
                 return EXIT_FAILURE;
             }
             // evaluation
-            dentaku_eval_src(d);
+            dentaku_dispatch(d);
 
             /* NOTREACHED */
             assert(0);
