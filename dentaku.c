@@ -516,18 +516,10 @@ dentaku_dispatch(Dentaku *dentaku)
 void
 dentaku_clear_stack(Dentaku *dentaku)
 {
-    // TODO free and pop each top
-
-    stack_release(dentaku->data_stack);
-
-    dentaku->data_stack = stack_initialize(
-        sizeof(Token),
-        (void (*)(void*))token_destroy,
-        (void *(*)(void*, const void*, size_t))token_copy
-    );
-    if (! dentaku->data_stack) {
-        DIE("failed to initialize stack");
-    }
+    stack_pop_many_elements(
+            dentaku->data_stack,
+            stack_size(dentaku->data_stack),
+            NULL);
 }
 
 
