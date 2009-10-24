@@ -494,6 +494,8 @@ dentaku_read_src(Dentaku *dentaku)
 NORETURN void
 dentaku_dispatch(Dentaku *dentaku)
 {
+    assert(dentaku->main_jmp_buf);
+
     if (STREQ(dentaku->arg_f, "rec")) {
         // TODO
         siglongjmp(*dentaku->main_jmp_buf, JMP_RET_ERR);
