@@ -293,6 +293,9 @@ dentaku_get_token(Dentaku *dentaku)
     Token top;
     stack_t *stk = dentaku->data_stack;
 
+    if (dentaku_src_eof(dentaku))
+        return;
+
     stack_top(stk, &top);
     // allow '+' or '-' before digit
     // when stack is empty or '(' is on the top.
