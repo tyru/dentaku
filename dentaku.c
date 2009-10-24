@@ -3,7 +3,7 @@
  * dentaku.c - calculator
  *
  * Written By: tyru <tyru.exe@gmail.com>
- * Last Change: 2009-10-23.
+ * Last Change: 2009-10-24.
  *
  */
 
@@ -725,7 +725,9 @@ void
 dentaku_show_result(Dentaku *dentaku)
 {
     Token top;
-    if (stack_top(dentaku->data_stack, &top) == STACK_SUCCESS)
+    if (stack_top(dentaku->data_stack, &top) == STACK_SUCCESS) {
         puts(top.str);
+        token_destroy(&top);
+    }
 }
 
