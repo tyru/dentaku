@@ -1,5 +1,5 @@
-#ifndef DIGIT_H
-#define DIGIT_H
+#ifndef DENTAKU_DIGIT_H
+#define DENTAKU_DIGIT_H
 
 
 
@@ -11,4 +11,4 @@ typedef struct {
 
 
 
-#endif /* DIGIT_H */
+#endif /* DENTAKU_DIGIT_H */

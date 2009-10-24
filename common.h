@@ -1,5 +1,5 @@
-#ifndef COMMON_H
-#define COMMON_H
+#ifndef DENTAKU_COMMON_H
+#define DENTAKU_COMMON_H
 
 
 
@@ -48,4 +48,4 @@ typedef unsigned int    stack_ret;
 #endif
 
 
-#endif /* COMMON_H */
+#endif /* DENTAKU_COMMON_H */

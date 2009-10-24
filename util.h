@@ -1,5 +1,5 @@
-#ifndef UTIL_H
-#define UTIL_H
+#ifndef DENTAKU_UTIL_H
+#define DENTAKU_UTIL_H
 
 #include "common.h"
 
@@ -37,4 +37,4 @@ bool
 dtoa(Digit *digit, char *ascii, size_t max_size, int base);
 
 
-#endif /* UTIL_H */
+#endif /* DENTAKU_UTIL_H */

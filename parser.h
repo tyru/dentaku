@@ -1,5 +1,5 @@
-#ifndef PARSER_H
-#define PARSER_H
+#ifndef DENTAKU_PARSER_H
+#define DENTAKU_PARSER_H
 
 #include "common.h"
 
@@ -11,4 +11,4 @@ char*
 get_token(char *src, Token *tok, bool allow_signed, bool *error);
 
 
-#endif /* PARSER_H */
+#endif /* DENTAKU_PARSER_H */

@@ -1,5 +1,5 @@
-#ifndef DENTAKU_H
-#define DENTAKU_H
+#ifndef DENTAKU_DENTAKU_H
+#define DENTAKU_DENTAKU_H
 
 
 
@@ -105,4 +105,4 @@ void
 dentaku_show_result(Dentaku *dentaku);
 
 
-#endif /* DENTAKU_H */
+#endif /* DENTAKU_DENTAKU_H */

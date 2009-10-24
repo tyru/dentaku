@@ -1,5 +1,5 @@
-#ifndef TOKEN_H
-#define TOKEN_H
+#ifndef DENTAKU_TOKEN_H
+#define DENTAKU_TOKEN_H
 
 #include "common.h"
 
@@ -36,4 +36,4 @@ token_copy(Token *dest, const Token *src, size_t n);
 
 
 
-#endif /* TOKEN_H */
+#endif /* DENTAKU_TOKEN_H */
