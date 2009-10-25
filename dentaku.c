@@ -522,10 +522,7 @@ dentaku_dispatch(Dentaku *dentaku)
 void
 dentaku_clear_stack(Dentaku *dentaku)
 {
-    stack_pop_many_elements(
-            dentaku->data_stack,
-            stack_size(dentaku->data_stack),
-            NULL);
+    stack_clear(dentaku->data_stack);
 }
 
 

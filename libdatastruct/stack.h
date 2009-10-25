@@ -71,6 +71,9 @@ struct stack
 #define stack_empty(stack) \
     (!(stack)->size)
 
+#define stack_clear(stack) \
+    stack_pop_many_elements((stack), stack_size(stack), NULL)
+
 /*******************************************************************************
 	Functions
 *******************************************************************************/
