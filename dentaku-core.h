@@ -60,8 +60,8 @@ dentaku_exit(Dentaku *dentaku, int status);
 bool
 dentaku_src_eof(Dentaku *dentaku);
 
-void
-dentaku_calc_expr(Dentaku *dentaku);
+bool
+dentaku_calc_expr(Dentaku *dentaku, Token *tok_op, Token *tok_n, Token *tok_m);
 
 
 

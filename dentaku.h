@@ -24,14 +24,6 @@ dentaku_exit(Dentaku *dentaku, int status);
 
 
 
-bool
-dentaku_src_eof(Dentaku *dentaku);
-
-void
-dentaku_calc_expr(Dentaku *dentaku);
-
-
-
 Dentaku*
 dentaku_alloc();
 
