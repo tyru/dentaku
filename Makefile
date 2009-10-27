@@ -5,7 +5,7 @@ PROG = dentaku
 CFLAGS = -g -W -Wall -std=gnu99
 LDFLAGS = -lm
 
-SRC = main.c dentaku-core.c dentaku-stack.c parser.c token.c util.c
+SRC = main.c dentaku-core.c dentaku-stack.c parser.c token.c util.c op.c
 OBJS = $(SRC:.c=.o) mylib/list/list.o
 
 
@@ -73,11 +73,9 @@ dentaku-core.o: /usr/include/asm-generic/errno.h
 dentaku-core.o: /usr/include/asm-generic/errno-base.h /usr/include/assert.h
 dentaku-core.o: dentaku.h /usr/include/setjmp.h /usr/include/bits/setjmp.h
 dentaku-core.o: token.h libdatastruct/stack.h mylib/list/list.h
-dentaku-core.o: dentaku-stack.h util.h /usr/include/getopt.h
+dentaku-core.o: dentaku-stack.h util.h op.h /usr/include/getopt.h
 dentaku-core.o: /usr/include/unistd.h /usr/include/bits/posix_opt.h
-dentaku-core.o: /usr/include/bits/confname.h /usr/include/math.h
-dentaku-core.o: /usr/include/bits/huge_val.h /usr/include/bits/mathdef.h
-dentaku-core.o: /usr/include/bits/mathcalls.h
+dentaku-core.o: /usr/include/bits/confname.h
 dentaku-stack.o: dentaku-stack.h common.h digit.h /usr/include/stdio.h
 dentaku-stack.o: /usr/include/features.h /usr/include/sys/cdefs.h
 dentaku-stack.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h
@@ -150,3 +148,21 @@ util.o: /usr/include/string.h /usr/include/errno.h /usr/include/bits/errno.h
 util.o: /usr/include/linux/errno.h /usr/include/asm/errno.h
 util.o: /usr/include/asm-generic/errno.h
 util.o: /usr/include/asm-generic/errno-base.h /usr/include/assert.h
+op.o: op.h common.h digit.h /usr/include/stdio.h /usr/include/features.h
+op.o: /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h
+op.o: /usr/include/gnu/stubs.h /usr/include/gnu/stubs-32.h
+op.o: /usr/include/bits/types.h /usr/include/bits/typesizes.h
+op.o: /usr/include/libio.h /usr/include/_G_config.h /usr/include/wchar.h
+op.o: /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h
+op.o: /usr/include/stdlib.h /usr/include/sys/types.h /usr/include/time.h
+op.o: /usr/include/endian.h /usr/include/bits/endian.h
+op.o: /usr/include/bits/byteswap.h /usr/include/sys/select.h
+op.o: /usr/include/bits/select.h /usr/include/bits/sigset.h
+op.o: /usr/include/bits/time.h /usr/include/sys/sysmacros.h
+op.o: /usr/include/bits/pthreadtypes.h /usr/include/alloca.h
+op.o: /usr/include/string.h /usr/include/errno.h /usr/include/bits/errno.h
+op.o: /usr/include/linux/errno.h /usr/include/asm/errno.h
+op.o: /usr/include/asm-generic/errno.h /usr/include/asm-generic/errno-base.h
+op.o: /usr/include/assert.h util.h /usr/include/math.h
+op.o: /usr/include/bits/huge_val.h /usr/include/bits/mathdef.h
+op.o: /usr/include/bits/mathcalls.h

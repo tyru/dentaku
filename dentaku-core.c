@@ -22,11 +22,11 @@
 
 #include "dentaku-stack.h"
 #include "util.h"
+#include "op.h"
 
 #include <getopt.h>
 #include <stdarg.h>
 #include <unistd.h>
-#include <math.h>
 
 
 
@@ -132,14 +132,16 @@ dentaku_src_eof(Dentaku *dentaku)
  *
  * return result of token.
  * if return value is NULL: error occured
+ *
+ * TODO
+ * - use table for ops
+ * - just pop 3 tokens from stack
  */
 void
 dentaku_calc_expr(Dentaku *dentaku)
 {
     Token tok_n, tok_op, tok_m, tok_result;
     Digit n, m, result;
-    double d_n, d_m;
-    bool success;
     stack_t *stk = dentaku->data_stack;
     stack_ret ret;
 
@@ -211,13 +213,11 @@ dentaku_calc_expr(Dentaku *dentaku)
         WARN2("can't convert '%s' to digit", tok_n.str);
         goto error;
     }
-    d_n = digit2double(&n);
 
     if (! atod(tok_m.str, &m, 10)) {
         WARN2("can't convert '%s' to digit", tok_m.str);
         goto error;
     }
-    d_m = (double)m.i + m.d;
 
     if (stack_top(stk, &tok_result) == STACK_SUCCESS) {
         // fix for the case that '-1-1-1' results in '-1'.
@@ -229,24 +229,20 @@ dentaku_calc_expr(Dentaku *dentaku)
             tok_plus.str = "+";
             tok_plus.type = TOK_PLUS;
             stack_push(stk, &tok_plus);
-            d_n = -d_n;
+            n = op_unary_minus(&n);
         }
         token_destroy(&tok_result);
     }
 
     /* calc */
     switch (*tok_op.str) {
-    case '+': success = double2digit(d_n + d_m, &result); break;
-    case '-': success = double2digit(d_n - d_m, &result); break;
-    case '*': success = double2digit(d_n * d_m, &result); break;
-    case '/': success = double2digit(d_n / d_m, &result); break;
-    case '^': success = double2digit(pow(d_n, d_m), &result); break;
+    case '+': result = op_plus(&n, &m);       break;
+    case '-': result = op_minus(&n, &m);      break;
+    case '*': result = op_multiply(&n, &m);   break;
+    case '/': result = op_divide(&n, &m);     break;
+    case '^': result = op_power(&n, &m);      break;
     default:
         WARN2("unknown op '%s'", tok_op.str);
-        goto error;
-    }
-    if (! success) {
-        WARN("failed to convert double to digit");
         goto error;
     }
 
@@ -261,7 +257,7 @@ dentaku_calc_expr(Dentaku *dentaku)
     tok_result.type = TOK_DIGIT;
 
     dentaku_printf_d(dentaku, "eval '%f %s %f' => '%s'",
-        d_n, tok_op.str, d_m, tok_result.str);
+        digit2double(&n), tok_op.str, digit2double(&m), tok_result.str);
 
     // push result.
     stack_push(stk, &tok_result);
