@@ -10,9 +10,6 @@
 NORETURN void
 dentaku_stack_run(Dentaku *dentaku);
 
-void
-dentaku_push_got_token(Dentaku *dentaku);
-
 
 
 #endif /* DENTAKU_DENTAKU_STACK_H */
