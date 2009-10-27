@@ -22,7 +22,6 @@
 
 #include "dentaku-eval.h"
 #include "util.h"
-#include "parser.h"
 
 #include <getopt.h>
 #include <stdarg.h>
@@ -279,54 +278,6 @@ just_ret:
     token_destroy(&tok_n);
     token_destroy(&tok_op);
     token_destroy(&tok_m);
-}
-
-
-// get one token from dentaku->src or dentaku->data_stack->top.
-// if error occured, return NULL.
-void
-dentaku_get_token(Dentaku *dentaku)
-{
-    bool syntax_error;
-    Token tok_result;
-    bool allow_signed;
-    Token top;
-    stack_t *stk = dentaku->data_stack;
-
-    if (dentaku_src_eof(dentaku))
-        return;
-
-    stack_top(stk, &top);
-    // allow '+' or '-' before digit
-    // when stack is empty or '(' is on the top.
-    allow_signed = stack_empty(stk) || top.type == TOK_LPAREN;
-
-    token_init(&tok_result);
-    token_alloc(&tok_result, MAX_TOK_CHAR_BUF);
-
-    char *cur_pos = dentaku->src + dentaku->src_pos;
-    char *next_pos = get_token(cur_pos, &tok_result, allow_signed, &syntax_error);
-
-    if (next_pos == NULL) {
-        // EOF or syntax error.
-        token_destroy(&tok_result);
-
-        // set to EOF.
-        dentaku->src_pos = dentaku->src_len;
-        dentaku_printf_d(dentaku, "reach EOF");
-
-        if (syntax_error)
-            siglongjmp(*dentaku->main_jmp_buf, JMP_RET_ERR);
-        else if (stack_empty(stk))
-            // top of stack is NULL and reached EOF.
-            siglongjmp(*dentaku->main_jmp_buf, JMP_RET_ERR);
-    }
-    else {
-        dentaku_printf_d(dentaku, "got! [%s]", tok_result.str);
-
-        dentaku->src_pos += next_pos - cur_pos;
-        stack_push(stk, &tok_result);
-    }
 }
 
 

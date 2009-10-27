@@ -10,6 +10,9 @@
 NORETURN void
 dentaku_eval_src(Dentaku *dentaku);
 
+void
+dentaku_push_got_token(Dentaku *dentaku);
+
 
 
 #endif /* DENTAKU_DENTAKU_EVAL_H */

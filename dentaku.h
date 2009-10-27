@@ -63,9 +63,6 @@ dentaku_src_eof(Dentaku *dentaku);
 void
 dentaku_calc_expr(Dentaku *dentaku);
 
-void
-dentaku_get_token(Dentaku *dentaku);
-
 
 
 void
