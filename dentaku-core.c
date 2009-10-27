@@ -315,8 +315,6 @@ allocate_members(Dentaku *dentaku)
         DIE("failed to allocate for input string");
     }
 }
-
-
 void
 dentaku_init(Dentaku *dentaku)
 {
@@ -376,7 +374,6 @@ show_usage(void)
     puts("  -f [rec,stk,cmp]    change internal behavior until dentaku shows answer");
     puts("");
 }
-
 void
 dentaku_getopt(Dentaku *dentaku, int argc, char **argv)
 {
@@ -398,16 +395,17 @@ dentaku_getopt(Dentaku *dentaku, int argc, char **argv)
             case 'd':
                 dentaku->debug = true;
                 break;
-
             case 'f':
                 dentaku->arg_f = optarg;
-
+                break;
             case 'h':
                 show_usage();
                 dentaku_exit(dentaku, EXIT_SUCCESS);
+                break;
             case '?':
                 show_usage();
                 dentaku_exit(dentaku, EXIT_FAILURE);
+                break;
         }
     }
 
