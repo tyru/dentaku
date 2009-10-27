@@ -135,7 +135,8 @@ dentaku_src_eof(Dentaku *dentaku)
  *
  * TODO
  * - use table for ops
- * - just pop 3 tokens from stack
+ * - get digit, op, digit from arguments.
+ *   not to make this function depend on RPN, or not.
  */
 void
 dentaku_calc_expr(Dentaku *dentaku)
