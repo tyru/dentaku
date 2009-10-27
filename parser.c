@@ -118,9 +118,11 @@ parser_get_token(char *src, Token *tok, bool allow_signed, bool *error)
 
     case '+':
         tok->type = TOK_PLUS;
+        goto save_digit_to_tok_buf;
     case '-':
         tok->type = TOK_MINUS;
 
+save_digit_to_tok_buf:
         // Allow '+<digit>' or '-<digit>'.
         if (allow_signed && isdigit(*skip_space(src + 1))) {
             // if NOT signed digit

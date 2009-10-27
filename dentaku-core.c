@@ -13,7 +13,7 @@
  *   for allocating just token's characters length.
  *   (if capacity is a fewer than needed size, use realloc())
  * - use GC
- * - add more ops. (e.g.: '^', 'log', 'exp')
+ * - add more ops. (e.g.: 'log', 'exp')
  * - too ugly
  */
 
@@ -220,10 +220,13 @@ dentaku_calc_expr(Dentaku *dentaku)
     }
 
     if (stack_top(stk, &tok_result) == STACK_SUCCESS) {
-        // fix for the case that '-1-1-1' results in '-1'.
+        // fix for the case that '-1 - 1 - 1' results in '-1'.
         // 1 - 1 => 0
         // -1 - 0 => -1
-        if (tok_result.str[0] == '-') {
+        if (tok_result.type == TOK_MINUS) {
+            // fix to '-1 + -1 - 1'
+            // -1 - 1 => -2
+            // -1 + -2 => -3
             stack_pop(stk, NULL);
             Token tok_plus;
             tok_plus.str = "+";
@@ -274,6 +277,48 @@ just_ret:
     token_destroy(&tok_n);
     token_destroy(&tok_op);
     token_destroy(&tok_m);
+}
+
+
+bool
+dentaku_stack_elements_are(Dentaku *dentaku, ...)
+{
+    va_list ap;
+    TokenType type;
+    int pop_size;
+    stack_t *stk;
+    Token *popped_elem;
+    stack_ret ret;
+    bool ret_val = true;
+
+    stk = dentaku->data_stack;
+    popped_elem = alloca(sizeof(Token) * stack_size(stk));
+
+    va_start(ap, dentaku);
+    for (pop_size = 0; (type = va_arg(ap, TokenType)) != TOK_UNDEF; pop_size++) {
+        ret = stack_pop(stk, popped_elem + pop_size);
+        if (ret == STACK_EMPTY) {
+            ret_val = false;
+        }
+        else if (ret != STACK_SUCCESS) {
+            fprintf(stderr, "stack_pop(stk, popped_elem + pop_size) == %d\n", ret);
+            DIE("something wrong");
+        }
+
+        if (popped_elem[pop_size].type != type)    // does not match!
+            return false;
+    }
+    // I can't use stack_push_many_elements(),
+    // Because of reverse sequence.
+    for (; pop_size; pop_size--) {
+        if (stack_push(stk, popped_elem + pop_size - 1) != STACK_SUCCESS) {
+            DIE("internal error: something wrong");
+        }
+        token_destroy(popped_elem + pop_size - 1);
+    }
+    va_end(ap);
+
+    return ret_val;
 }
 
 
