@@ -341,6 +341,7 @@ dentaku_init(Dentaku *dentaku)
     dentaku_printf_d(dentaku, "initializing dentaku...");
 
     dentaku->data_stack = NULL;
+    dentaku->syntax_tree = NULL;
 
     dentaku->main_jmp_buf = NULL;
 

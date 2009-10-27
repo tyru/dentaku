@@ -6,38 +6,27 @@ CFLAGS = -g -W -Wall -std=gnu99
 LDFLAGS = -lm
 
 SRC = main.c dentaku.c dentaku-eval.c parser.c token.c util.c
-OBJS = $(SRC:.c=.o)
+OBJS = $(SRC:.c=.o) mylib/list/list.o
 
 
 all: $(PROG)
 
-
 test: $(PROG)
 	\perl test.pl
-
 leak-test: $(PROG)
 	\valgrind --leak-check=full ./$(PROG)
 
-
-debug: $(PROG)
-	\gdb ./$(PROG)
-
-
-foo:
-	\echo "src:" $(SRC)
-	\echo "objs:" $(OBJS)
-
-$(PROG): $(OBJS) stack
+$(PROG): $(OBJS) stack.o
 	$(CC) $(LDFLAGS) -o $@ $(OBJS) stack.o
 
 .c.o:
 	$(CC) $(CFLAGS) -c $< -o $@
 
-stack: stack.o
-
 stack.o: libdatastruct/stack.c libdatastruct/stack.h
 	$(CC) $(CFLAGS) -c libdatastruct/stack.c -o stack.o
 
+mylib/list/list.o: mylib/list/list.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
 depend:
 	\makedepend -- $(CFLAGS) -- $(SRC)

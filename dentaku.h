@@ -5,8 +5,10 @@
 
 #include "common.h"
 
+// TODO Hide these headers
 #include "token.h"
 #include "libdatastruct/stack.h"
+#include "mylib/list/list.h"
 
 #include <setjmp.h>
 
@@ -15,6 +17,7 @@
 
 typedef struct {
     stack_t *data_stack;
+    List    *syntax_tree;
 
     sigjmp_buf  *main_jmp_buf;
 
