@@ -113,9 +113,10 @@ error:
     siglongjmp(*dentaku->main_jmp_buf, JMP_RET_ERR);
 }
 
+
 // get one token from dentaku->src or dentaku->data_stack->top.
 static void
-dentaku_push_got_token(Dentaku *dentaku)
+push_got_token(Dentaku *dentaku)
 {
     bool syntax_error;
     Token tok_result;
@@ -295,7 +296,7 @@ eval_when_mul_or_div(Dentaku *dentaku)
     Token tok_got;
 
     // get and push right hand operand.
-    dentaku_push_got_token(dentaku);
+    push_got_token(dentaku);
     // TODO I want something like alloca().
     stack_top(stk, &tok_got);
 
@@ -349,7 +350,7 @@ dentaku_stack_run(Dentaku *dentaku)
 
 
     while (1) {
-        dentaku_push_got_token(dentaku);
+        push_got_token(dentaku);
         stack_top(stk, &tok_got);
         dentaku_printf_d(dentaku, "dispatch! [%s]", tok_got.str);
 
