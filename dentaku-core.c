@@ -188,6 +188,7 @@ dentaku_calc_expr(Dentaku *dentaku, Token *tok_op, Token *tok_n, Token *tok_m, T
 }
 
 
+// XXX not tested.
 bool
 dentaku_stack_elements_are(Dentaku *dentaku, ...)
 {
