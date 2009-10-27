@@ -4,12 +4,18 @@
 #include "common.h"
 
 
-#define TOKEN_IS_OPERATOR(tok_ptr) \
-    ((tok_ptr).type == TOK_PLUS \
-  || (tok_ptr).type == TOK_MINUS \
-  || (tok_ptr).type == TOK_MULTIPLY \
-  || (tok_ptr).type == TOK_DIVIDE \
-  || (tok_ptr).type == TOK_UP_ALLOW)
+#define TOKEN_IS_OPERATOR(tok) \
+    ((tok).type == TOK_PLUS \
+  || (tok).type == TOK_MINUS \
+  || (tok).type == TOK_MULTIPLY \
+  || (tok).type == TOK_DIVIDE \
+  || (tok).type == TOK_UP_ALLOW)
+
+#define TOKEN_HAS_HIGHER_PRIORITY(tok) \
+    ((tok).type == TOK_MULTIPLY \
+  || (tok).type == TOK_DIVIDE \
+  || (tok).type == TOK_UP_ALLOW)
+
 
 
 typedef enum {

@@ -60,7 +60,7 @@ static void
 eval_when_eof_or_rparen(Dentaku *dentaku)
 {
     stack_t *stk = dentaku->data_stack;
-    bool top_op_is_mul_div = false;    // continue evaluating when op is '*' or '/'.
+    bool allow_rparen = false;    // continue evaluating when op has higher priority
     Token top_buf, result;
     const TokenType top_type = (dentaku_src_eof(dentaku) ? TOK_UNDEF : TOK_RPAREN);
     const char *top_type_str = top_type == TOK_RPAREN ? "')'" : "eof";
@@ -72,7 +72,7 @@ eval_when_eof_or_rparen(Dentaku *dentaku)
     dentaku_printf_d(dentaku, "top is %s", top_type_str);
 
     // calculate until expression becomes 1 token
-    // or top is correspond '(' and next is neither '*' nor '/'.
+    // or top is correspond '(' and next does not have higher priority
     for (; ; token_destroy(&result)) {
         dentaku_calc_expr(dentaku);
         stack_pop(stk, &result);
@@ -86,7 +86,7 @@ eval_when_eof_or_rparen(Dentaku *dentaku)
 
 
         if (stack_empty(stk)) {
-            if (top_type == TOK_RPAREN && ! top_op_is_mul_div) {
+            if (top_type == TOK_RPAREN && ! allow_rparen) {
                 // token was ')' at first, but got EOF.
                 token_destroy(&result);
                 WARN("extra close parenthesis");
@@ -121,10 +121,8 @@ eval_when_eof_or_rparen(Dentaku *dentaku)
             // because I got correspond '('.
             token_destroy(&top_buf);
             stack_top(stk, &top_buf);
-            bool mul_or_div = ! stack_empty(stk)
-                            && (top_buf.str[0] == '*'
-                            ||  top_buf.str[0] == '/'
-                            ||  top_buf.str[0] == '^');
+            bool high_priority = ! stack_empty(stk)
+                            && TOKEN_HAS_HIGHER_PRIORITY(top_buf);
             bool is_digit = ! stack_empty(stk)
                            && top_buf.type == TOK_DIGIT;
 
@@ -152,17 +150,17 @@ eval_when_eof_or_rparen(Dentaku *dentaku)
                 // forbid empty stack with top_type == TOK_RPAREN.
                 // because '1+2)' is not valid expression.
                 // set this value to through the checking.
-                top_op_is_mul_div = true;
+                allow_rparen = true;
                 continue;
             }
-            else if (top_type == TOK_RPAREN && mul_or_div) {
+            else if (top_type == TOK_RPAREN && high_priority) {
                 dentaku_printf_d(dentaku,
                         "next op is '*' or '/' or '^'. continue evaluating...");
 
                 // same as above.
                 stack_push(stk, &result);
 
-                top_op_is_mul_div = true;
+                allow_rparen = true;
                 token_destroy(&result);
                 continue;
             }
@@ -174,7 +172,7 @@ eval_when_eof_or_rparen(Dentaku *dentaku)
         }
         else if (TOKEN_IS_OPERATOR(top_buf)) {
             stack_push(stk, &result);
-            if (top_buf.str[0] == '+' || top_buf.str[0] == '-')
+            if (! TOKEN_HAS_HIGHER_PRIORITY(top_buf))
                 break;
         }
         else {
@@ -207,7 +205,7 @@ eval_when_mul_or_div(Dentaku *dentaku)
         siglongjmp(*dentaku->main_jmp_buf, JMP_RET_ERR);
     }
     else if (TOKEN_IS_OPERATOR(tok_got)) {
-        WARN2("reaching '%c' where expression is expected", *tok_got.str);
+        WARN2("reaching '%c' where expression is expected", tok_got.str[0]);
         token_destroy(&tok_got);
         siglongjmp(*dentaku->main_jmp_buf, JMP_RET_ERR);
     }
@@ -256,7 +254,7 @@ dentaku_stack_run(Dentaku *dentaku)
         }
         else if (TOKEN_IS_OPERATOR(tok_got)) {
             // postpone '+' and '-'.
-            if (tok_got.str[0] == '*' || tok_got.str[0] == '/') {
+            if (TOKEN_HAS_HIGHER_PRIORITY(tok_got)) {
                 eval_when_mul_or_div(dentaku);
             }
         }
