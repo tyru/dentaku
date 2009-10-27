@@ -65,7 +65,7 @@ get_digit(char *src, char *buf, size_t maxsize)
 
 // if EOF or syntax error: return NULL
 char*
-get_token(char *src, Token *tok, bool allow_signed, bool *error)
+parser_get_token(char *src, Token *tok, bool allow_signed, bool *error)
 {
     char *after_pos = NULL;
     char tok_buf[MAX_TOK_CHAR_BUF];

@@ -31,7 +31,7 @@ dentaku_push_got_token(Dentaku *dentaku)
     token_alloc(&tok_result, MAX_TOK_CHAR_BUF);
 
     char *cur_pos = dentaku->src + dentaku->src_pos;
-    char *next_pos = get_token(cur_pos, &tok_result, allow_signed, &syntax_error);
+    char *next_pos = parser_get_token(cur_pos, &tok_result, allow_signed, &syntax_error);
 
     if (next_pos == NULL) {
         // EOF or syntax error.

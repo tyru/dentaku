@@ -8,7 +8,7 @@
 
 
 char*
-get_token(char *src, Token *tok, bool allow_signed, bool *error);
+parser_get_token(char *src, Token *tok, bool allow_signed, bool *error);
 
 
 #endif /* DENTAKU_PARSER_H */
