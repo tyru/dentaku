@@ -127,28 +127,20 @@ dentaku_src_eof(Dentaku *dentaku)
 
 
 /*
- * calculate top 3 elems of stack.
- * result token is tok_result.
- *
- * return result of token.
- * if return value is NULL: error occured
- *
- * TODO
- * - use table for ops
+ * Calculate expression.
+ * Result token is tok_result.
  */
 bool
-dentaku_calc_expr(Dentaku *dentaku, Token *tok_op, Token *tok_n, Token *tok_m)
+dentaku_calc_expr(Dentaku *dentaku, Token *tok_op, Token *tok_n, Token *tok_m, Token *tok_result)
 {
-    Token tok_result;
     Digit n, m, result;
-    stack_t *stk = dentaku->data_stack;
 
     if (dentaku->debug) {
         dentaku_printf_d(dentaku, "before calculation");
         dentaku_show_stack(dentaku);
     }
 
-    /* check each token's type */
+    /* Check each token's type */
     if (! (tok_n->type == TOK_DIGIT
         && TOKEN_IS_OPERATOR(*tok_op)
         && tok_m->type == TOK_DIGIT))
@@ -158,19 +150,18 @@ dentaku_calc_expr(Dentaku *dentaku, Token *tok_op, Token *tok_n, Token *tok_m)
         return false;
     }
 
-
-    /* convert */
-    if (! atod(tok_n->str, &n, 10)) {
+    /* Convert */
+    if (! atod(tok_n->str, &n, 10)) {    // n
         WARN2("can't convert '%s' to digit", tok_n->str);
         return false;
     }
-
-    if (! atod(tok_m->str, &m, 10)) {
+    if (! atod(tok_m->str, &m, 10)) {    // m
         WARN2("can't convert '%s' to digit", tok_m->str);
         return false;
     }
 
-    /* calc */
+    /* Calculation */
+    // TODO Use table for ops
     switch (*tok_op->str) {
     case '+': result = op_plus(&n, &m);       break;
     case '-': result = op_minus(&n, &m);      break;
@@ -183,21 +174,15 @@ dentaku_calc_expr(Dentaku *dentaku, Token *tok_op, Token *tok_n, Token *tok_m)
     }
 
 
-    /* convert result token */
-    token_init(&tok_result);
-    token_alloc(&tok_result, MAX_TOK_CHAR_BUF);
-    if (! dtoa(&result, tok_result.str, MAX_TOK_CHAR_BUF, 10)) {
+    /* Convert result to Token */
+    if (! dtoa(&result, tok_result->str, MAX_TOK_CHAR_BUF, 10)) {
         WARN("can't convert digit to string");
         return false;
     }
-    tok_result.type = TOK_DIGIT;
+    tok_result->type = TOK_DIGIT;
 
     dentaku_printf_d(dentaku, "eval '%f %s %f' => '%s'",
-        digit2double(&n), tok_op->str, digit2double(&m), tok_result.str);
-
-    // push result.
-    stack_push(stk, &tok_result);
-    token_destroy(&tok_result);
+        digit2double(&n), tok_op->str, digit2double(&m), tok_result->str);
 
     return true;
 }

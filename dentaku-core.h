@@ -61,7 +61,7 @@ bool
 dentaku_src_eof(Dentaku *dentaku);
 
 bool
-dentaku_calc_expr(Dentaku *dentaku, Token *tok_op, Token *tok_n, Token *tok_m);
+dentaku_calc_expr(Dentaku *dentaku, Token *tok_op, Token *tok_n, Token *tok_m, Token *tok_result);
 
 
 

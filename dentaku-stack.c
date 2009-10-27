@@ -11,7 +11,7 @@
 static void
 eval_stack_expr(Dentaku *dentaku)
 {
-    Token tok_n, tok_op, tok_m, tmp;
+    Token tok_n, tok_op, tok_m, tok_result, tmp;
     stack_t *stk = dentaku->data_stack;
     stack_ret ret;
 
@@ -95,8 +95,14 @@ eval_stack_expr(Dentaku *dentaku)
         token_destroy(&tmp);
     }
 
-    if (! dentaku_calc_expr(dentaku, &tok_op, &tok_n, &tok_m))
+    token_init(&tok_result);
+    token_alloc(&tok_result, MAX_TOK_CHAR_BUF);
+    if (! dentaku_calc_expr(dentaku, &tok_op, &tok_n, &tok_m, &tok_result))
         goto error;
+
+    // Push result.
+    stack_push(stk, &tok_result);
+    token_destroy(&tok_result);
     return;
 
 
