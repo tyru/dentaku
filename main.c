@@ -4,10 +4,10 @@
 int
 main(int argc, char *argv[])
 {
-    Dentaku dentaku;
-    Dentaku *d = &dentaku;
+    Dentaku *d;
     sigjmp_buf jbuf;
 
+    d = dentaku_alloc();
     dentaku_init(d);
     dentaku_alloc(d);
     dentaku_getopt(d, argc, argv);

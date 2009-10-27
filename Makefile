@@ -5,7 +5,7 @@ PROG = dentaku
 CFLAGS = -g -W -Wall -std=gnu99
 LDFLAGS = -lm
 
-SRC = main.c dentaku.c dentaku-stack.c parser.c token.c util.c
+SRC = main.c dentaku-core.c dentaku-stack.c parser.c token.c util.c
 OBJS = $(SRC:.c=.o) mylib/list/list.o
 
 
@@ -51,30 +51,54 @@ main.o: /usr/include/bits/pthreadtypes.h /usr/include/alloca.h
 main.o: /usr/include/string.h /usr/include/errno.h /usr/include/bits/errno.h
 main.o: /usr/include/linux/errno.h /usr/include/asm/errno.h
 main.o: /usr/include/asm-generic/errno.h
-main.o: /usr/include/asm-generic/errno-base.h /usr/include/assert.h token.h
-main.o: libdatastruct/stack.h /usr/include/setjmp.h
-main.o: /usr/include/bits/setjmp.h
-dentaku.o: dentaku.h common.h digit.h /usr/include/stdio.h
-dentaku.o: /usr/include/features.h /usr/include/sys/cdefs.h
-dentaku.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h
-dentaku.o: /usr/include/gnu/stubs-32.h /usr/include/bits/types.h
-dentaku.o: /usr/include/bits/typesizes.h /usr/include/libio.h
-dentaku.o: /usr/include/_G_config.h /usr/include/wchar.h
-dentaku.o: /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h
-dentaku.o: /usr/include/stdlib.h /usr/include/sys/types.h /usr/include/time.h
-dentaku.o: /usr/include/endian.h /usr/include/bits/endian.h
-dentaku.o: /usr/include/bits/byteswap.h /usr/include/sys/select.h
-dentaku.o: /usr/include/bits/select.h /usr/include/bits/sigset.h
-dentaku.o: /usr/include/bits/time.h /usr/include/sys/sysmacros.h
-dentaku.o: /usr/include/bits/pthreadtypes.h /usr/include/alloca.h
-dentaku.o: /usr/include/string.h /usr/include/errno.h
-dentaku.o: /usr/include/bits/errno.h /usr/include/linux/errno.h
-dentaku.o: /usr/include/asm/errno.h /usr/include/asm-generic/errno.h
-dentaku.o: /usr/include/asm-generic/errno-base.h /usr/include/assert.h
-dentaku.o: token.h libdatastruct/stack.h /usr/include/setjmp.h
-dentaku.o: /usr/include/bits/setjmp.h util.h parser.h /usr/include/getopt.h
-dentaku.o: /usr/include/unistd.h /usr/include/bits/posix_opt.h
-dentaku.o: /usr/include/bits/confname.h
+main.o: /usr/include/asm-generic/errno-base.h /usr/include/assert.h
+main.o: /usr/include/setjmp.h /usr/include/bits/setjmp.h
+dentaku-core.o: dentaku-core.h common.h digit.h /usr/include/stdio.h
+dentaku-core.o: /usr/include/features.h /usr/include/sys/cdefs.h
+dentaku-core.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h
+dentaku-core.o: /usr/include/gnu/stubs-32.h /usr/include/bits/types.h
+dentaku-core.o: /usr/include/bits/typesizes.h /usr/include/libio.h
+dentaku-core.o: /usr/include/_G_config.h /usr/include/wchar.h
+dentaku-core.o: /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h
+dentaku-core.o: /usr/include/stdlib.h /usr/include/sys/types.h
+dentaku-core.o: /usr/include/time.h /usr/include/endian.h
+dentaku-core.o: /usr/include/bits/endian.h /usr/include/bits/byteswap.h
+dentaku-core.o: /usr/include/sys/select.h /usr/include/bits/select.h
+dentaku-core.o: /usr/include/bits/sigset.h /usr/include/bits/time.h
+dentaku-core.o: /usr/include/sys/sysmacros.h /usr/include/bits/pthreadtypes.h
+dentaku-core.o: /usr/include/alloca.h /usr/include/string.h
+dentaku-core.o: /usr/include/errno.h /usr/include/bits/errno.h
+dentaku-core.o: /usr/include/linux/errno.h /usr/include/asm/errno.h
+dentaku-core.o: /usr/include/asm-generic/errno.h
+dentaku-core.o: /usr/include/asm-generic/errno-base.h /usr/include/assert.h
+dentaku-core.o: dentaku.h /usr/include/setjmp.h /usr/include/bits/setjmp.h
+dentaku-core.o: token.h libdatastruct/stack.h mylib/list/list.h
+dentaku-core.o: dentaku-stack.h util.h /usr/include/getopt.h
+dentaku-core.o: /usr/include/unistd.h /usr/include/bits/posix_opt.h
+dentaku-core.o: /usr/include/bits/confname.h /usr/include/math.h
+dentaku-core.o: /usr/include/bits/huge_val.h /usr/include/bits/mathdef.h
+dentaku-core.o: /usr/include/bits/mathcalls.h
+dentaku-stack.o: dentaku-stack.h common.h digit.h /usr/include/stdio.h
+dentaku-stack.o: /usr/include/features.h /usr/include/sys/cdefs.h
+dentaku-stack.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h
+dentaku-stack.o: /usr/include/gnu/stubs-32.h /usr/include/bits/types.h
+dentaku-stack.o: /usr/include/bits/typesizes.h /usr/include/libio.h
+dentaku-stack.o: /usr/include/_G_config.h /usr/include/wchar.h
+dentaku-stack.o: /usr/include/bits/stdio_lim.h
+dentaku-stack.o: /usr/include/bits/sys_errlist.h /usr/include/stdlib.h
+dentaku-stack.o: /usr/include/sys/types.h /usr/include/time.h
+dentaku-stack.o: /usr/include/endian.h /usr/include/bits/endian.h
+dentaku-stack.o: /usr/include/bits/byteswap.h /usr/include/sys/select.h
+dentaku-stack.o: /usr/include/bits/select.h /usr/include/bits/sigset.h
+dentaku-stack.o: /usr/include/bits/time.h /usr/include/sys/sysmacros.h
+dentaku-stack.o: /usr/include/bits/pthreadtypes.h /usr/include/alloca.h
+dentaku-stack.o: /usr/include/string.h /usr/include/errno.h
+dentaku-stack.o: /usr/include/bits/errno.h /usr/include/linux/errno.h
+dentaku-stack.o: /usr/include/asm/errno.h /usr/include/asm-generic/errno.h
+dentaku-stack.o: /usr/include/asm-generic/errno-base.h /usr/include/assert.h
+dentaku-stack.o: dentaku.h /usr/include/setjmp.h /usr/include/bits/setjmp.h
+dentaku-stack.o: dentaku-core.h token.h libdatastruct/stack.h
+dentaku-stack.o: mylib/list/list.h util.h parser.h
 parser.o: parser.h common.h digit.h /usr/include/stdio.h
 parser.o: /usr/include/features.h /usr/include/sys/cdefs.h
 parser.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h

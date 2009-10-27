@@ -1,7 +1,7 @@
 
 #include "dentaku-stack.h"
 
-#include "dentaku.h"
+#include "dentaku-core.h"
 #include "util.h"
 #include "parser.h"
 

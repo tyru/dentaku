@@ -1,6 +1,6 @@
 /* vim:ts=4:sw=4:sts=0:tw=0:set et: */
 /* 
- * dentaku.c - calculator
+ * dentaku-core.c - calculator
  *
  * Written By: tyru <tyru.exe@gmail.com>
  * Last Change: 2009-10-27.
@@ -18,7 +18,7 @@
  */
 
 
-#include "dentaku.h"
+#include "dentaku-core.h"
 
 #include "dentaku-stack.h"
 #include "util.h"
@@ -284,6 +284,37 @@ just_ret:
 
 
 
+Dentaku*
+dentaku_alloc()
+{
+    Dentaku *dentaku = malloc(sizeof(Dentaku));
+    if (! dentaku) {
+        perror("malloc");
+        exit(EXIT_FAILURE);
+    }
+    return dentaku;
+}
+
+
+static void
+allocate_members(Dentaku *dentaku)
+{
+    dentaku_printf_d(dentaku, "allocating dentaku...");
+
+    dentaku->data_stack = stack_initialize(
+        sizeof(Token),
+        (void (*)(void *))token_destroy,
+        (void *(*)(void*, const void*, size_t))token_copy
+    );
+    if (! dentaku->data_stack) {
+        DIE("failed to initialize stack");
+    }
+
+    dentaku->src = malloc(MAX_IN_BUF);
+    if (dentaku->src == NULL) {
+        DIE("failed to allocate for input string");
+    }
+}
 
 
 void
@@ -310,27 +341,9 @@ dentaku_init(Dentaku *dentaku)
     dentaku->arg_f = "stk";
 
     dentaku->debug = false;
-}
 
 
-void
-dentaku_alloc(Dentaku *dentaku)
-{
-    dentaku_printf_d(dentaku, "allocating dentaku...");
-
-    dentaku->data_stack = stack_initialize(
-        sizeof(Token),
-        (void (*)(void *))token_destroy,
-        (void *(*)(void*, const void*, size_t))token_copy
-    );
-    if (! dentaku->data_stack) {
-        DIE("failed to initialize stack");
-    }
-
-    dentaku->src = malloc(MAX_IN_BUF);
-    if (dentaku->src == NULL) {
-        DIE("failed to allocate for input string");
-    }
+    allocate_members(dentaku);
 }
 
 
@@ -462,6 +475,7 @@ dentaku_dispatch(Dentaku *dentaku)
         siglongjmp(*dentaku->main_jmp_buf, JMP_RET_ERR);
     }
     else {
+        // TODO check at dentaku_getopt()
         dentaku_dief(dentaku, "Unknown -f option: %s", dentaku->arg_f);
     }
 }

@@ -2,7 +2,6 @@
 #define DENTAKU_DENTAKU_STACK_H
 
 #include "common.h"
-
 #include "dentaku.h"
 
 
