@@ -3,7 +3,7 @@
  * dentaku-core.c - calculator
  *
  * Written By: tyru <tyru.exe@gmail.com>
- * Last Change: 2009-10-27.
+ * Last Change: 2009-10-28.
  *
  */
 
@@ -197,7 +197,7 @@ dentaku_calc_expr(Dentaku *dentaku)
 
     /* check each token's type */
     if (! (tok_n.type == TOK_DIGIT
-        && tok_op.type == TOK_OP
+        && TOKEN_IS_OPERATOR(tok_op)
         && tok_m.type == TOK_DIGIT))
     {
         WARN4("expression '%s %s %s' is invalid",
@@ -227,7 +227,7 @@ dentaku_calc_expr(Dentaku *dentaku)
             stack_pop(stk, NULL);
             Token tok_plus;
             tok_plus.str = "+";
-            tok_plus.type = TOK_OP;
+            tok_plus.type = TOK_PLUS;
             stack_push(stk, &tok_plus);
             d_n = -d_n;
         }

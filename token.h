@@ -4,14 +4,24 @@
 #include "common.h"
 
 
+#define TOKEN_IS_OPERATOR(tok_ptr) \
+    ((tok_ptr).type == TOK_PLUS \
+  || (tok_ptr).type == TOK_MINUS \
+  || (tok_ptr).type == TOK_MULTIPLY \
+  || (tok_ptr).type == TOK_DIVIDE \
+  || (tok_ptr).type == TOK_UP_ALLOW)
 
 
 typedef enum {
     TOK_UNDEF,
     TOK_DIGIT,
-    TOK_OP,
     TOK_LPAREN,
     TOK_RPAREN,
+    TOK_PLUS,
+    TOK_MINUS,
+    TOK_MULTIPLY,
+    TOK_DIVIDE,
+    TOK_UP_ALLOW,
 } TokenType;
 
 

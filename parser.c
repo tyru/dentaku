@@ -86,6 +86,7 @@ parser_get_token(char *src, Token *tok, bool allow_signed, bool *error)
     src = incl_src;
 
 
+    // TODO Use table
     switch (*src) {
     case '(':
 
@@ -106,20 +107,23 @@ parser_get_token(char *src, Token *tok, bool allow_signed, bool *error)
         break;
 
     case '*':
+        tok->type = TOK_MULTIPLY;
+        goto save_to_tok_buf;
     case '/':
+        tok->type = TOK_DIVIDE;
+        goto save_to_tok_buf;
     case '^':
-
-        tok_buf[0] = src[0];
-        tok_buf[1] = '\0';
-        tok->type = TOK_OP;
-
-        src++;
-        break;
+        tok->type = TOK_UP_ALLOW;
+        goto save_to_tok_buf;
 
     case '+':
+        tok->type = TOK_PLUS;
     case '-':
-        // if NOT signed digit
+        tok->type = TOK_MINUS;
+
+        // Allow '+<digit>' or '-<digit>'.
         if (allow_signed && isdigit(*skip_space(src + 1))) {
+            // if NOT signed digit
             sign_pos = src;
             src = skip_space(src + 1);
             /* FALLTHROUGH */
@@ -127,7 +131,6 @@ parser_get_token(char *src, Token *tok, bool allow_signed, bool *error)
         else {
             tok_buf[0] = src[0];
             tok_buf[1] = '\0';
-            tok->type = TOK_OP;
 
             src++;
             break;
@@ -153,6 +156,14 @@ parser_get_token(char *src, Token *tok, bool allow_signed, bool *error)
 
         *error = true;
         return NULL;
+
+
+save_to_tok_buf:
+        tok_buf[0] = src[0];
+        tok_buf[1] = '\0';
+
+        src++;
+        break;
     }
 
     // allocate just token's length

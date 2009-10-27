@@ -143,7 +143,7 @@ eval_when_eof_or_rparen(Dentaku *dentaku)
                 // push "*"
                 Token tok_mul;
                 tok_mul.str = "*";
-                tok_mul.type = TOK_OP;
+                tok_mul.type = TOK_MULTIPLY;
                 stack_push(stk, &tok_mul);
                 // push result.
                 stack_push(stk, &result);
@@ -172,13 +172,14 @@ eval_when_eof_or_rparen(Dentaku *dentaku)
                 break;
             }
         }
-        else if (top_buf.type == TOK_OP) {
+        else if (TOKEN_IS_OPERATOR(top_buf)) {
             stack_push(stk, &result);
             if (top_buf.str[0] == '+' || top_buf.str[0] == '-')
                 break;
         }
-        else
+        else {
             stack_push(stk, &result);
+        }
     }
     token_destroy(&result);
     token_destroy(&top_buf);
@@ -197,21 +198,20 @@ eval_when_mul_or_div(Dentaku *dentaku)
     stack_top(stk, &tok_got);
 
 
-    switch (tok_got.type) {
-    case TOK_DIGIT:
+    if (tok_got.type == TOK_DIGIT) {
         dentaku_calc_expr(dentaku);
-        break;
-
-    // just syntax checking
-    case TOK_RPAREN:
+    }
+    else if (tok_got.type == TOK_RPAREN) {
         WARN("reaching ')' where expression is expected");
         token_destroy(&tok_got);
         siglongjmp(*dentaku->main_jmp_buf, JMP_RET_ERR);
-    case TOK_OP:
+    }
+    else if (TOKEN_IS_OPERATOR(tok_got)) {
         WARN2("reaching '%c' where expression is expected", *tok_got.str);
         token_destroy(&tok_got);
         siglongjmp(*dentaku->main_jmp_buf, JMP_RET_ERR);
-    default:
+    }
+    else {
         token_destroy(&tok_got);
     }
 }
@@ -231,7 +231,7 @@ eval_when_mul_or_div(Dentaku *dentaku)
  *    - do calculation (result)
  *    - if top is '(', pop it
  *    - push result
- * TOK_OP:
+ * operator:
  *  - if op is '*' or '/'
  *    - get token
  *    - if it is digit, call dentaku_calc_expr()
@@ -254,7 +254,7 @@ dentaku_stack_run(Dentaku *dentaku)
         if (dentaku_src_eof(dentaku) || tok_got.type == TOK_RPAREN) {    // EOF or ')'
             eval_when_eof_or_rparen(dentaku);
         }
-        else if (tok_got.type == TOK_OP) {    // '+', '-', '*', '/'
+        else if (TOKEN_IS_OPERATOR(tok_got)) {
             // postpone '+' and '-'.
             if (tok_got.str[0] == '*' || tok_got.str[0] == '/') {
                 eval_when_mul_or_div(dentaku);
