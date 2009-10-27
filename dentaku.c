@@ -3,7 +3,7 @@
  * dentaku.c - calculator
  *
  * Written By: tyru <tyru.exe@gmail.com>
- * Last Change: 2009-10-25.
+ * Last Change: 2009-10-27.
  *
  */
 
@@ -357,7 +357,6 @@ dentaku_init(Dentaku *dentaku)
     // cmp: compile and run
     dentaku->arg_f = "stk";
 
-    dentaku->arg_rpn = ARG_RPN_NOP;
     dentaku->debug = false;
 }
 

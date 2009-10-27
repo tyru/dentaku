@@ -13,13 +13,6 @@
 
 
 
-typedef enum {
-    ARG_RPN_NOP = 0,
-    ARG_RPN_TO_RPN,
-    ARG_RPN_FROM_RPN,
-} ArgRPN;
-
-
 typedef struct {
     stack_t *data_stack;
 
@@ -35,7 +28,6 @@ typedef struct {
 
     // for arguments
     char    *arg_f;
-    ArgRPN  arg_rpn;
     bool    debug;
 } Dentaku;
 
