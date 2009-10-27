@@ -5,7 +5,7 @@ PROG = dentaku
 CFLAGS = -g -W -Wall -std=gnu99
 LDFLAGS = -lm
 
-SRC = main.c dentaku.c dentaku-eval.c parser.c token.c util.c
+SRC = main.c dentaku.c dentaku-stack.c parser.c token.c util.c
 OBJS = $(SRC:.c=.o) mylib/list/list.o
 
 

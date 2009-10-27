@@ -1,5 +1,5 @@
 
-#include "dentaku-eval.h"
+#include "dentaku-stack.h"
 
 #include "dentaku.h"
 #include "util.h"
@@ -190,7 +190,7 @@ eval_when_mul_or_div(Dentaku *dentaku)
  *  - nop
  */
 NORETURN void
-dentaku_eval_src(Dentaku *dentaku)
+dentaku_stack_run(Dentaku *dentaku)
 {
     stack_t *stk = dentaku->data_stack;
     Token tok_got;

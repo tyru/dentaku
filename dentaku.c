@@ -20,7 +20,7 @@
 
 #include "dentaku.h"
 
-#include "dentaku-eval.h"
+#include "dentaku-stack.h"
 #include "util.h"
 
 #include <getopt.h>
@@ -455,7 +455,7 @@ dentaku_dispatch(Dentaku *dentaku)
         siglongjmp(*dentaku->main_jmp_buf, JMP_RET_ERR);
     }
     else if (STREQ(dentaku->arg_f, "stk")) {
-        dentaku_eval_src(dentaku);
+        dentaku_stack_run(dentaku);
     }
     else if (STREQ(dentaku->arg_f, "cmp")) {
         // TODO
