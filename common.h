@@ -36,7 +36,6 @@ typedef unsigned int    stack_ret;
 
 
 #define STREQ(s1, s2)       (*(s1) == *(s2) && strcmp((s1), (s2)) == 0)
-#define ALLOCATED(ptr)      ((ptr) != NULL && errno != ENOMEM)
 #define UNUSED(x)           ((void)x)
 
 

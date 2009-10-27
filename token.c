@@ -18,7 +18,7 @@ void
 token_alloc(Token *tok, size_t size)
 {
     tok->str = malloc(size);
-    if (! ALLOCATED(tok->str)) {
+    if (! tok->str) {
         perror("malloc");
         exit(EXIT_FAILURE);
     }
