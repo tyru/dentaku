@@ -7,11 +7,9 @@
 
 
 void
-warn(int line, const char *fmt, ...)
+warn(const char *fmt, ...)
 {
     va_list ap;
-
-    UNUSED(line);
 
     fputs("[warning]::", stderr);
 
@@ -26,11 +24,19 @@ warn(int line, const char *fmt, ...)
 
 // Note that this does not call dentaku_destroy().
 NORETURN void
-die(const char *filename, int line, const char *msg)
+die(const char *filename, int line, const char *fmt, ...)
 {
+    va_list ap;
+
     fprintf(stderr,
-            "\n\ninternal error:\n[%s] at %s, line %d.\n",
-            msg, filename, line);
+            "\n\ninternal error at %s, line %d.\n",
+            filename, line);
+
+    va_start(ap, fmt);
+    vfprintf(stderr, fmt, ap);
+    va_end(ap);
+
+    fputc('\n', stderr);
     exit(EXIT_FAILURE);
 }
 
@@ -54,8 +60,7 @@ digit2double(Digit *digit)
 }
 
 
-// on success, return true.
-bool
+void
 atod(const char *digit_str, Digit *digit, int base)
 {
     char *end_ptr;
@@ -67,28 +72,28 @@ atod(const char *digit_str, Digit *digit, int base)
     val = strtod(digit_str, &end_ptr);
 
     if (errno == ERANGE || (errno != 0 && val == 0)) {
-        return false;
+        DIE2("can't convert '%s' to digit", digit_str);
     }
     if (end_ptr == digit_str) {
-        return false;
+        DIE2("can't convert '%s' to digit", digit_str);
     }
     if (*end_ptr != '\0') {
-        return false;
+        DIE2("can't convert '%s' to digit", digit_str);
     }
 
-    return double2digit(val, digit);
+    if (! double2digit(val, digit))
+        DIE2("can't convert '%s' to digit", digit_str);
 }
 
 
-// on success, return true.
 // FIXME don't leave zeros ("1.0000....") of tail of ascii.
-bool
+void
 dtoa(Digit *digit, char *ascii, size_t max_size, int base)
 {
     double val;
     UNUSED(base);
 
     val = digit2double(digit);
-    snprintf(ascii, max_size, "%f", val);
-    return double2digit(val, digit);
+    if (snprintf(ascii, max_size, "%f", val) < 0)
+        DIE2("can't convert '%f' to string", val);
 }

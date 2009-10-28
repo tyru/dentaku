@@ -151,14 +151,8 @@ dentaku_calc_expr(Dentaku *dentaku, Token *tok_op, Token *tok_n, Token *tok_m, T
     }
 
     /* Convert */
-    if (! atod(tok_n->str, &n, 10)) {    // n
-        WARN2("can't convert '%s' to digit", tok_n->str);
-        return false;
-    }
-    if (! atod(tok_m->str, &m, 10)) {    // m
-        WARN2("can't convert '%s' to digit", tok_m->str);
-        return false;
-    }
+    atod(tok_n->str, &n, 10);
+    atod(tok_m->str, &m, 10);
 
     /* Calculation */
     // TODO Use table for ops
@@ -175,10 +169,7 @@ dentaku_calc_expr(Dentaku *dentaku, Token *tok_op, Token *tok_n, Token *tok_m, T
 
 
     /* Convert result to Token */
-    if (! dtoa(&result, tok_result->str, MAX_TOK_CHAR_BUF, 10)) {
-        WARN("can't convert digit to string");
-        return false;
-    }
+    dtoa(&result, tok_result->str, MAX_TOK_CHAR_BUF, 10);
     tok_result->type = TOK_DIGIT;
 
     dentaku_printf_d(dentaku, "eval '%f %s %f' => '%s'",

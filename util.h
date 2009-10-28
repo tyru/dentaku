@@ -6,19 +6,30 @@
 
 
 
-#define WARN(msg)           warn(__LINE__, msg)
-#define WARN2(msg, arg1)    warn(__LINE__, msg, arg1)
-#define WARN3(msg, arg1, arg2)    warn(__LINE__, msg, arg1, arg2)
-#define WARN4(msg, arg1, arg2, arg3)    warn(__LINE__, msg, arg1, arg2, arg3)
+#define WARN(msg) \
+    warn(msg)
+#define WARN2(msg, arg1) \
+    warn(msg, arg1)
+#define WARN3(msg, arg1, arg2) \
+    warn(msg, arg1, arg2)
+#define WARN4(msg, arg1, arg2, arg3) \
+    warn(msg, arg1, arg2, arg3)
 
 void
-warn(int line, const char *fmt, ...);
+warn(const char *fmt, ...);
 
 
-#define DIE(msg)    die(__FILE__, __LINE__, msg)
+#define DIE(msg) \
+    die(__FILE__, __LINE__, msg)
+#define DIE2(msg, arg1) \
+    die(__FILE__, __LINE__, msg, arg1)
+#define DIE3(msg, arg1, arg2) \
+    die(__FILE__, __LINE__, msg, arg1, arg2)
+#define DIE4(msg, arg1, arg2, arg3) \
+    die(__FILE__, __LINE__, msg, arg1, arg2, arg3)
 
 NORETURN void
-die(const char *filename, int line, const char *msg);
+die(const char *filename, int line, const char *msg, ...);
 
 
 
@@ -30,10 +41,10 @@ digit2double(Digit *digit);
 
 
 
-bool
+void
 atod(const char *digit_str, Digit *digit, int base);
 
-bool
+void
 dtoa(Digit *digit, char *ascii, size_t max_size, int base);
 
 
