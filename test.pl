@@ -115,7 +115,16 @@ my @tests = (
     },
     sub {
         calc_int("-(1+1)", -2);
-    }
+    },
+    sub {
+        calc_int("+(1+1)", 2);
+    },
+    sub {
+        calc_int("+(1+2)+(3+4)", 10);
+    },
+    sub {
+        calc_int("-(1+2)+(3+4)", 4);
+    },
 );
 plan tests => scalar @tests;
 
