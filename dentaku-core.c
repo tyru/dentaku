@@ -372,8 +372,10 @@ dentaku_read_src(Dentaku *dentaku)
     char buf[MAX_IN_BUF];
     size_t read_size;
 
-    if (fileno(dentaku->f_in) == fileno(stdin) && isatty(0)) {
+    // Input is from terminal.
+    if (isatty(fileno(dentaku->f_in))) {
         fputs(PROMPT_STR, dentaku->f_out);
+        fflush(dentaku->f_out);
         // read each line
         if (fgets(buf, MAX_IN_BUF, dentaku->f_in) == NULL)
             return false;
