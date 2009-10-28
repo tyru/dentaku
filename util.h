@@ -5,7 +5,6 @@
 
 
 
-
 #define WARN(msg) \
     warn(msg)
 #define WARN2(msg, arg1) \
@@ -42,10 +41,10 @@ digit2double(Digit *digit);
 
 
 void
-atod(const char *digit_str, Digit *digit, int base);
+token2digit(Token *, Digit *, int);
 
 void
-dtoa(Digit *digit, char *ascii, size_t max_size, int base);
+digit2token(Digit *, Token *, size_t, int);
 
 
 

@@ -49,7 +49,7 @@ eval_stack_expr(Dentaku *dentaku)
 
             // m -> -m
             Digit d;
-            atod(tok_m.str, &d, 10);
+            token2digit(&tok_m, &d, 10);
             d = op_unary_minus(&d);
 
             // allocate for '-' and tok_m.str.
@@ -57,7 +57,7 @@ eval_stack_expr(Dentaku *dentaku)
             token_destroy(&tok_m);
             token_alloc(&tok_m, alloc_size);
 
-            dtoa(&d, tok_m.str, alloc_size, 10);
+            digit2token(&d, &tok_m, alloc_size, 10);
             goto push_result_return;
         }
         else if (tok_op.type == TOK_LPAREN) {

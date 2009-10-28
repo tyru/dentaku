@@ -1,5 +1,6 @@
 
 #include "util.h"
+#include "token.h"
 
 #include <stdarg.h>
 
@@ -64,10 +65,11 @@ digit2double(Digit *digit)
 
 
 void
-atod(const char *digit_str, Digit *digit, int base)
+token2digit(Token *tok, Digit *digit, int base)
 {
     char *end_ptr;
     double val;
+    char *digit_str = tok->str;
 
     UNUSED(base);
 
@@ -90,10 +92,11 @@ atod(const char *digit_str, Digit *digit, int base)
 
 
 void
-dtoa(Digit *digit, char *ascii, size_t max_size, int base)
+digit2token(Digit *digit, Token *tok, size_t max_size, int base)
 {
     double val;
     UNUSED(base);
+    char *ascii = tok->str;
 
     val = digit2double(digit);
     if (snprintf(ascii, max_size, "%f", val) < 0)

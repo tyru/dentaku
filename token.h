@@ -41,10 +41,10 @@ typedef enum {
 } TokenType;
 
 
-typedef struct {
+struct Token_tag {
     char        *str;
     TokenType   type;
-} Token;
+};
 
 
 void

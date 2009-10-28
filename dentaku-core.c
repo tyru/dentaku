@@ -151,8 +151,8 @@ dentaku_calc_expr(Dentaku *dentaku, Token *tok_op, Token *tok_n, Token *tok_m, T
     }
 
     /* Convert */
-    atod(tok_n->str, &n, 10);
-    atod(tok_m->str, &m, 10);
+    token2digit(tok_n, &n, 10);
+    token2digit(tok_m, &m, 10);
 
     /* Calculation */
     // TODO Use table for ops
@@ -169,7 +169,7 @@ dentaku_calc_expr(Dentaku *dentaku, Token *tok_op, Token *tok_n, Token *tok_m, T
 
 
     /* Convert result to Token */
-    dtoa(&result, tok_result->str, MAX_TOK_CHAR_BUF, 10);
+    digit2token(&result, tok_result, MAX_TOK_CHAR_BUF, 10);
     tok_result->type = TOK_DIGIT;
 
     dentaku_printf_d(dentaku, "eval '%f %s %f' => '%s'",

@@ -22,6 +22,9 @@
 typedef unsigned int    stack_ret;
 
 
+typedef struct Token_tag Token;
+
+
 
 
 #define PROMPT_STR          "=> "
