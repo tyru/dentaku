@@ -4,10 +4,12 @@
 #include "dentaku-core.h"
 #include "util.h"
 #include "parser.h"
+#include "op.h"
 
 
 
 
+// Ugly.
 static void
 eval_stack_expr(Dentaku *dentaku)
 {
@@ -39,15 +41,34 @@ eval_stack_expr(Dentaku *dentaku)
     switch (ret = stack_pop(stk, &tok_op)) {
     /* when '(' or empty stack, just push result (tok_m) and return */
     case STACK_SUCCESS:
-        if (tok_op.type != TOK_LPAREN)
+        if (tok_op.type == TOK_PLUS && stack_empty(stk)) {
+            goto return_m;
+        }
+        else if (tok_op.type == TOK_MINUS && stack_empty(stk)) {
+            // fix for the case that '-(1+1)' results in error.
+
+            // m -> -m
+            Digit d;
+            atod(tok_m.str, &d, 10);
+            d = op_unary_minus(&d);
+
+            // allocate for '-' and tok_m.str.
+            size_t alloc_size = strlen(tok_m.str) + 2;
+            token_destroy(&tok_m);
+            token_alloc(&tok_m, alloc_size);
+
+            dtoa(&d, tok_m.str, alloc_size, 10);
+            goto return_m;
+        }
+        else if (tok_op.type == TOK_LPAREN) {
+            stack_push(stk, &tok_op);
+            goto return_m;
+        }
+        else {
             break;
-        stack_push(stk, &tok_op);
-        /* FALLTHROUGH */
+        }
     case STACK_EMPTY:
-        stack_push(stk, &tok_m);
-        token_destroy(&tok_n);
-        token_destroy(&tok_op);
-        return;
+        goto return_m;
     default:
         DIE2("something wrong stack_pop(stk, &tok_m) == %d", ret);
     }
@@ -112,6 +133,11 @@ eval_stack_expr(Dentaku *dentaku)
     return;
 
 
+return_m:
+    stack_push(stk, &tok_m);
+    token_destroy(&tok_n);
+    token_destroy(&tok_op);
+    return;
 error:
     token_destroy(&tok_n);
     token_destroy(&tok_op);
