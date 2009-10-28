@@ -230,10 +230,12 @@ eval_when_eof_or_rparen(Dentaku *dentaku)
             // because I got correspond '('.
             token_destroy(&top_buf);
             stack_top(stk, &top_buf);
-            bool high_priority = ! stack_empty(stk)
-                            && TOKEN_HAS_HIGHER_PRIORITY(top_buf);
-            bool is_digit = ! stack_empty(stk)
-                           && top_buf.type == TOK_DIGIT;
+            bool is_digit = top_type == TOK_RPAREN
+                         && ! stack_empty(stk)
+                         && top_buf.type == TOK_DIGIT;
+            bool high_priority = top_type == TOK_RPAREN
+                              && ! stack_empty(stk)
+                              && TOKEN_HAS_HIGHER_PRIORITY(top_buf);
 
             if (stack_empty(stk) && dentaku_src_eof(dentaku)) {
                 dentaku_printf_d(dentaku,
@@ -244,7 +246,7 @@ eval_when_eof_or_rparen(Dentaku *dentaku)
                 token_destroy(&result);
                 siglongjmp(*dentaku->main_jmp_buf, JMP_RET_OK);
             }
-            else if (top_type == TOK_RPAREN && is_digit) {
+            else if (is_digit) {
                 dentaku_printf_d(dentaku, "add '*' between '(...)' and '(...)'");
 
                 // push "*"
@@ -262,7 +264,7 @@ eval_when_eof_or_rparen(Dentaku *dentaku)
                 allow_rparen = true;
                 continue;
             }
-            else if (top_type == TOK_RPAREN && high_priority) {
+            else if (high_priority) {
                 dentaku_printf_d(dentaku,
                         "next op is '*' or '/' or '^'. continue evaluating...");
 
