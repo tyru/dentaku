@@ -3,7 +3,7 @@
  * dentaku-core.c - calculator
  *
  * Written By: tyru <tyru.exe@gmail.com>
- * Last Change: 2009-10-28.
+ * Last Change: 2009-10-29.
  *
  */
 
@@ -313,9 +313,7 @@ show_usage(void)
     puts("  -f [rec,stk,cmp,rpn]    change internal behavior until dentaku shows answer");
     puts("");
 }
-
-
-void
+static void
 validate_arg_f(Dentaku *dentaku)
 {
     const char *arg_f = dentaku->arg_f;
@@ -330,7 +328,6 @@ validate_arg_f(Dentaku *dentaku)
     : dentaku_dief(dentaku, "Unknown -f option: %s", arg_f)
     ;
 }
-
 void
 dentaku_getopt(Dentaku *dentaku, int argc, char **argv)
 {
