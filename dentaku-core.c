@@ -424,6 +424,10 @@ dentaku_dispatch(Dentaku *dentaku)
         // TODO
         siglongjmp(*dentaku->main_jmp_buf, JMP_RET_ERR);
     }
+    else if (STREQ(dentaku->arg_f, "rpn")) {
+        // TODO
+        siglongjmp(*dentaku->main_jmp_buf, JMP_RET_ERR);
+    }
     else {
         // TODO check at dentaku_getopt()
         dentaku_dief(dentaku, "Unknown -f option: %s", dentaku->arg_f);
