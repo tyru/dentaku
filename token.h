@@ -11,6 +11,16 @@
   || (tok).type == TOK_DIVIDE \
   || (tok).type == TOK_UP_ALLOW)
 
+/*
+ * Calculator (dentaku) has only
+ * higher priority group (*, /, ^)
+ * and lower priority group (+, -),
+ * So just calculate these operators
+ * before lower priority operators.
+ * If this is practical programming language,
+ * I have to execute each operator by the order
+ * of each operator.
+ */
 #define TOKEN_HAS_HIGHER_PRIORITY(tok) \
     ((tok).type == TOK_MULTIPLY \
   || (tok).type == TOK_DIVIDE \
