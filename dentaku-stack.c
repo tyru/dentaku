@@ -146,7 +146,7 @@ error:
 }
 
 
-// get one token from dentaku->src or dentaku->data_stack->top.
+// Get one token from dentaku->src if not eof.
 static void
 push_got_token(Dentaku *dentaku)
 {
@@ -159,10 +159,10 @@ push_got_token(Dentaku *dentaku)
     if (dentaku_src_eof(dentaku))
         return;
 
-    stack_top(stk, &top);
-    // allow '+' or '-' before digit
+    // Allow '+' or '-' before digit
     // when stack is empty or '(' is on the top.
-    allow_signed = stack_empty(stk) || top.type == TOK_LPAREN;
+    allow_signed = stack_top(stk, &top) == STACK_EMPTY
+                || top.type == TOK_LPAREN;
 
     token_init(&tok_result);
     token_alloc(&tok_result, MAX_TOK_CHAR_BUF);
