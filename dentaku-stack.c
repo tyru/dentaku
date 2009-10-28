@@ -102,7 +102,11 @@ eval_stack_expr(Dentaku *dentaku)
 
     // Push result.
     stack_push(stk, &tok_result);
+
     token_destroy(&tok_result);
+    token_destroy(&tok_n);
+    token_destroy(&tok_op);
+    token_destroy(&tok_m);
     return;
 
 
