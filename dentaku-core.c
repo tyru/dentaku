@@ -319,8 +319,6 @@ show_usage(void)
     printf("Usage: %s [OPTIONS] [--] [file]\n", DENTAKU_PROG_NAME);
     puts("  --help              show this help");
     puts("  --debug             show debug message");
-    puts("  --to-rpn            convert infix notation to RPN of input numerical expression");
-    puts("  --from-rpn          convert RPN to infix notation of input numerical expression");
     puts("  -f [rec,stk,cmp,rpn]    change internal behavior until dentaku shows answer");
     puts("");
 }
@@ -348,8 +346,6 @@ dentaku_getopt(Dentaku *dentaku, int argc, char **argv)
     static const struct option long_opts[] = {
         {"help", 0, NULL, 'h'},
         {"debug", 0, NULL, 'd'},
-        {"to-rpn", 0, NULL, 0},    // TODO
-        {"from-rpn", 0, NULL, 0},    // TODO
         {0, 0, 0, 0}
     };
     int opt_index = 0;
