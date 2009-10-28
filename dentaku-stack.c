@@ -31,25 +31,27 @@ eval_stack_expr(Dentaku *dentaku)
         dentaku_printf_d(dentaku, "pop 'm' of 'n <op> m'... [%s]", tok_m.str);
         break;
     default:
-        WARN2("something wrong stack_pop(stk, &tok_m) == %d", ret);
+        DIE2("something wrong stack_pop(stk, &tok_m) == %d", ret);
     }
 
     // 2nd. pop '<op>' of expression 'n <op> m'.
     // '<op>' or '( <op>'
-    if ((ret = stack_pop(stk, &tok_op)) == STACK_EMPTY
-     || (ret == STACK_SUCCESS && tok_op.type == TOK_LPAREN))
-    {
-        if (ret != STACK_EMPTY)
-            stack_push(stk, &tok_op);
+    switch (ret = stack_pop(stk, &tok_op)) {
+    /* when '(' or empty stack, just push result (tok_m) and return */
+    case STACK_SUCCESS:
+        if (tok_op.type != TOK_LPAREN)
+            break;
+        stack_push(stk, &tok_op);
+        /* FALLTHROUGH */
+    case STACK_EMPTY:
         stack_push(stk, &tok_m);
         token_destroy(&tok_n);
         token_destroy(&tok_op);
         return;
+    default:
+        DIE2("something wrong stack_pop(stk, &tok_m) == %d", ret);
     }
     dentaku_printf_d(dentaku, "pop '<op>' of 'n <op> m'... [%s]", tok_op.str);
-    if (ret != STACK_SUCCESS) {
-        WARN2("something wrong stack_pop(stk, &tok_m) == %d", ret);
-    }
 
     // 3rd. pop 'n' of expression 'n <op> m'.
     switch (ret = stack_pop(stk, &tok_n)) {
@@ -60,7 +62,7 @@ eval_stack_expr(Dentaku *dentaku)
         WARN("reaching EOF where digit is expected");
         goto error;
     default:
-        WARN2("something wrong stack_pop(stk, &tok_m) == %d", ret);
+        DIE2("something wrong stack_pop(stk, &tok_m) == %d", ret);
     }
 
     if (stack_top(stk, &tmp) == STACK_SUCCESS) {
