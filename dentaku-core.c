@@ -321,9 +321,27 @@ show_usage(void)
     puts("  --debug             show debug message");
     puts("  --to-rpn            convert infix notation to RPN of input numerical expression");
     puts("  --from-rpn          convert RPN to infix notation of input numerical expression");
-    puts("  -f [rec,stk,cmp]    change internal behavior until dentaku shows answer");
+    puts("  -f [rec,stk,cmp,rpn]    change internal behavior until dentaku shows answer");
     puts("");
 }
+
+
+void
+validate_arg_f(Dentaku *dentaku)
+{
+    const char *arg_f = dentaku->arg_f;
+    STREQ(arg_f, "rec") ?
+    0    // ok
+    : STREQ(arg_f, "stk") ?
+    0    // ok
+    : STREQ(arg_f, "cmp") ?
+    0    // ok
+    : STREQ(arg_f, "rpn") ?
+    0    // ok
+    : dentaku_dief(dentaku, "Unknown -f option: %s", arg_f)
+    ;
+}
+
 void
 dentaku_getopt(Dentaku *dentaku, int argc, char **argv)
 {
@@ -347,6 +365,7 @@ dentaku_getopt(Dentaku *dentaku, int argc, char **argv)
                 break;
             case 'f':
                 dentaku->arg_f = optarg;
+                validate_arg_f(dentaku);
                 break;
             case 'h':
                 show_usage();
@@ -429,8 +448,7 @@ dentaku_dispatch(Dentaku *dentaku)
         siglongjmp(*dentaku->main_jmp_buf, JMP_RET_ERR);
     }
     else {
-        // TODO check at dentaku_getopt()
-        dentaku_dief(dentaku, "Unknown -f option: %s", dentaku->arg_f);
+        DIE("internal error: check -f option's value!");
     }
 }
 
