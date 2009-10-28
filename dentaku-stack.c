@@ -42,7 +42,7 @@ eval_stack_expr(Dentaku *dentaku)
     /* when '(' or empty stack, just push result (tok_m) and return */
     case STACK_SUCCESS:
         if (tok_op.type == TOK_PLUS && stack_empty(stk)) {
-            goto return_m;
+            goto push_result_return;
         }
         else if (tok_op.type == TOK_MINUS && stack_empty(stk)) {
             // fix for the case that '-(1+1)' results in error.
@@ -58,17 +58,17 @@ eval_stack_expr(Dentaku *dentaku)
             token_alloc(&tok_m, alloc_size);
 
             dtoa(&d, tok_m.str, alloc_size, 10);
-            goto return_m;
+            goto push_result_return;
         }
         else if (tok_op.type == TOK_LPAREN) {
             stack_push(stk, &tok_op);
-            goto return_m;
+            goto push_return;
         }
         else {
             break;
         }
     case STACK_EMPTY:
-        goto return_m;
+        goto push_result_return;
     default:
         DIE2("something wrong stack_pop(stk, &tok_m) == %d", ret);
     }
@@ -133,10 +133,17 @@ eval_stack_expr(Dentaku *dentaku)
     return;
 
 
-return_m:
+push_result_return:
     stack_push(stk, &tok_m);
     token_destroy(&tok_n);
     token_destroy(&tok_op);
+    token_destroy(&tok_m);
+    siglongjmp(*dentaku->main_jmp_buf, JMP_RET_OK);
+push_return:
+    stack_push(stk, &tok_m);
+    token_destroy(&tok_n);
+    token_destroy(&tok_op);
+    token_destroy(&tok_m);
     return;
 error:
     token_destroy(&tok_n);
