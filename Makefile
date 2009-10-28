@@ -6,7 +6,12 @@ CFLAGS = -g -W -Wall -std=gnu99
 LDFLAGS = -lm
 
 SRC = main.c dentaku-core.c dentaku-stack.c parser.c token.c util.c op.c
-OBJS = $(SRC:.c=.o) mylib/list/list.o
+
+STACK_SRC = libdatastruct/stack.c
+STACK_OBJS = $(STACK_SRC:.c=.o)
+LIST_SRC = mylib/list/list.c
+LIST_OBJS = $(LIST_SRC:.c=.o)
+OBJS = $(SRC:.c=.o) $(STACK_OBJS) $(LIST_OBJS)
 
 
 all: $(PROG)
@@ -16,16 +21,15 @@ test: $(PROG)
 leak-test: $(PROG)
 	\valgrind --leak-check=full ./$(PROG)
 
-$(PROG): $(OBJS) stack.o
-	$(CC) $(LDFLAGS) -o $@ $(OBJS) stack.o
+$(PROG): $(OBJS)
+	$(CC) $(LDFLAGS) -o $@ $(OBJS)
 
+# making *.o files
 .c.o:
 	$(CC) $(CFLAGS) -c $< -o $@
-
-stack.o: libdatastruct/stack.c libdatastruct/stack.h
-	$(CC) $(CFLAGS) -c libdatastruct/stack.c -o stack.o
-
-mylib/list/list.o: mylib/list/list.c
+$(STACK_OBJS): $(STACK_SRC)
+	$(CC) $(CFLAGS) -c $< -o $@
+$(LIST_OBJS): $(LIST_SRC)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 depend:
