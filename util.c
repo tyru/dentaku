@@ -7,6 +7,9 @@
 
 
 
+/*
+ * Show the warning message.
+ */
 void
 warn(const char *fmt, ...)
 {
@@ -23,7 +26,9 @@ warn(const char *fmt, ...)
 }
 
 
-// Note that this does not call dentaku_destroy().
+/*
+ * Internal Error.
+ */
 NORETURN void
 die(const char *filename, int line, const char *fmt, ...)
 {
@@ -44,9 +49,9 @@ die(const char *filename, int line, const char *fmt, ...)
 
 
 
-/*
- * Conversion Functions
- */
+/*******************************
+ * Conversion Functions        *
+ *******************************/
 
 // on success, return true.
 bool
@@ -128,6 +133,10 @@ digit2token(Digit *digit, Token *tok, size_t max_size, int base)
 
 
 
+
+/*******************************
+ * Util Functions              *
+ *******************************/
 
 /*
  * Return pointer to first character which is NOT c of str.
