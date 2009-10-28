@@ -48,4 +48,12 @@ void
 dtoa(Digit *digit, char *ascii, size_t max_size, int base);
 
 
+
+char*
+strchr_not(const char *str, int c);
+
+char*
+last_chr(const char *str);
+
+
 #endif /* DENTAKU_UTIL_H */

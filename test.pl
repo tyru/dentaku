@@ -4,6 +4,7 @@ use warnings;
 use Test::More;
 use Test::Output;
 use FileHandle;
+use POSIX ();
 
 
 
@@ -16,18 +17,18 @@ sub run_dentaku {
 }
 
 sub rx_int {
-    my $int = shift;
+    my $int = POSIX::floor(shift);
     $int > 0 ?
-        qr/\A \+ ? $int (\. \d+)? \Z/x
-      : qr/\A      $int (\. \d+)? \Z/x
+        qr/\A \+ ? $int \Z/x
+      : qr/\A      $int \Z/x
 }
 sub rx_float {
     my $float = shift;
     my ($i, $f) = split /\./, "$float";
     $f = 0 unless defined $f;
     $float > 0 ? 
-        qr/\A \+ ? $i \. $f 0* \Z/x
-      : qr/\A      $i \. $f 0* \Z/x
+        qr/\A \+ ? $i \. $f \Z/x
+      : qr/\A      $i \. $f \Z/x
 }
 
 sub calc_int {
@@ -84,7 +85,7 @@ my @tests = (
         calc_int("7/(3+4)*5", 5);
     },
     sub {
-        calc_float("1-7/(3+4)*5", -4);
+        calc_int("1-7/(3+4)*5", -4);
     },
     sub {
         calc_int("-1-1-1", -3);
