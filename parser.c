@@ -64,12 +64,14 @@ get_digit(char *src, char *buf, size_t maxsize)
 
 
 // if EOF or syntax error: return NULL
-char*
-parser_get_token(char *src, Token *tok, bool allow_signed, bool *error)
+Token*
+parser_get_token(char *src, char **next_pos, bool allow_signed, bool *error)
 {
     char *after_pos = NULL;
     char tok_buf[MAX_TOK_CHAR_BUF];
     char *sign_pos = NULL;
+    Token *tok_result;
+    TokenType tok_type;
 
 
     // set true when syntax error.
@@ -92,7 +94,7 @@ parser_get_token(char *src, Token *tok, bool allow_signed, bool *error)
 
         tok_buf[0] = src[0];
         tok_buf[1] = '\0';
-        tok->type = TOK_LPAREN;
+        tok_type = TOK_LPAREN;
 
         src++;
         break;
@@ -101,33 +103,33 @@ parser_get_token(char *src, Token *tok, bool allow_signed, bool *error)
 
         tok_buf[0] = src[0];
         tok_buf[1] = '\0';
-        tok->type = TOK_RPAREN;
+        tok_type = TOK_RPAREN;
 
         src++;
         break;
 
     case '*':
-        tok->type = TOK_MULTIPLY;
+        tok_type = TOK_MULTIPLY;
         goto save_to_tok_buf;
     case '/':
-        tok->type = TOK_DIVIDE;
+        tok_type = TOK_DIVIDE;
         goto save_to_tok_buf;
     case '^':
-        tok->type = TOK_UP_ALLOW;
+        tok_type = TOK_UP_ALLOW;
         goto save_to_tok_buf;
 
     case '+':
-        tok->type = TOK_PLUS;
+        tok_type = TOK_PLUS;
         goto save_digit_to_tok_buf;
     case '-':
-        tok->type = TOK_MINUS;
+        tok_type = TOK_MINUS;
 
 save_digit_to_tok_buf:
         // Allow '+<digit>' or '-<digit>'.
         if (allow_signed && isdigit(*skip_space(src + 1))) {
             // if NOT signed digit
             sign_pos = src;
-            src = skip_space(src + 1);
+            src = skip_space(src + 1);    // NOTE: Allow spaces between sign and digit.
             /* FALLTHROUGH */
         }
         else {
@@ -148,7 +150,7 @@ save_digit_to_tok_buf:
             }
             src = after_pos;
 
-            tok->type = TOK_DIGIT;
+            tok_type = TOK_DIGIT;
 
             break;
         }
@@ -168,18 +170,24 @@ save_to_tok_buf:
         break;
     }
 
-    // allocate just token's length
-    // size_t alloc_num = (sign_pos == NULL ? 0 : 1) + strlen(tok_buf) + 1;
-    // token_alloc(tok, alloc_num);
+    tok_result = malloc(sizeof(Token));
+    if (! tok_result) {
+        DIE("cannot allocate memory for Token!");
+    }
+    token_init(tok_result);
+    size_t alloc_num = (sign_pos == NULL ? 0 : 1) + strlen(tok_buf) + 1;
+    token_alloc(tok_result, alloc_num);
+
+    tok_result->type = tok_type;
 
     if (sign_pos == NULL) {
-        strncpy(tok->str, tok_buf, MAX_TOK_CHAR_BUF);
+        strncpy(tok_result->str, tok_buf, alloc_num);
     }
     else {
-        strncpy(tok->str, sign_pos, 1);
-        strncpy(tok->str + 1, tok_buf, MAX_TOK_CHAR_BUF - 1);
+        tok_result->str[0] = sign_pos[0];
+        strncpy(tok_result->str + 1, tok_buf, alloc_num - 1);
     }
 
-
-    return src;
+    *next_pos = src;
+    return tok_result;
 }

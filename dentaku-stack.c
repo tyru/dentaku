@@ -139,7 +139,8 @@ static void
 push_got_token(Dentaku *dentaku)
 {
     bool syntax_error;
-    Token tok_result;
+    Token *tok_result;
+    char *next_pos;
     bool allow_signed;
     Token top;
     stack_t *stk = dentaku->data_stack;
@@ -152,14 +153,10 @@ push_got_token(Dentaku *dentaku)
     allow_signed = stack_top(stk, &top) == STACK_EMPTY
                 || top.type == TOK_LPAREN;
 
-    // TODO Let parser_get_token() allocate token.
-    token_init(&tok_result);
-    token_alloc(&tok_result, MAX_TOK_CHAR_BUF);
-
     char *cur_pos = dentaku->src + dentaku->src_pos;
-    char *next_pos = parser_get_token(cur_pos, &tok_result, allow_signed, &syntax_error);
+    tok_result = parser_get_token(cur_pos, &next_pos, allow_signed, &syntax_error);
 
-    if (next_pos == NULL) {    // EOF or syntax error.
+    if (tok_result == NULL) {    // EOF or syntax error.
         // set to EOF.
         dentaku->src_pos = dentaku->src_len;
         dentaku_printf_d(dentaku, "reach EOF");
@@ -171,10 +168,11 @@ push_got_token(Dentaku *dentaku)
             siglongjmp(*dentaku->main_jmp_buf, JMP_RET_ERR);
     }
     else {
-        dentaku_printf_d(dentaku, "got! [%s]", tok_result.str);
+        dentaku_printf_d(dentaku, "got! [%s]", tok_result->str);
 
         dentaku->src_pos += next_pos - cur_pos;
-        stack_push(stk, &tok_result);
+        stack_push(stk, tok_result);
+        free(tok_result);
     }
 }
 
