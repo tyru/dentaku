@@ -172,6 +172,7 @@ push_got_token(Dentaku *dentaku)
 
         dentaku->src_pos += next_pos - cur_pos;
         stack_push(stk, tok_result);
+        // TODO use GC (not just pushing allocated pointers to list)
         free(tok_result);
     }
 }
