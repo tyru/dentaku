@@ -170,6 +170,12 @@ push_got_token(Dentaku *dentaku)
     else {
         dentaku_printf_d(dentaku, "got! [%s]", tok_result->str);
 
+        if (TOKEN_IS_OPERATOR(top) && TOKEN_IS_OPERATOR(*tok_result)) {
+            WARN3("operator continued after operator: %s %s ...",
+                    top.str, tok_result->str);
+            siglongjmp(*dentaku->main_jmp_buf, JMP_RET_ERR);
+        }
+
         dentaku->src_pos += next_pos - cur_pos;
         stack_push(stk, tok_result);
         // TODO use GC (not just pushing allocated pointers to list)
