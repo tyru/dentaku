@@ -1,5 +1,6 @@
 
 #include "token.h"
+#include "alloc-list.h"
 
 
 
@@ -17,9 +18,9 @@ token_init(Token *tok)
 void
 token_alloc(Token *tok, size_t size)
 {
-    tok->str = malloc(size);
+    tok->str = al_malloc(size);
     if (! tok->str) {
-        perror("malloc");
+        perror("al_malloc");
         exit(EXIT_FAILURE);
     }
 }

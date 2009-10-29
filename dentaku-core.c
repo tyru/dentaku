@@ -3,7 +3,7 @@
  * dentaku-core.c - calculator
  *
  * Written By: tyru <tyru.exe@gmail.com>
- * Last Change: 2009-10-29.
+ * Last Change: 2009-10-30.
  *
  */
 
@@ -23,6 +23,7 @@
 #include "dentaku-stack.h"
 #include "util.h"
 #include "op.h"
+#include "alloc-list.h"
 
 #include <getopt.h>
 #include <stdarg.h>
@@ -214,7 +215,6 @@ dentaku_stack_elements_are(Dentaku *dentaku, ...)
         if (stack_push(stk, popped_elem + pop_size - 1) != STACK_SUCCESS) {
             DIE("internal error: something wrong");
         }
-        token_destroy(popped_elem + pop_size - 1);
     }
     va_end(ap);
 
@@ -244,7 +244,7 @@ allocate_members(Dentaku *dentaku)
 
     dentaku->data_stack = stack_initialize(
         sizeof(Token),
-        (void (*)(void *))token_destroy,
+        0,
         (void *(*)(void*, const void*, size_t))token_copy
     );
     if (! dentaku->data_stack) {
@@ -252,10 +252,12 @@ allocate_members(Dentaku *dentaku)
     }
 
     dentaku->src = malloc(MAX_IN_BUF);
-    if (dentaku->src == NULL) {
+    if (! dentaku->src) {
         DIE("failed to allocate for input string");
     }
 }
+
+
 void
 dentaku_init(Dentaku *dentaku)
 {
@@ -283,6 +285,7 @@ dentaku_init(Dentaku *dentaku)
 
 
     allocate_members(dentaku);
+    al_init();
 }
 
 
@@ -290,14 +293,17 @@ void
 dentaku_destroy(Dentaku *dentaku)
 {
     dentaku_printf_d(dentaku, "destroying dentaku...");
-
-    dentaku_clear_stack(dentaku);
+    // dentaku->data_stack
     stack_release(dentaku->data_stack);
-
+    // dentaku->src
     if (dentaku->src) {
         free(dentaku->src);
         dentaku->src = NULL;
     }
+    // dentaku
+    free(dentaku);
+
+    al_destroy();
 }
 
 
@@ -447,6 +453,13 @@ dentaku_clear_stack(Dentaku *dentaku)
 }
 
 
+void
+dentaku_free_alloc_tokens(Dentaku *dentaku)
+{
+    al_free_pointers();
+}
+
+
 bool
 dentaku_register_main_cont(Dentaku *dentaku, sigjmp_buf *cont)
 {
@@ -461,7 +474,6 @@ dentaku_show_result(Dentaku *dentaku)
     Token top;
     if (stack_top(dentaku->data_stack, &top) == STACK_SUCCESS) {
         puts(top.str);
-        token_destroy(&top);
     }
 }
 

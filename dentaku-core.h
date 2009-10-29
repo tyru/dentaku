@@ -10,6 +10,7 @@
 #include "token.h"
 #include "libdatastruct/stack.h"
 #include "mylib/list/list.h"
+#include "alloc-list.h"
 #include <setjmp.h>
 
 
@@ -85,6 +86,9 @@ dentaku_dispatch(Dentaku *dentaku);
 
 void
 dentaku_clear_stack(Dentaku *dentaku);
+
+void
+dentaku_free_alloc_tokens(Dentaku *dentaku);
 
 bool
 dentaku_register_main_cont(Dentaku *dentaku, sigjmp_buf *cont);

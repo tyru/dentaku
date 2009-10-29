@@ -45,6 +45,9 @@ dentaku_dispatch(Dentaku *dentaku);
 void
 dentaku_clear_stack(Dentaku *dentaku);
 
+void
+dentaku_free_alloc_tokens(Dentaku *dentaku);
+
 bool
 dentaku_register_main_cont(Dentaku *dentaku, sigjmp_buf *cont);
 

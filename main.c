@@ -9,11 +9,11 @@ main(int argc, char *argv[])
 
     d = dentaku_alloc();
     dentaku_init(d);
-    dentaku_alloc(d);
     dentaku_getopt(d, argc, argv);
 
 
     while (1) {
+        dentaku_free_alloc_tokens(d);
         dentaku_clear_stack(d);
 
         if (! dentaku_read_src(d))

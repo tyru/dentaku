@@ -5,7 +5,7 @@ PROG = dentaku
 CFLAGS = -g -W -Wall -std=gnu99
 LDFLAGS = -lm
 
-SRC = main.c dentaku-core.c dentaku-stack.c parser.c token.c util.c op.c
+SRC = main.c dentaku-core.c dentaku-stack.c parser.c token.c util.c op.c alloc-list.c
 
 STACK_SRC = libdatastruct/stack.c
 STACK_OBJS = $(STACK_SRC:.c=.o)

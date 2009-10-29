@@ -54,7 +54,6 @@ eval_stack_expr(Dentaku *dentaku)
 
             // allocate for '-' and tok_m.str.
             size_t alloc_size = strlen(tok_m.str) + 2;
-            token_destroy(&tok_m);
             token_alloc(&tok_m, alloc_size);
 
             digit2token(&d, &tok_m, alloc_size, 10);
@@ -105,17 +104,12 @@ eval_stack_expr(Dentaku *dentaku)
             stack_push(stk, &tok_plus);
 
             // n -> -n
-            char *str = malloc(strlen(tok_n.str) + 2);
-            if (! str) {
-                DIE("can't allocate memory!");
-            }
-            str[0] = '-';
-            strcpy(str + 1, tok_n.str);
-            if (tok_n.str)
-                free(tok_n.str);
-            tok_n.str = str;
+            Token minus_tok_n;
+            token_alloc(&minus_tok_n, strlen(tok_n.str) + 2);
+            minus_tok_n.str[0] = '-';
+            strcpy(minus_tok_n.str + 1, tok_n.str);
+            tok_n.str = minus_tok_n.str;
         }
-        token_destroy(&tmp);
     }
 
     token_init(&tok_result);
@@ -126,29 +120,16 @@ eval_stack_expr(Dentaku *dentaku)
     // Push result.
     stack_push(stk, &tok_result);
 
-    token_destroy(&tok_result);
-    token_destroy(&tok_n);
-    token_destroy(&tok_op);
-    token_destroy(&tok_m);
     return;
 
 
 push_result_return:
     stack_push(stk, &tok_m);
-    token_destroy(&tok_n);
-    token_destroy(&tok_op);
-    token_destroy(&tok_m);
     siglongjmp(*dentaku->main_jmp_buf, JMP_RET_OK);
 push_return:
     stack_push(stk, &tok_m);
-    token_destroy(&tok_n);
-    token_destroy(&tok_op);
-    token_destroy(&tok_m);
     return;
 error:
-    token_destroy(&tok_n);
-    token_destroy(&tok_op);
-    token_destroy(&tok_m);
     siglongjmp(*dentaku->main_jmp_buf, JMP_RET_ERR);
 }
 
@@ -171,16 +152,14 @@ push_got_token(Dentaku *dentaku)
     allow_signed = stack_top(stk, &top) == STACK_EMPTY
                 || top.type == TOK_LPAREN;
 
+    // TODO Let parser_get_token() allocate token.
     token_init(&tok_result);
     token_alloc(&tok_result, MAX_TOK_CHAR_BUF);
 
     char *cur_pos = dentaku->src + dentaku->src_pos;
     char *next_pos = parser_get_token(cur_pos, &tok_result, allow_signed, &syntax_error);
 
-    if (next_pos == NULL) {
-        // EOF or syntax error.
-        token_destroy(&tok_result);
-
+    if (next_pos == NULL) {    // EOF or syntax error.
         // set to EOF.
         dentaku->src_pos = dentaku->src_len;
         dentaku_printf_d(dentaku, "reach EOF");
@@ -217,7 +196,7 @@ eval_when_eof_or_rparen(Dentaku *dentaku)
 
     // calculate until expression becomes 1 token
     // or top is correspond '(' and next does not have higher priority
-    for (; ; token_destroy(&result)) {
+    while (1) {
         eval_stack_expr(dentaku);
         stack_pop(stk, &result);
         dentaku_printf_d(dentaku, "result [%s]", result.str);
@@ -232,7 +211,6 @@ eval_when_eof_or_rparen(Dentaku *dentaku)
         if (stack_empty(stk)) {
             if (top_type == TOK_RPAREN && ! allow_rparen) {
                 // token was ')' at first, but got EOF.
-                token_destroy(&result);
                 WARN("extra close parenthesis");
                 siglongjmp(*dentaku->main_jmp_buf, JMP_RET_ERR);
             }
@@ -240,7 +218,6 @@ eval_when_eof_or_rparen(Dentaku *dentaku)
 
             if (dentaku_src_eof(dentaku)) {
                 // end.
-                token_destroy(&result);
                 siglongjmp(*dentaku->main_jmp_buf, JMP_RET_OK);
             }
             else
@@ -251,8 +228,6 @@ eval_when_eof_or_rparen(Dentaku *dentaku)
         else if (top_buf.type == TOK_LPAREN) {
             if (top_type == TOK_UNDEF) {
                 // token was EOF at first, but got '('.
-                token_destroy(&result);
-                token_destroy(&top_buf);
                 WARN("extra open parenthesis");
                 siglongjmp(*dentaku->main_jmp_buf, JMP_RET_ERR);
             }
@@ -263,7 +238,6 @@ eval_when_eof_or_rparen(Dentaku *dentaku)
             // unless top is '*' or '/',
             // finish calculation of one expression in parenthesis.
             // because I got correspond '('.
-            token_destroy(&top_buf);
             stack_top(stk, &top_buf);
             bool is_digit = top_type == TOK_RPAREN
                          && ! stack_empty(stk)
@@ -278,7 +252,6 @@ eval_when_eof_or_rparen(Dentaku *dentaku)
                         result.str);
 
                 stack_push(stk, &result);
-                token_destroy(&result);
                 siglongjmp(*dentaku->main_jmp_buf, JMP_RET_OK);
             }
             else if (is_digit) {
@@ -292,7 +265,6 @@ eval_when_eof_or_rparen(Dentaku *dentaku)
                 // push result.
                 stack_push(stk, &result);
 
-                token_destroy(&result);
                 // forbid empty stack with top_type == TOK_RPAREN.
                 // because '1+2)' is not valid expression.
                 // set this value to through the checking.
@@ -307,12 +279,10 @@ eval_when_eof_or_rparen(Dentaku *dentaku)
                 stack_push(stk, &result);
 
                 allow_rparen = true;
-                token_destroy(&result);
                 continue;
             }
             else {
                 stack_push(stk, &result);
-                token_destroy(&result);
                 break;
             }
         }
@@ -325,8 +295,6 @@ eval_when_eof_or_rparen(Dentaku *dentaku)
             stack_push(stk, &result);
         }
     }
-    token_destroy(&result);
-    token_destroy(&top_buf);
 }
 
 
@@ -347,16 +315,11 @@ eval_when_mul_or_div(Dentaku *dentaku)
     }
     else if (tok_got.type == TOK_RPAREN) {
         WARN("reaching ')' where expression is expected");
-        token_destroy(&tok_got);
         siglongjmp(*dentaku->main_jmp_buf, JMP_RET_ERR);
     }
     else if (TOKEN_IS_OPERATOR(tok_got)) {
         WARN2("reaching '%c' where expression is expected", tok_got.str[0]);
-        token_destroy(&tok_got);
         siglongjmp(*dentaku->main_jmp_buf, JMP_RET_ERR);
-    }
-    else {
-        token_destroy(&tok_got);
     }
 }
 
