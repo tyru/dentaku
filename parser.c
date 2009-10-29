@@ -63,7 +63,8 @@ get_digit(char *src, char *buf, size_t maxsize)
 
 
 
-// if EOF or syntax error: return NULL
+// If EOF or syntax error: return NULL
+// Otherwise, Return allocated token.
 Token*
 parser_get_token(char *src, char **next_pos, bool allow_signed, bool *error)
 {
@@ -73,14 +74,12 @@ parser_get_token(char *src, char **next_pos, bool allow_signed, bool *error)
     Token *tok_result;
     TokenType tok_type;
 
-
-    // set true when syntax error.
+    // Set true when syntax error.
     *error = false;
 
-
+    // Return when eof.
     if (src == NULL)
         return NULL;
-
     char *incl_src = skip_space(src);
     if (incl_src == NULL) {
         return NULL;
@@ -91,32 +90,27 @@ parser_get_token(char *src, char **next_pos, bool allow_signed, bool *error)
     // TODO Use table
     switch (*src) {
     case '(':
-
-        tok_buf[0] = src[0];
-        tok_buf[1] = '\0';
         tok_type = TOK_LPAREN;
-
-        src++;
-        break;
-
+        goto save_chr_to_tok_buf;
     case ')':
-
-        tok_buf[0] = src[0];
-        tok_buf[1] = '\0';
         tok_type = TOK_RPAREN;
-
-        src++;
-        break;
-
+        goto save_chr_to_tok_buf;
     case '*':
         tok_type = TOK_MULTIPLY;
-        goto save_to_tok_buf;
+        goto save_chr_to_tok_buf;
     case '/':
         tok_type = TOK_DIVIDE;
-        goto save_to_tok_buf;
+        goto save_chr_to_tok_buf;
     case '^':
         tok_type = TOK_UP_ALLOW;
-        goto save_to_tok_buf;
+
+save_chr_to_tok_buf:
+        tok_buf[0] = src[0];
+        tok_buf[1] = '\0';
+
+        src++;
+        break;
+
 
     case '+':
         tok_type = TOK_PLUS;
@@ -160,14 +154,6 @@ save_digit_to_tok_buf:
 
         *error = true;
         return NULL;
-
-
-save_to_tok_buf:
-        tok_buf[0] = src[0];
-        tok_buf[1] = '\0';
-
-        src++;
-        break;
     }
 
     tok_result = malloc(sizeof(Token));

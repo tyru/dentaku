@@ -305,7 +305,6 @@ eval_when_mul_or_div(Dentaku *dentaku)
 
     // get and push right hand operand.
     push_got_token(dentaku);
-    // TODO I want something like alloca().
     stack_top(stk, &tok_got);
 
 

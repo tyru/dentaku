@@ -11,8 +11,6 @@ typedef struct Dentaku_tag Dentaku;
 
 /* Public Functions */
 
-// TODO Leave functions only used in main.c
-
 NORETURN void
 dentaku_die(Dentaku *dentaku, const char *errmsg);
 

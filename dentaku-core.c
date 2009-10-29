@@ -9,9 +9,6 @@
 
 
 /* TODO && FIXME
- * - add .str's capacity size to Token
- *   for allocating just token's characters length.
- *   (if capacity is a fewer than needed size, use realloc())
  * - use GC
  * - add more ops. (e.g.: 'log', 'exp')
  * - too ugly

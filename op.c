@@ -1,6 +1,7 @@
 /*
  * TODO
  * - Return Digit* after making GC
+ * - Use gmp library
  */
 
 #include "op.h"
