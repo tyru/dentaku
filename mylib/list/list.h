@@ -30,16 +30,16 @@ typedef enum {
 } ListRVal;
 
 
-typedef struct node_t {
-    struct node_t   *next;
-    struct node_t   *prev;
-    void            *item;
+typedef struct Node_tag {
+    struct Node_tag     *next;
+    struct Node_tag     *prev;
+    void                *item;
 } Node;
 
-typedef struct list_t {
-    Node    *head;
-    Node    *tail;
-    size_t elem_size;
+typedef struct List_tag {
+    Node                *head;
+    Node                *tail;
+    size_t              elem_size;
     list_release_func   rel_func;
     list_copy_func      copy_func;
 } List;
