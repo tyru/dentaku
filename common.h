@@ -7,7 +7,6 @@
 
 
 #include "digit.h"
-#include "mylib/list/list.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,6 +21,7 @@
 
 typedef unsigned int            stack_ret;
 typedef struct Token_tag        Token;
+typedef struct List_tag         List;
 
 
 

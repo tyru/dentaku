@@ -6,6 +6,12 @@
 #include "alloc-list.h"
 #include "util.h"
 
+// I want to see the definition of struct List_tag,
+// But I don't want to see typedef of List
+// to avoid multiple List's typedef definition.
+#define List    List__
+    #include "mylib/list/list.h"
+#undef List
 
 static List    *pointers_list;
 

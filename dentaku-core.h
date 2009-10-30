@@ -9,7 +9,6 @@
 // TODO Hide these headers
 #include "token.h"
 #include "libdatastruct/stack.h"
-#include "mylib/list/list.h"
 #include "alloc-list.h"
 #include <setjmp.h>
 
