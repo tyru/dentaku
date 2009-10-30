@@ -22,6 +22,7 @@
 typedef unsigned int            stack_ret;
 typedef struct Token_tag        Token;
 typedef struct List_tag         List;
+typedef struct Dentaku_tag      Dentaku;
 
 
 

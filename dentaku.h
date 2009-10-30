@@ -6,7 +6,6 @@
 
 
 
-typedef struct Dentaku_tag Dentaku;
 
 
 /* Public Functions */
