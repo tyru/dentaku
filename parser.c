@@ -1,5 +1,6 @@
 
 #include "parser.h"
+#include "token.h"
 #include "util.h"
 
 #include <ctype.h>

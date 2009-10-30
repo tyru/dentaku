@@ -3,8 +3,6 @@
 
 #include "common.h"
 
-#include "token.h"
-
 
 
 Token*
