@@ -5,7 +5,7 @@ int
 main(int argc, char *argv[])
 {
     Dentaku *d;
-    sigjmp_buf jbuf;
+    JMP_BUF jbuf;
 
     d = dentaku_alloc();
     dentaku_init(d);

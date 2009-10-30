@@ -17,10 +17,15 @@
 
 #include "dentaku-core.h"
 
+#define stack_t     stack_t__
+    #include "libdatastruct/stack.h"
+#undef stack_t
+
 #include "dentaku-stack.h"
 #include "util.h"
 #include "op.h"
 #include "alloc-list.h"
+#include "token.h"
 
 #include <getopt.h>
 #include <stdarg.h>

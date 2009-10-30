@@ -19,10 +19,16 @@
 
 
 
-typedef unsigned int            stack_ret;
+typedef struct Dentaku_tag      Dentaku;
 typedef struct Token_tag        Token;
 typedef struct List_tag         List;
-typedef struct Dentaku_tag      Dentaku;
+
+typedef struct stack            stack_t;
+typedef unsigned int            stack_ret;
+
+#include <setjmp.h>
+#define JMP_BUF     sigjmp_buf
+
 
 
 
@@ -37,8 +43,11 @@ typedef struct Dentaku_tag      Dentaku;
 #define JMP_RET_ERR         2
 
 
+
+
 #define STREQ(s1, s2)       (*(s1) == *(s2) && strcmp((s1), (s2)) == 0)
 #define UNUSED(x)           ((void)x)
+
 
 
 

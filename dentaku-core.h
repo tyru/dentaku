@@ -4,13 +4,6 @@
 
 
 #include "common.h"
-#include "dentaku.h"    // typedef struct Dentaku_tag Dentaku
-
-// TODO Hide these headers
-#include "token.h"
-#include "libdatastruct/stack.h"
-#include "alloc-list.h"
-#include <setjmp.h>
 
 
 
@@ -19,7 +12,7 @@ struct Dentaku_tag {
     stack_t *data_stack;
     List    *syntax_tree;
 
-    sigjmp_buf  *main_jmp_buf;
+    JMP_BUF *main_jmp_buf;
 
     FILE    *f_in;
     FILE    *f_out;
