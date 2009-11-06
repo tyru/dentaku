@@ -31,23 +31,27 @@
 
 #define HEADER_CASSOCLIST_H
 
-#include <stddef.h>
-
 /*******************************************************************************
 	Constants
 *******************************************************************************/
 
-#define CASSOCLIST_SUCCESS                                   0x00000000
-#define CASSOCLIST_MEMORY_ALLOCATION_ERROR                   0x00000001
-#define CASSOCLIST_INVALID_KEY                               0x00000002
-#define CASSOCLIST_KEY_COLLISION                             0x00000004
-#define CASSOCLIST_NOT_EXISTENT_KEY                          0x00000008
-#define CASSOCLIST_HASH_COLLISION                            0x00000010
+#define CASSOCLIST_SUCCESS                        0x00000000
+#define CASSOCLIST_MEMORY_ALLOCATION_ERROR        0x00000001
+#define CASSOCLIST_INVALID_KEY                    0x00000002
+#define CASSOCLIST_KEY_COLLISION                  0x00000004
+#define CASSOCLIST_NOT_EXISTENT_KEY               0x00000008
+#define CASSOCLIST_HASH_COLLISION                 0x00000010
 
-#define CASSOCLIST_MAX_OF_SHORT_KEY_SIZE                     16
-#define CASSOCLIST_DEFAULT_ARRAY_SIZE                        64
+#define CASSOCLIST_MAX_OF_SHORT_KEY_SIZE          16
+#define CASSOCLIST_DEFAULT_ARRAY_SIZE             64
 
-#define CASSOCLIST_HASH_TYPES                                4
+#define CASSOCLIST_HASH_TYPES                     4
+
+/*******************************************************************************
+	Including Headers
+*******************************************************************************/
+
+#include "common_public.h"
 
 /*******************************************************************************
 	Structures
@@ -71,7 +75,7 @@ struct cassoclist_element_info
 struct cassoclist
 {
 	cassoclist_element_info_t *element_info_array;
-	void *value_array;
+	char *value_array;
 	size_t size;
 	size_t element_size;
 	size_t array_size;
@@ -83,7 +87,7 @@ struct cassoclist
 *******************************************************************************/
 
 #define cassoclist_size(cassoclist) \
-    ((assoclist)->size)
+    ((cassoclist)->size)
 
 #define cassoclist_empty(cassoclist) \
     (!(cassoclist)->size)
@@ -93,7 +97,7 @@ struct cassoclist
 *******************************************************************************/
 
 extern cassoclist_t *cassoclist_initialize
-    (const size_t,void (*)(void *));
+    (size_t,void (*)(void *));
 extern void cassoclist_release
     (cassoclist_t *);
 extern unsigned int cassoclist_add
@@ -105,4 +109,4 @@ extern unsigned int cassoclist_lookup
 extern unsigned int cassoclist_remove
     (cassoclist_t *,const char *,void *);
 
-#endif
+#endif /* HEADER_CASSOCLIST_H */

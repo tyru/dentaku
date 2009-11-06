@@ -1,7 +1,7 @@
 
 /*
- * Definition for the stack data structure
- * Copyright (c) 2009, Kazuhiko Sakaguchi All rights reserved.
+ * Common private definition for the libdatastruct
+ * Copyright (c) 2008-2009, Kazuhiko Sakaguchi All rights reserved.
  * This file is part of the libdatastruct.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -27,84 +27,51 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef HEADER_STACK_H
+#ifndef HEADER_COMMON_PRIVATE_H
 
-#define HEADER_STACK_H
+#define HEADER_COMMON_PRIVATE_H
 
 /*******************************************************************************
 	Constants
 *******************************************************************************/
 
-#define STACK_SUCCESS                             0x00000000
-#define STACK_MEMORY_ALLOCATION_ERROR             0x00000001
-#define STACK_EMPTY                               0x00000002
-#define STACK_OFFSET_IS_TOO_LARGE                 0x00000004
-
-#define STACK_MEMORY_ALLOCATION_UNIT_SIZE         32
+#define GLIBC_ALLOCA                              1
 
 /*******************************************************************************
 	Including Headers
 *******************************************************************************/
 
+#include <stdlib.h>
+
+#if GLIBC_ALLOCA
+#include <alloca.h>
+#endif
+
 #include "common_public.h"
-
-/*******************************************************************************
-	Structures
-*******************************************************************************/
-
-typedef struct stack stack_t;
-
-struct stack
-{
-	char *array;
-	size_t size;
-	size_t max_used_size;
-	size_t element_size;
-	size_t array_size;
-	void (*release_function)(void *);
-	void *(*copy_function)(void *, const void *, size_t);
-};
 
 /*******************************************************************************
 	Macros
 *******************************************************************************/
 
-#define stack_size(stack) \
-    ((size_t)(stack)->size)
+#if GLIBC_ALLOCA
 
-#define stack_empty(stack) \
-    (!(stack)->size)
+#define portable_alloca(size)                     (alloca(size))
+#define portable_alloca_free(ptr)                 ((void)0)
+#define portable_alloca_check(ptr)                (1)
 
-#define stack_clear(stack) \
-    stack_pop_many_elements((stack), stack_size(stack), NULL)
+#else
+
+#define portable_alloca(size)                     (malloc(size))
+#define portable_alloca_free(ptr)                 (free(ptr))
+#define portable_alloca_check(ptr)                (ptr)
+
+#endif
 
 /*******************************************************************************
 	Functions
 *******************************************************************************/
 
-extern stack_t *stack_initialize
-    (size_t,void (*)(void *),void *(*)(void *,const void *, size_t));
-extern void stack_release
-    (stack_t *);
-extern unsigned int stack_bottom
-    (stack_t *,void *);
-extern unsigned int stack_top
-    (stack_t *,void *);
-extern unsigned int stack_refer_from_bottom
-    (stack_t *,size_t,void *);
-extern unsigned int stack_refer_from_top
-    (stack_t *,size_t,void *);
-extern unsigned int stack_refer_many_elements_from_bottom
-    (stack_t *,size_t,size_t,void *);
-extern unsigned int stack_refer_many_elements_from_top
-    (stack_t *,size_t,size_t,void *);
-extern unsigned int stack_push
-    (stack_t *,const void *);
-extern unsigned int stack_pop
-    (stack_t *,void *);
-extern unsigned int stack_push_many_elements
-    (stack_t *,size_t,const void *);
-extern unsigned int stack_pop_many_elements
-    (stack_t *,size_t,void *);
+extern unsigned int power_of_two_alignment
+    (unsigned int);
 
-#endif /* HEADER_STACK_H */
+#endif /* HEADER_COMMON_PRIVATE_H */

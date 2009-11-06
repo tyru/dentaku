@@ -1,7 +1,7 @@
 
 /*
- * Definition for the queue data structure
- * Copyright (c) 2009, Kazuhiko Sakaguchi All rights reserved.
+ * Common public definition for the libdatastruct
+ * Copyright (c) 2008-2009, Kazuhiko Sakaguchi All rights reserved.
  * This file is part of the libdatastruct.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -27,72 +27,28 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef HEADER_QUEUE_H
+#ifndef HEADER_COMMON_PUBLIC_H
 
-#define HEADER_QUEUE_H
+#define HEADER_COMMON_PUBLIC_H
 
 /*******************************************************************************
 	Constants
 *******************************************************************************/
 
-#define QUEUE_SUCCESS                             0x00000000
-#define QUEUE_MEMORY_ALLOCATION_ERROR             0x00000001
-#define QUEUE_EMPTY                               0x00000002
-#define QUEUE_OFFSET_IS_TOO_LARGE                 0x00000004
-
-#define QUEUE_DEFAULT_ARRAY_SIZE                  64
+#define DEFAULT_RELEASE_FUNCTION                  default_release_function
+#define DEFAULT_COPY_FUNCTION                     memcpy
 
 /*******************************************************************************
 	Including Headers
 *******************************************************************************/
 
-#include "common_public.h"
-
-/*******************************************************************************
-	Structures
-*******************************************************************************/
-
-typedef struct queue queue_t;
-
-struct queue
-{
-	char *array;
-	size_t size;
-	size_t element_size;
-	size_t array_size;
-	size_t head;
-	void (*release_function)(void *);
-};
-
-/*******************************************************************************
-	Macros
-*******************************************************************************/
-
-#define queue_size(queue) \
-    ((queue)->size)
-
-#define queue_empty(queue) \
-    (!(queue)->size)
+#include <string.h>
 
 /*******************************************************************************
 	Functions
 *******************************************************************************/
 
-extern queue_t *queue_initialize
-    (size_t,void (*)(void *));
-extern void queue_release
-    (queue_t *);
-extern unsigned int queue_front
-    (queue_t *,void *);
-extern unsigned int queue_back
-    (queue_t *,void *);
-extern unsigned int queue_refer_from_front
-    (queue_t *,size_t,void *);
-extern unsigned int queue_refer_from_back
-    (queue_t *,size_t,void *);
-extern unsigned int queue_enqueue
-    (queue_t *,const void *);
-extern unsigned int queue_dequeue
-    (queue_t *,void *);
+extern void default_release_function
+    (void *);
 
-#endif /* HEADER_QUEUE_H */
+#endif /* HEADER_COMMON_PUBLIC_H */

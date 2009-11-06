@@ -27,8 +27,20 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdlib.h>
-#include <string.h>
+/*******************************************************************************
+	Including Headers
+*******************************************************************************/
+
+#include "common_private.h"
+
+/*******************************************************************************
+	Functions
+*******************************************************************************/
+
+void default_release_function(void *pointer)
+{
+	/* empty function */
+}
 
 unsigned int power_of_two_alignment(unsigned int n)
 {
@@ -43,4 +55,3 @@ unsigned int power_of_two_alignment(unsigned int n)
 	}
 	return result;
 }
-

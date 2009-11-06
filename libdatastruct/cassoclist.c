@@ -27,23 +27,16 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define GLIBC_ALLOCA                                        1
-
-#include <stdlib.h>
-#include <string.h>
-
-#if GLIBC_ALLOCA
-#include <alloca.h>
-#endif
+/*******************************************************************************
+	Including Headers
+*******************************************************************************/
 
 #include "cassoclist.h"
+#include "common_private.h"
 
 /*******************************************************************************
 	Macros
 *******************************************************************************/
-
-#define void_pointer_addition(pointer,number) \
-    ((void *)((char *)pointer+number))
 
 #define hash(cassoclist,key,number) \
     (hash_function(key,number)&((cassoclist)->array_size-1))
@@ -98,11 +91,10 @@
     && (free(get_long_key_by_offset(cassoclist,offset)),1))
 
 #define get_value_by_offset(cassoclist,offset) \
-    (void_pointer_addition((cassoclist)->value_array \
-    ,(cassoclist)->element_size*(offset)))
+    ((cassoclist)->value_array+(cassoclist)->element_size*(offset))
 
 #define compare_key_and_element_info(key,element_info) \
-    (get_used_flag(element_info)  && compare_string(key,get_key(element_info)))
+    (get_used_flag(element_info) && compare_string(key,get_key(element_info)))
 
 #define compare_key_and_offset(cassoclist,key,offset) \
     (get_used_flag_by_offset(cassoclist,offset) \
@@ -201,12 +193,9 @@ static unsigned int cassoclist_trymove(cassoclist_t *cassoclist
 	if(!get_used_flag_by_offset(cassoclist,offset)){
 		return CASSOCLIST_SUCCESS;
 	}
-#if GLIBC_ALLOCA
-	stack_top = stack_bottom = alloca(sizeof(trymove_stack_t)*(recur_limit+1));
-#else
-	stack_top = stack_bottom = malloc(sizeof(trymove_stack_t)*(recur_limit+1));
-#endif
-	if(!stack_bottom){
+	stack_top = stack_bottom
+	    = portable_alloca(sizeof(trymove_stack_t)*(recur_limit+1));
+	if(!portable_alloca_check(stack_bottom)){
 		return CASSOCLIST_MEMORY_ALLOCATION_ERROR;
 	}
 	stack_top->offset = offset;
@@ -230,9 +219,7 @@ static unsigned int cassoclist_trymove(cassoclist_t *cassoclist
 					stack_top--;
 				}
 				get_used_flag(stack_top->element_info) = 0;
-#if !GLIBC_ALLOCA
-				free(stack_bottom);
-#endif
+				portable_alloca_free(stack_bottom);
 				return CASSOCLIST_SUCCESS;
 			}
 		}
@@ -240,9 +227,7 @@ static unsigned int cassoclist_trymove(cassoclist_t *cassoclist
 		stack_top->hash_id++;
 		while(stack_top->hash_id == CASSOCLIST_HASH_TYPES){
 			if(stack_top == stack_bottom){
-#if !GLIBC_ALLOCA
-				free(stack_bottom);
-#endif
+				portable_alloca_free(stack_bottom);
 				return CASSOCLIST_HASH_COLLISION;
 			}
 			stack_top--;
@@ -251,7 +236,7 @@ static unsigned int cassoclist_trymove(cassoclist_t *cassoclist
 	}
 }
 
-cassoclist_t *cassoclist_initialize(const size_t element_size
+cassoclist_t *cassoclist_initialize(size_t element_size
     ,void (*release_function)(void *))
 {
 	cassoclist_t *cassoclist = malloc(sizeof(cassoclist_t));
@@ -286,7 +271,7 @@ void cassoclist_release(cassoclist_t *cassoclist)
 		    = get_element_info_by_offset(cassoclist,counter);
 		if(get_used_flag(element_info)){
 			free_long_key(element_info);
-			if(cassoclist->release_function){
+			if(cassoclist->release_function != DEFAULT_RELEASE_FUNCTION){
 				cassoclist->release_function
 				    (get_value_by_offset(cassoclist,counter));
 			}
@@ -369,7 +354,7 @@ unsigned int cassoclist_reassign(cassoclist_t *cassoclist
 	if(errcode){
 		return errcode;
 	}
-	if(cassoclist->release_function){
+	if(cassoclist->release_function != DEFAULT_RELEASE_FUNCTION){
 		cassoclist->release_function(get_value_by_offset(cassoclist,offset));
 	}
 	memcpy(get_value_by_offset(cassoclist,offset)
@@ -415,7 +400,7 @@ unsigned int cassoclist_remove(cassoclist_t *cassoclist
 		memcpy(output
 		    ,get_value_by_offset(cassoclist,offset),cassoclist->element_size);
 	}
-	else if(cassoclist->release_function){
+	else if(cassoclist->release_function != DEFAULT_RELEASE_FUNCTION){
 		cassoclist->release_function(get_value_by_offset(cassoclist,offset));
 	}
 	get_used_flag(element_info) = 0;

@@ -31,18 +31,22 @@
 
 #define HEADER_DEQUE_H
 
-#include <stddef.h>
-
 /*******************************************************************************
 	Constants
 *******************************************************************************/
 
-#define DEQUE_SUCCESS                                       0x00000000
-#define DEQUE_MEMORY_ALLOCATION_ERROR                       0x00000001
-#define DEQUE_EMPTY                                         0x00000002
-#define DEQUE_OFFSET_IS_TOO_LARGE                           0x00000004
+#define DEQUE_SUCCESS                             0x00000000
+#define DEQUE_MEMORY_ALLOCATION_ERROR             0x00000001
+#define DEQUE_EMPTY                               0x00000002
+#define DEQUE_OFFSET_IS_TOO_LARGE                 0x00000004
 
-#define DEQUE_DEFAULT_ARRAY_SIZE                            64
+#define DEQUE_DEFAULT_ARRAY_SIZE                  64
+
+/*******************************************************************************
+	Including Headers
+*******************************************************************************/
+
+#include "common_public.h"
 
 /*******************************************************************************
 	Structures
@@ -52,7 +56,7 @@ typedef struct deque deque_t;
 
 struct deque
 {
-	void *array;
+	char *array;
 	size_t size;
 	size_t element_size;
 	size_t array_size;
@@ -75,7 +79,7 @@ struct deque
 *******************************************************************************/
 
 extern deque_t *deque_initialize
-    (const size_t,void (*)(void *));
+    (size_t,void (*)(void *));
 extern void deque_release
     (deque_t *);
 extern unsigned int deque_front
@@ -83,9 +87,9 @@ extern unsigned int deque_front
 extern unsigned int deque_back
     (deque_t *,void *);
 extern unsigned int deque_refer_from_front
-    (deque_t *,const size_t,void *);
+    (deque_t *,size_t,void *);
 extern unsigned int deque_refer_from_back
-    (deque_t *,const size_t,void *);
+    (deque_t *,size_t,void *);
 extern unsigned int deque_push_front
     (deque_t *,const void *);
 extern unsigned int deque_push_back
@@ -95,4 +99,4 @@ extern unsigned int deque_pop_front
 extern unsigned int deque_pop_back
     (deque_t *,void *);
 
-#endif
+#endif /* HEADER_DEQUE_H */

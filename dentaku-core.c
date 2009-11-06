@@ -3,7 +3,7 @@
  * dentaku-core.c - calculator
  *
  * Written By: tyru <tyru.exe@gmail.com>
- * Last Change: 2009-10-30.
+ * Last Change: 2009-11-07.
  *
  */
 
@@ -246,7 +246,7 @@ allocate_members(Dentaku *dentaku)
 
     dentaku->data_stack = stack_initialize(
         sizeof(Token),
-        0,
+        DEFAULT_RELEASE_FUNCTION,
         (void *(*)(void*, const void*, size_t))token_copy
     );
     if (! dentaku->data_stack) {
