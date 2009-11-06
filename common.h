@@ -15,8 +15,6 @@
 
 #include <stdbool.h>
 
-#include <assert.h>
-
 
 
 typedef struct Dentaku_tag      Dentaku;

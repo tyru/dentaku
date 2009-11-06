@@ -27,6 +27,7 @@
 #include "alloc-list.h"
 #include "token.h"
 
+#include <assert.h>
 #include <getopt.h>
 #include <stdarg.h>
 #include <unistd.h>

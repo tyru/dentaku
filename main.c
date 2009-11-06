@@ -1,4 +1,5 @@
 #include "dentaku.h"
+#include <assert.h>
 
 
 int
@@ -11,9 +12,10 @@ main(int argc, char *argv[])
     dentaku_init(d);
     dentaku_getopt(d, argc, argv);
 
-
     while (1) {
+        // Free previously allocated tokens.
         dentaku_free_alloc_tokens(d);
+        // Clear current stack.
         dentaku_clear_stack(d);
 
         if (! dentaku_read_src(d))
@@ -21,25 +23,22 @@ main(int argc, char *argv[])
 
         switch (sigsetjmp(jbuf, 1)) {
         case 0:
-            // set jbuf
             if (! dentaku_register_main_cont(d, &jbuf)) {
                 fputs("can't register jmp_buf", stderr);
                 dentaku_destroy(d);
-                return EXIT_FAILURE;
+                return -1;
             }
-            // evaluation
+            // Evaluation
             dentaku_dispatch(d);
-
             /* NOTREACHED */
             assert(0);
 
         case JMP_RET_OK:
-            // evaluation has done.
             dentaku_show_result(d);
             break;
         }
     }
 
     dentaku_destroy(d);
-    return EXIT_SUCCESS;
+    return 0;
 }
