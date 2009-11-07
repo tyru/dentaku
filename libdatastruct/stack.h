@@ -56,7 +56,7 @@ typedef struct stack stack_t;
 
 struct stack
 {
-	char *array;
+	void *array;
 	size_t size;
 	size_t max_used_size;
 	size_t element_size;
