@@ -7,7 +7,7 @@
 
 #include "dentaku-core.h"
 #include "util.h"
-#include "parser.h"
+#include "myparser.h"
 #include "op.h"
 #include "token.h"
 
@@ -159,7 +159,7 @@ push_got_token(Dentaku *dentaku)
                 || top.type == TOK_LPAREN;
 
     char *cur_pos = dentaku->src + dentaku->src_pos;
-    tok_result = parser_get_token(cur_pos, &next_pos, allow_signed, &syntax_error);
+    tok_result = myparser_get_token(cur_pos, &next_pos, allow_signed, &syntax_error);
 
     if (tok_result == NULL) {    // EOF or syntax error.
         // set to EOF.
