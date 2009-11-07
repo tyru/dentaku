@@ -2,7 +2,7 @@
  * parser...?
  */
 
-#include "myparser.h"
+#include "lexer.h"
 #include "token.h"
 #include "util.h"
 
@@ -70,7 +70,7 @@ get_digit(char *src, char *buf, size_t maxsize)
 // If EOF or syntax error: return NULL
 // Otherwise, Return allocated token.
 Token*
-myparser_get_token(char *src, char **next_pos, bool allow_signed, bool *error)
+lexer_get_token(char *src, char **next_pos, bool allow_signed, bool *error)
 {
     char *after_pos = NULL;
     char tok_buf[MAX_TOK_CHAR_BUF];

@@ -9,7 +9,7 @@ YACC = yacc
 LEX = lex
 
 
-SRC = main.c dentaku-core.c dentaku-stack.c dentaku-parser.c myparser.c token.c util.c op.c alloc-list.c
+SRC = main.c dentaku-core.c dentaku-stack.c dentaku-parser.c lexer.c token.c util.c op.c alloc-list.c
 
 STACK_SRC = libdatastruct/stack.c libdatastruct/common.c
 STACK_OBJS = $(STACK_SRC:.c=.o)
@@ -125,7 +125,7 @@ dentaku-stack.o: /usr/include/errno.h /usr/include/bits/errno.h
 dentaku-stack.o: /usr/include/linux/errno.h /usr/include/asm/errno.h
 dentaku-stack.o: /usr/include/asm-generic/errno.h
 dentaku-stack.o: /usr/include/asm-generic/errno-base.h /usr/include/setjmp.h
-dentaku-stack.o: /usr/include/bits/setjmp.h dentaku-core.h util.h myparser.h
+dentaku-stack.o: /usr/include/bits/setjmp.h dentaku-core.h util.h lexer.h
 dentaku-stack.o: op.h token.h libdatastruct/stack.h
 dentaku-stack.o: libdatastruct/common_public.h
 dentaku-parser.o: dentaku-parser.h common.h digit.h /usr/include/stdio.h
@@ -149,25 +149,24 @@ dentaku-parser.o: /usr/include/asm-generic/errno.h
 dentaku-parser.o: /usr/include/asm-generic/errno-base.h /usr/include/setjmp.h
 dentaku-parser.o: /usr/include/bits/setjmp.h dentaku-core.h
 dentaku-parser.o: libdatastruct/stack.h libdatastruct/common_public.h
-myparser.o: myparser.h common.h digit.h /usr/include/stdio.h
-myparser.o: /usr/include/features.h /usr/include/bits/predefs.h
-myparser.o: /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h
-myparser.o: /usr/include/gnu/stubs.h /usr/include/gnu/stubs-32.h
-myparser.o: /usr/include/bits/types.h /usr/include/bits/typesizes.h
-myparser.o: /usr/include/libio.h /usr/include/_G_config.h
-myparser.o: /usr/include/wchar.h /usr/include/bits/stdio_lim.h
-myparser.o: /usr/include/bits/sys_errlist.h /usr/include/stdlib.h
-myparser.o: /usr/include/sys/types.h /usr/include/time.h
-myparser.o: /usr/include/endian.h /usr/include/bits/endian.h
-myparser.o: /usr/include/bits/byteswap.h /usr/include/sys/select.h
-myparser.o: /usr/include/bits/select.h /usr/include/bits/sigset.h
-myparser.o: /usr/include/bits/time.h /usr/include/sys/sysmacros.h
-myparser.o: /usr/include/bits/pthreadtypes.h /usr/include/alloca.h
-myparser.o: /usr/include/string.h /usr/include/xlocale.h /usr/include/errno.h
-myparser.o: /usr/include/bits/errno.h /usr/include/linux/errno.h
-myparser.o: /usr/include/asm/errno.h /usr/include/asm-generic/errno.h
-myparser.o: /usr/include/asm-generic/errno-base.h /usr/include/setjmp.h
-myparser.o: /usr/include/bits/setjmp.h token.h util.h /usr/include/ctype.h
+lexer.o: lexer.h common.h digit.h /usr/include/stdio.h
+lexer.o: /usr/include/features.h /usr/include/bits/predefs.h
+lexer.o: /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h
+lexer.o: /usr/include/gnu/stubs.h /usr/include/gnu/stubs-32.h
+lexer.o: /usr/include/bits/types.h /usr/include/bits/typesizes.h
+lexer.o: /usr/include/libio.h /usr/include/_G_config.h /usr/include/wchar.h
+lexer.o: /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h
+lexer.o: /usr/include/stdlib.h /usr/include/sys/types.h /usr/include/time.h
+lexer.o: /usr/include/endian.h /usr/include/bits/endian.h
+lexer.o: /usr/include/bits/byteswap.h /usr/include/sys/select.h
+lexer.o: /usr/include/bits/select.h /usr/include/bits/sigset.h
+lexer.o: /usr/include/bits/time.h /usr/include/sys/sysmacros.h
+lexer.o: /usr/include/bits/pthreadtypes.h /usr/include/alloca.h
+lexer.o: /usr/include/string.h /usr/include/xlocale.h /usr/include/errno.h
+lexer.o: /usr/include/bits/errno.h /usr/include/linux/errno.h
+lexer.o: /usr/include/asm/errno.h /usr/include/asm-generic/errno.h
+lexer.o: /usr/include/asm-generic/errno-base.h /usr/include/setjmp.h
+lexer.o: /usr/include/bits/setjmp.h token.h util.h /usr/include/ctype.h
 token.o: token.h common.h digit.h /usr/include/stdio.h
 token.o: /usr/include/features.h /usr/include/bits/predefs.h
 token.o: /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h
