@@ -1,15 +1,14 @@
 
 #include "dentaku-stack.h"
-
-#define stack_t     stack_t__
-    #include "libdatastruct/stack.h"
-#undef stack_t
-
 #include "dentaku-core.h"
 #include "util.h"
 #include "myparser.h"
 #include "op.h"
 #include "token.h"
+
+#define stack_t     stack_t__
+    #include "libdatastruct/stack.h"
+#undef stack_t
 
 
 

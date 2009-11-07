@@ -3,7 +3,7 @@
  * dentaku-core.c - calculator
  *
  * Written By: tyru <tyru.exe@gmail.com>
- * Last Change: 2009-11-07.
+ * Last Change: 2009-11-08.
  *
  */
 
@@ -22,6 +22,8 @@
 #undef stack_t
 
 #include "dentaku-stack.h"
+#include "dentaku-parser.h"
+
 #include "util.h"
 #include "op.h"
 #include "alloc-list.h"
@@ -279,10 +281,8 @@ dentaku_init(Dentaku *dentaku)
     dentaku->src_len = -1;
     dentaku->src_pos = -1;
 
-    // rec: recursion
-    // stk: stack
-    // cmp: compile and run
-    dentaku->arg_f = "stk";
+    // See what this does at show_usage().
+    dentaku->arg_f = "stack";
 
     dentaku->debug = false;
 
@@ -316,24 +316,41 @@ static void
 show_usage(void)
 {
     puts("");
-    printf("Usage: %s [OPTIONS] [--] [file]\n", DENTAKU_PROG_NAME);
-    puts("  --help              show this help");
-    puts("  --debug             show debug message");
-    puts("  -f [rec,stk,cmp,rpn]    change internal behavior until dentaku shows answer");
+    puts("Usage: " DENTAKU_PROG_NAME " [OPTIONS] [--] [file]");
     puts("");
+    puts("  --help");
+    puts("    show this help");
+    puts("  --debug");
+    puts("    show debug message");
+    puts("  -f [rec,stk,cmp,rpn]");
+    puts("    change internal behavior until dentaku shows answer");
+    puts("");
+    puts("F_OPTIONS");
+    puts("  recursion");
+    puts("    calculate using recursion");
+    puts("  stack");
+    puts("    calculate using stack");
+    puts("  compile");
+    puts("    compile and calculate");
+    // puts("  rpn");
+    // puts("    show RPN expression");
+    puts("  parser");
+    puts("    calculate using yacc & lex");
 }
 static void
 validate_arg_f(Dentaku *dentaku)
 {
     const char *arg_f = dentaku->arg_f;
-    STREQ(arg_f, "rec") ?
-    0    // ok
-    : STREQ(arg_f, "stk") ?
-    0    // ok
-    : STREQ(arg_f, "cmp") ?
-    0    // ok
-    : STREQ(arg_f, "rpn") ?
-    0    // ok
+    STREQ(arg_f, "recursion") ?
+    0
+    : STREQ(arg_f, "stack") ?
+    0
+    : STREQ(arg_f, "compile") ?
+    0
+    // : STREQ(arg_f, "rpn") ?
+    // 0
+    : STREQ(arg_f, "parser") ?
+    0
     : dentaku_dief(dentaku, "Unknown -f option: %s", arg_f)
     ;
 }
@@ -425,20 +442,23 @@ dentaku_dispatch(Dentaku *dentaku)
 {
     assert(dentaku->main_jmp_buf);
 
-    if (STREQ(dentaku->arg_f, "rec")) {
+    if (STREQ(dentaku->arg_f, "recursion")) {
         // TODO
         siglongjmp(*dentaku->main_jmp_buf, JMP_RET_ERR);
     }
-    else if (STREQ(dentaku->arg_f, "stk")) {
+    else if (STREQ(dentaku->arg_f, "stack")) {
         dentaku_stack_run(dentaku);
     }
-    else if (STREQ(dentaku->arg_f, "cmp")) {
+    else if (STREQ(dentaku->arg_f, "compile")) {
         // TODO
         siglongjmp(*dentaku->main_jmp_buf, JMP_RET_ERR);
     }
-    else if (STREQ(dentaku->arg_f, "rpn")) {
-        // TODO
-        siglongjmp(*dentaku->main_jmp_buf, JMP_RET_ERR);
+    // else if (STREQ(dentaku->arg_f, "rpn")) {
+    //     // TODO
+    //     siglongjmp(*dentaku->main_jmp_buf, JMP_RET_ERR);
+    // }
+    else if (STREQ(dentaku->arg_f, "parser")) {
+        dentaku_parser_run(dentaku);
     }
     else {
         DIE("internal error: check -f option's value!");
