@@ -8,12 +8,13 @@ use POSIX ();
 
 
 
-my $EXE = "./dentaku";
+our $EXE = "./dentaku";
+our $OPT_F = "stack";
 
 # capture output.
 sub run_dentaku {
     my $expr = shift;
-    print qx( echo '$expr' | $EXE );
+    print qx( echo '$expr' | $EXE -f '$OPT_F' );
 }
 
 sub rx_int {
@@ -33,20 +34,21 @@ sub rx_float {
 
 sub calc_int {
     my ($expr, $result) = @_;
-    stdout_like { run_dentaku($expr) } rx_int($result),, "'$expr' is '$result'";
+    stdout_like { run_dentaku($expr) } rx_int($result),, "$OPT_F: '$expr' is '$result'";
 }
 sub calc_float {
     my ($expr, $result) = @_;
-    stdout_like { run_dentaku($expr) } rx_float($result),, "'$expr' is '$result'";
+    stdout_like { run_dentaku($expr) } rx_float($result),, "$OPT_F: '$expr' is '$result'";
 }
 
 
+my @f_opts = qw(stack parser);
 my @tests = (
     sub {
-        stdout_is { run_dentaku("1") } "1\n", "1 is 1";
+        calc_int("1", 1);
     },
     sub {
-        stdout_is { run_dentaku("10") } "10\n", "10 is 10";
+        calc_int("10", 10);
     },
     sub {
         calc_int("1-1", 0);
@@ -127,6 +129,9 @@ my @tests = (
         calc_int("-(1+2)+(3+4)", 4);
     },
 );
-plan tests => scalar @tests;
+plan tests => scalar @tests * @f_opts;
 
-$_->() for @tests;    # run!
+for my $f (@f_opts) {
+    local $OPT_F = $f;
+    $_->() for @tests;
+}
