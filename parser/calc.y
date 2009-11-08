@@ -70,6 +70,14 @@ primary_expression
     {
         $$ = $2;
     }
+    | ADD primary_expression
+    {
+        $$ = $2;
+    }
+    | SUB primary_expression
+    {
+        $$ = -$2;
+    }
     ;
  %%
 
@@ -78,7 +86,7 @@ int
 yyerror(char const *str)
 {
     extern char *yytext;
-    fprintf(stderr, "parser error near %s\n", yytext);
+    fprintf(stderr, "%s: parser error near %s\n", str, yytext);
     return 0;
 }
 
