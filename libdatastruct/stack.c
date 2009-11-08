@@ -161,8 +161,9 @@ unsigned int stack_refer_many_elements_from_bottom
 }
 
 unsigned int stack_refer_many_elements_from_top
-    (stack_t *stack,size_t offset_a,size_t offset_b,void *output)
+    (stack_t *stack,size_t offset_a,size_t offset_b,void *output_)
 {
+	char *output = output_;
 	if(offset_a >= stack_size(stack) || offset_b >= stack_size(stack)){
 		return STACK_OFFSET_IS_TOO_LARGE;
 	}
@@ -280,8 +281,9 @@ unsigned int stack_push_many_elements
 }
 
 unsigned int stack_pop_many_elements
-    (stack_t *stack,size_t pop_size,void *output)
+    (stack_t *stack,size_t pop_size,void *output_)
 {
+	char *output = output_;
 	if(stack->size < pop_size){
 		return STACK_EMPTY;
 	}
