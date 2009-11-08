@@ -11,13 +11,13 @@ yywrap(void)
 }
 %}
 %%
-"+"     return ADD;
-"-"     return SUB;
-"*"     return MUL;
-"("     return LP;
-")"     return RP;
-"/"     return DIV;
-"\n"    return CR;
+"+"     return YYTOK_ADD;
+"-"     return YYTOK_SUB;
+"*"     return YYTOK_MUL;
+"("     return YYTOK_LP;
+")"     return YYTOK_RP;
+"/"     return YYTOK_DIV;
+"\n"    return YYTOK_CR;
 [1-9][0-9]* {
     double temp;
     sscanf(yytext, "%lf", &temp);

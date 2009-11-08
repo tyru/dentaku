@@ -20,7 +20,7 @@ stack_t *parser_result_stack;
     double       double_value;
 }
 %token <double_value>      DOUBLE_LITERAL
-%token ADD SUB MUL DIV CR LP RP
+%token YYTOK_ADD YYTOK_SUB YYTOK_MUL YYTOK_DIV YYTOK_LP YYTOK_RP YYTOK_CR
 %type <double_value> expression term primary_expression
  %%
 line_list
@@ -28,7 +28,7 @@ line_list
     | line_list line
     ;
 line
-    : expression CR
+    : expression YYTOK_CR
     {
         Token tok;
         Digit d;
@@ -39,42 +39,40 @@ line
         double2digit($1, &d);
         digit2token(&d, &tok, MAX_TOK_CHAR_BUF, 10);
         stack_push(parser_result_stack, &tok);
-
-        //printf(">>%lf\n", $1);
     }
 expression
     : term
-    | expression ADD term
+    | expression YYTOK_ADD term
     {
         $$ = $1 + $3;
     }
-    | expression SUB term
+    | expression YYTOK_SUB term
     {
         $$ = $1 - $3;
     }
     ;
 term
     : primary_expression
-    | term MUL primary_expression
+    | term YYTOK_MUL primary_expression
     {
         $$ = $1 * $3;
     }
-    | term DIV primary_expression
+    | term YYTOK_DIV primary_expression
     {
         $$ = $1 / $3;
     }
     ;
 primary_expression
     : DOUBLE_LITERAL
-    | LP expression RP
+    | YYTOK_LP expression YYTOK_RP
     {
         $$ = $2;
     }
-    | ADD primary_expression
+    | YYTOK_ADD primary_expression
     {
         $$ = $2;
     }
-    | SUB primary_expression
+    | YYTOK_SUB primary_expression
     {
         $$ = -$2;
     }
