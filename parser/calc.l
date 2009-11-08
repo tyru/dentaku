@@ -17,7 +17,7 @@ yywrap(void)
 "("     return YYTOK_LP;
 ")"     return YYTOK_RP;
 "/"     return YYTOK_DIV;
-"\n"    return YYTOK_CR;
+"\n"    return YYTOK_NL;
 [1-9][0-9]* {
     double temp;
     sscanf(yytext, "%lf", &temp);

@@ -20,7 +20,7 @@ stack_t *parser_result_stack;
     double       double_value;
 }
 %token <double_value>      DOUBLE_LITERAL
-%token YYTOK_ADD YYTOK_SUB YYTOK_MUL YYTOK_DIV YYTOK_LP YYTOK_RP YYTOK_CR
+%token YYTOK_ADD YYTOK_SUB YYTOK_MUL YYTOK_DIV YYTOK_LP YYTOK_RP YYTOK_NL
 %type <double_value> expression term primary_expression
  %%
 line_list
@@ -28,7 +28,7 @@ line_list
     | line_list line
     ;
 line
-    : expression YYTOK_CR
+    : expression YYTOK_NL
     {
         Token tok;
         Digit d;
@@ -84,7 +84,8 @@ int
 yyerror(char const *str)
 {
     extern char *yytext;
-    fprintf(stderr, "%s: parser error near %s\n", str, yytext);
+    fprintf(stderr, "%s: parser error near '[%c(%d)]%s'\n",
+                    str, *yytext, *yytext, yytext+1);
     return 0;
 }
 
