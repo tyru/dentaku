@@ -20,7 +20,7 @@ stack_t *parser_result_stack;
     double       double_value;
 }
  %token <double_value>      DOUBLE_LITERAL
- %token ADD SUB MUL DIV CR
+ %token ADD SUB MUL DIV CR LP RP
  %type <double_value> expression term primary_expression
  %%
  line_list
@@ -30,42 +30,46 @@ stack_t *parser_result_stack;
  line
      : expression CR
      {
-         Token tok;
-         Digit d;
+        Token tok;
+        Digit d;
 
-         token_init(&tok);
-         token_alloc(&tok, MAX_TOK_CHAR_BUF);
+        token_init(&tok);
+        token_alloc(&tok, MAX_TOK_CHAR_BUF);
 
-         double2digit($1, &d);
-         digit2token(&d, &tok, MAX_TOK_CHAR_BUF, 10);
-         stack_push(parser_result_stack, &tok);
+        double2digit($1, &d);
+        digit2token(&d, &tok, MAX_TOK_CHAR_BUF, 10);
+        stack_push(parser_result_stack, &tok);
 
-         //printf(">>%lf\n", $1);
+        //printf(">>%lf\n", $1);
      }
  expression
      : term
      | expression ADD term
      {
-         $$ = $1 + $3;
+        $$ = $1 + $3;
      }
      | expression SUB term
      {
-         $$ = $1 - $3;
+        $$ = $1 - $3;
      }
      ;
  term
      : primary_expression
      | term MUL primary_expression 
      {
-         $$ = $1 * $3;
+        $$ = $1 * $3;
      }
      | term DIV primary_expression
      {
-         $$ = $1 / $3;
+        $$ = $1 / $3;
      }
      ;
  primary_expression
      : DOUBLE_LITERAL
+     | LP expression RP
+     {
+        $$ = $2;
+     }
      ;                 
  %%
 

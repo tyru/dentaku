@@ -14,6 +14,8 @@ yywrap(void)
 "+"     return ADD;
 "-"     return SUB;
 "*"     return MUL;
+"("     return LP;
+")"     return RP;
 "/"     return DIV;
 "\n"    return CR;
 [1-9][0-9]* {
