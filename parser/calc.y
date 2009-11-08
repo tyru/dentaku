@@ -19,17 +19,17 @@ stack_t *parser_result_stack;
     int          int_value;
     double       double_value;
 }
- %token <double_value>      DOUBLE_LITERAL
- %token ADD SUB MUL DIV CR LP RP
- %type <double_value> expression term primary_expression
+%token <double_value>      DOUBLE_LITERAL
+%token ADD SUB MUL DIV CR LP RP
+%type <double_value> expression term primary_expression
  %%
- line_list
-     : line
-     | line_list line
-     ;
- line
-     : expression CR
-     {
+line_list
+    : line
+    | line_list line
+    ;
+line
+    : expression CR
+    {
         Token tok;
         Digit d;
 
@@ -41,36 +41,36 @@ stack_t *parser_result_stack;
         stack_push(parser_result_stack, &tok);
 
         //printf(">>%lf\n", $1);
-     }
- expression
-     : term
-     | expression ADD term
-     {
+    }
+expression
+    : term
+    | expression ADD term
+    {
         $$ = $1 + $3;
-     }
-     | expression SUB term
-     {
+    }
+    | expression SUB term
+    {
         $$ = $1 - $3;
-     }
-     ;
- term
-     : primary_expression
-     | term MUL primary_expression 
-     {
+    }
+    ;
+term
+    : primary_expression
+    | term MUL primary_expression
+    {
         $$ = $1 * $3;
-     }
-     | term DIV primary_expression
-     {
+    }
+    | term DIV primary_expression
+    {
         $$ = $1 / $3;
-     }
-     ;
- primary_expression
-     : DOUBLE_LITERAL
-     | LP expression RP
-     {
+    }
+    ;
+primary_expression
+    : DOUBLE_LITERAL
+    | LP expression RP
+    {
         $$ = $2;
-     }
-     ;                 
+    }
+    ;
  %%
 
 
