@@ -96,15 +96,17 @@ static bool
 peek_token(Dentaku *dentaku, Token *tok)
 {
     if (stack_empty(dentaku->data_stack)) {
-        if (get_token(dentaku, tok, false)) {
-            assert(stack_push(dentaku->data_stack, tok) == STACK_SUCCESS);
+        Token tmp;
+        if (get_token(dentaku, &tmp, false)) {
+            assert(stack_push(dentaku->data_stack, &tmp) == STACK_SUCCESS);
         }
         else {
             return false;
         }
     }
-
-    assert(stack_top(dentaku->data_stack, tok) == STACK_SUCCESS);
+    if (tok) {
+        assert(stack_top(dentaku->data_stack, tok) == STACK_SUCCESS);
+    }
     return true;
 }
 
