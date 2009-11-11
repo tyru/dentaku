@@ -118,12 +118,11 @@ digit2token(Digit *digit, Token *tok, size_t max_size, int base)
             *head_zero = '\0';
             break;
         }
+        else if (non_zero_pos[1] == '\0') {    // last is non zero
+            break;
+        }
         else {
-            if (non_zero_pos[1] == '\0')    // last is non zero
-                break;
-            else
-                head_zero = non_zero_pos + 1;
-            // fprintf(stderr, "next head_zero [%s]\n", head_zero);
+            head_zero = non_zero_pos + 1;
         }
     }
     char *last_pos;
