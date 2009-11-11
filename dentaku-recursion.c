@@ -192,12 +192,8 @@ get_term(Dentaku *dentaku, Token *result)
             dentaku_printf_d(dentaku, "get_term()...done");
         }
     }
-    else if (tok.type == TOK_RPAREN) {
-        return;
-    }
-    else {
-        // DIE3("tok.str [%s], tok.type [%d]", tok.str, tok.type);
-    }
+
+    // Through TOK_RPAREN, and so on.
 }
 
 
@@ -234,12 +230,8 @@ get_expression(Dentaku *dentaku, Token *result)
             dentaku_printf_d(dentaku, "get_expression()...done");
         }
     }
-    else if (tok.type == TOK_RPAREN) {
-        return;
-    }
-    else {
-        DIE3("tok.str [%s], tok.type [%d]", tok.str, tok.type);
-    }
+
+    // Through TOK_RPAREN, and so on.
 }
 
 
