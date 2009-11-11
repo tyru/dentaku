@@ -129,6 +129,19 @@ my @tests = (
     sub {
         calc_int("3^3", 3**3);
     },
+    sub {
+        calc_int("3^0", 3**0);
+    },
+    sub {
+        calc_int("1^2^3", 1**2**3);
+    },
+    # TODO Use gmp library.
+    # sub {
+    #     calc_float("3^(-2)", 3**(-2));
+    # },
+    # sub {
+    #     calc_float("3^(-2)^2^(-1)", 3**(-2)**2**(-1));
+    # },
 );
 plan tests => scalar @tests;
 $_->() for @tests;
