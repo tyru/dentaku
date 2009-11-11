@@ -3,10 +3,6 @@
  *
  * This uses dentaku->data_stack as stash
  * for get_token(), unget_token(), peek_token().
- *
- *
- * TODO Call siglongjmp(*dentaku->main_jmp_buf, JMP_RET_ERR)
- * at where assert() is placed.
  */
 
 #include "dentaku-recursion.h"
@@ -119,7 +115,10 @@ static void
 get_primary_expression(Dentaku *dentaku, Token *result)
 {
     dentaku_printf_d(dentaku, "get_primary_expression()");
-    assert(get_token(dentaku, result));
+    if (! get_token(dentaku, result)) {
+        WARN("reaching EOF where <primary expression> is expected");
+        siglongjmp(*dentaku->main_jmp_buf, JMP_RET_ERR);
+    }
     assert(result);
 
     if (result->type == TOK_DIGIT) {
@@ -133,8 +132,10 @@ get_primary_expression(Dentaku *dentaku, Token *result)
 
         // Remove ')'
         Token rp;
-        assert(get_token(dentaku, &rp));
-        assert(rp.type == TOK_RPAREN);
+        if (! (get_token(dentaku, &rp) && rp.type == TOK_RPAREN)) {
+            WARN("reaching EOF or non ')' token where ')' is expected");
+            siglongjmp(*dentaku->main_jmp_buf, JMP_RET_ERR);
+        }
     }
     else if (result->type == TOK_PLUS) {
         // <YYTOK_ADD> <primary expression>
@@ -153,7 +154,8 @@ get_primary_expression(Dentaku *dentaku, Token *result)
     }
     else {
         // syntax error
-        assert(0);
+        WARN2("reacing '%s' where <primary expression> is expected", result->str);
+        siglongjmp(*dentaku->main_jmp_buf, JMP_RET_ERR);
     }
 }
 
@@ -178,12 +180,14 @@ get_term(Dentaku *dentaku, Token *result)
         // Get 'n'
         token_copy(&n, result, 0);
         // Get '*' or '/'
-        assert(get_token(dentaku, &op));
+        get_token(dentaku, &op);
         // Get 'm'
         get_primary_expression(dentaku, &m);
         dentaku_printf_d(dentaku, "get_primary_expression()...done");
         // result = n <op> m
-        assert(dentaku_calc_expr(dentaku, &op, &n, &m, result));
+        if (! dentaku_calc_expr(dentaku, &op, &n, &m, result)) {
+            siglongjmp(*dentaku->main_jmp_buf, JMP_RET_ERR);
+        }
 
         if (peek_token(dentaku, &tok) && tok.type != TOK_RPAREN) {
             // Not the end of <term>.
@@ -216,12 +220,14 @@ get_expression(Dentaku *dentaku, Token *result)
         // Get 'n'
         token_copy(&n, result, 0);
         // Get '+' or '-'
-        assert(get_token(dentaku, &op));
+        get_token(dentaku, &op);
         // Get 'm'
         get_term(dentaku, &m);
         dentaku_printf_d(dentaku, "get_term()...done");
         // result = n <op> m
-        assert(dentaku_calc_expr(dentaku, &op, &n, &m, result));
+        if (! dentaku_calc_expr(dentaku, &op, &n, &m, result)) {
+            siglongjmp(*dentaku->main_jmp_buf, JMP_RET_ERR);
+        }
 
         if (peek_token(dentaku, &tok) && tok.type != TOK_RPAREN) {
             // Not the end of <expression>.
@@ -242,7 +248,11 @@ get_line(Dentaku *dentaku, Token *result)
     get_expression(dentaku, result);
     dentaku_printf_d(dentaku, "get_expression()...done");
     // No more token
-    assert(! peek_token(dentaku, NULL));
+    Token tmp;
+    if (peek_token(dentaku, &tmp)) {
+        WARN2("reaching '%s' where EOF is expected", tmp.str);
+        siglongjmp(*dentaku->main_jmp_buf, JMP_RET_ERR);
+    }
 }
 
 
