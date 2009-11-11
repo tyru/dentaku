@@ -27,11 +27,8 @@ dentaku_parser_run(Dentaku *dentaku)
     yyin = tmp_in;
     parser_result_stack = dentaku->data_stack;
     if (yyparse()) {
-        // dentaku_die() calls exit()
-        // So don't have to close tmp_in manually.
-        dentaku_die(dentaku,
-                    "error: yyparse(): "
-                    "something wrong happened at yyparse()\n");
+        fclose(tmp_in);
+        siglongjmp(*dentaku->main_jmp_buf, JMP_RET_ERR);
     }
     fclose(tmp_in);
 
