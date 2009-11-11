@@ -161,6 +161,7 @@ get_term(Dentaku *dentaku, Token *result)
 
     if (! peek_token(dentaku, &tok)) {
         // <primary expression>
+        return;
     }
     else if (tok.type == TOK_MULTIPLY || tok.type == TOK_DIVIDE) {
         // <term> <YYTOK_MUL> <term>
@@ -175,9 +176,15 @@ get_term(Dentaku *dentaku, Token *result)
         get_term(dentaku, &m);
         // result = n <op> m
         assert(dentaku_calc_expr(dentaku, &op, &n, &m, result));
+
+        if (peek_token(dentaku, &tok) && tok.type != TOK_RPAREN) {
+            // Not the end of <term>.
+            unget_token(dentaku, result);
+            get_expression(dentaku, result);
+        }
     }
-    else if (tok.type == TOK_LPAREN || tok.type == TOK_RPAREN) {
-        // Nop.
+    else if (tok.type == TOK_RPAREN) {
+        return;
     }
     else {
         // DIE3("tok.str [%s], tok.type [%d]", tok.str, tok.type);
@@ -208,9 +215,15 @@ get_expression(Dentaku *dentaku, Token *result)
         get_term(dentaku, &m);
         // result = n <op> m
         assert(dentaku_calc_expr(dentaku, &op, &n, &m, result));
+
+        if (peek_token(dentaku, &tok) && tok.type != TOK_RPAREN) {
+            // Not the end of <expression>.
+            unget_token(dentaku, result);
+            get_expression(dentaku, result);
+        }
     }
-    else if (tok.type == TOK_LPAREN || tok.type == TOK_RPAREN) {
-        // Nop.
+    else if (tok.type == TOK_RPAREN) {
+        return;
     }
     else {
         DIE3("tok.str [%s], tok.type [%d]", tok.str, tok.type);
