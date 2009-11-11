@@ -84,7 +84,7 @@ int
 yyerror(char const *str)
 {
     extern char *yytext;
-    fprintf(stderr, "%s: parser error near '[%c(%d)]%s'\n",
+    fprintf(stderr, "%s: parser error near '[%c(ascii:%d)]%s'\n",
                     str, *yytext, *yytext, yytext+1);
     return 0;
 }
