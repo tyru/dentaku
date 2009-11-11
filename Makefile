@@ -34,7 +34,8 @@ test: $(PROG)
 	\perl test.pl
 leak-test: $(PROG)
 	-@echo -n "\n\n"
-	\valgrind --leak-check=full ./$(PROG)
+	\valgrind --leak-check=full ./$(PROG) -f stack
+	\valgrind --leak-check=full ./$(PROG) -f parser
 
 
 
