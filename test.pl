@@ -8,13 +8,12 @@ use POSIX ();
 
 
 
-our $EXE = "./dentaku";
-our $OPT_F = "stack";
+our $PROG = join ' ', map { qq('$_') } @ARGV;
 
 # capture output.
 sub run_dentaku {
     my $expr = shift;
-    print qx( echo '$expr' | $EXE -f '$OPT_F' );
+    print qx( echo '$expr' | $PROG );
 }
 
 sub rx_int {
@@ -34,15 +33,14 @@ sub rx_float {
 
 sub calc_int {
     my ($expr, $result) = @_;
-    stdout_like { run_dentaku($expr) } rx_int($result),, "$OPT_F: '$expr' is '$result'";
+    stdout_like { run_dentaku($expr) } rx_int($result),, "'$expr' is '$result'";
 }
 sub calc_float {
     my ($expr, $result) = @_;
-    stdout_like { run_dentaku($expr) } rx_float($result),, "$OPT_F: '$expr' is '$result'";
+    stdout_like { run_dentaku($expr) } rx_float($result),, "'$expr' is '$result'";
 }
 
 
-my @f_opts = qw(stack parser recursion);
 my @tests = (
     sub {
         calc_int("1", 1);
@@ -129,9 +127,5 @@ my @tests = (
         calc_int("-(1+2)+(3+4)", 4);
     },
 );
-plan tests => scalar @tests * @f_opts;
-
-for my $f (@f_opts) {
-    local $OPT_F = $f;
-    $_->() for @tests;
-}
+plan tests => scalar @tests;
+$_->() for @tests;

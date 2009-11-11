@@ -31,11 +31,14 @@ all: $(PROG)
 
 test: $(PROG)
 	-@echo -n "\n\n"
-	\perl test.pl
+	\perl test.pl ./$(PROG) -f stack
+	\perl test.pl ./$(PROG) -f parser
+	\perl test.pl ./$(PROG) -f recursion
 leak-test: $(PROG)
 	-@echo -n "\n\n"
 	\valgrind --leak-check=full ./$(PROG) -f stack
 	\valgrind --leak-check=full ./$(PROG) -f parser
+	\valgrind --leak-check=full ./$(PROG) -f recursion
 
 
 
