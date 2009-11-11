@@ -284,7 +284,7 @@ dentaku_init(Dentaku *dentaku)
 
     // See what this does at show_usage().
     dentaku->arg_f = "stack";
-
+    dentaku->quiet = false;
     dentaku->debug = false;
 
 
@@ -360,6 +360,7 @@ dentaku_getopt(Dentaku *dentaku, int argc, char **argv)
     static const struct option long_opts[] = {
         {"help", 0, NULL, 'h'},
         {"debug", 0, NULL, 'd'},
+        {"quiet", 0, NULL, 'q'},
         {0, 0, 0, 0}
     };
     int opt_index = 0;
@@ -368,8 +369,12 @@ dentaku_getopt(Dentaku *dentaku, int argc, char **argv)
     extern char *optarg;
     extern int optind, opterr, optopt;
 
-    while ((c = getopt_long(argc, argv, "hdf:", long_opts, &opt_index)) != -1) {
+    while ((c = getopt_long(argc, argv, "hdf:q", long_opts, &opt_index)) != -1) {
         switch (c) {
+            case 'h':
+                show_usage();
+                dentaku_exit(dentaku, EXIT_SUCCESS);
+                break;
             case 'd':
                 dentaku->debug = true;
                 break;
@@ -377,9 +382,8 @@ dentaku_getopt(Dentaku *dentaku, int argc, char **argv)
                 dentaku->arg_f = optarg;
                 validate_arg_f(dentaku);
                 break;
-            case 'h':
-                show_usage();
-                dentaku_exit(dentaku, EXIT_SUCCESS);
+            case 'q':
+                dentaku->quiet = true;
                 break;
             case '?':
                 show_usage();
@@ -403,8 +407,10 @@ dentaku_read_src(Dentaku *dentaku)
 
     // Input is from terminal.
     if (isatty(fileno(dentaku->f_in))) {
-        fputs(PROMPT_STR, dentaku->f_out);
-        fflush(dentaku->f_out);
+        if (! dentaku->quiet) {
+            fputs(PROMPT_STR, dentaku->f_out);
+            fflush(dentaku->f_out);
+        }
         // read each line
         if (fgets(buf, MAX_IN_BUF, dentaku->f_in) == NULL)
             return false;

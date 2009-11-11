@@ -24,6 +24,7 @@ struct Dentaku_tag {
 
     // for arguments
     char    *arg_f;
+    bool    quiet;
     bool    debug;
 };
 
