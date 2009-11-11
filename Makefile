@@ -1,12 +1,16 @@
-.PHONY: all clean stack
+.PHONY: all release test leak-test depend clean
 
 CC = gcc
 PROG = dentaku
-CFLAGS = -g -W -Wall -std=gnu99
+CFLAGS = -g -O2 -Wall -std=gnu99
 LDFLAGS = -lm
+
 
 YACC = yacc
 LEX = lex
+STRIP = strip
+PERL = perl
+VALGRIND = valgrind
 
 
 SRC_DIR = .
@@ -29,21 +33,27 @@ ALL_OBJS = $(SRC:.c=.o) $(STACK_OBJS) $(LIST_OBJS) $(PARSER_OBJS)
 
 all: $(PROG)
 
+release: $(PROG)
+	-@\echo -n "\n\n"
+	$(STRIP) $(PROG)
+
+
+
 test: $(PROG)
-	-@echo -n "\n\n"
-	\perl test.pl ./$(PROG) -f stack
-	\perl test.pl ./$(PROG) -f parser
-	\perl test.pl ./$(PROG) -f recursion
+	-@\echo -n "\n\n"
+	$(PERL) test.pl ./$(PROG) -f stack
+	$(PERL) test.pl ./$(PROG) -f parser
+	$(PERL) test.pl ./$(PROG) -f recursion
 leak-test: $(PROG)
-	-@echo -n "\n\n"
-	\valgrind --leak-check=full ./$(PROG) -f stack
-	\valgrind --leak-check=full ./$(PROG) -f parser
-	\valgrind --leak-check=full ./$(PROG) -f recursion
+	-@\echo -n "\n\n"
+	$(VALGRIND) --leak-check=full ./$(PROG) -f stack
+	$(VALGRIND) --leak-check=full ./$(PROG) -f parser
+	$(VALGRIND) --leak-check=full ./$(PROG) -f recursion
 
 
 
 $(PROG): $(ALL_OBJS)
-	-@echo -n "\n\n"
+	-@\echo -n "\n\n"
 	-\rm -f y.tab.c y.tab.h y.output lex.yy.c    # clean up yacc&lex's garbages
 	$(CC) $(LDFLAGS) -o $@ $(ALL_OBJS)
 
@@ -52,7 +62,7 @@ $(PROG): $(ALL_OBJS)
 
 
 $(PARSER_OBJS): $(PARSER_SRC)
-	-@echo -n "\n\n"
+	-@\echo -n "\n\n"
 	$(YACC) -dv $(PARSER_YACC_SRC)
 	$(CC) $(CFLAGS) -c y.tab.c -o y.tab.o
 	$(LEX) $(PARSER_LEX_SRC)
@@ -60,11 +70,11 @@ $(PARSER_OBJS): $(PARSER_SRC)
 
 
 depend:
-	-@echo -n "\n\n"
+	-@\echo -n "\n\n"
 	\makedepend -Y$(SRC_DIR) -- $(CFLAGS) -- $(SRC) 2>/dev/null
 
 clean:
-	-@echo -n "\n\n"
+	-@\echo -n "\n\n"
 	-\rm -f $(PROG) $(ALL_OBJS) y.tab.c y.tab.h lex.yy.c
 # DO NOT DELETE
 
@@ -78,8 +88,9 @@ dentaku-stack.o: lexer.h op.h token.h libdatastruct/stack.h
 dentaku-stack.o: libdatastruct/common_public.h
 dentaku-parser.o: dentaku-parser.h common.h digit.h dentaku-core.h
 dentaku-parser.o: libdatastruct/stack.h libdatastruct/common_public.h
-dentaku-recursion.o: dentaku-recursion.h common.h digit.h dentaku-core.h
-dentaku-recursion.o: lexer.h
+dentaku-recursion.o: dentaku-recursion.h common.h digit.h
+dentaku-recursion.o: libdatastruct/stack.h libdatastruct/common_public.h
+dentaku-recursion.o: dentaku-core.h lexer.h token.h util.h op.h
 lexer.o: lexer.h common.h digit.h token.h util.h
 token.o: token.h common.h digit.h alloc-list.h
 util.o: util.h common.h digit.h token.h
