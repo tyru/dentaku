@@ -93,6 +93,7 @@ unget_token(Dentaku *dentaku, Token *tok)
 }
 
 
+// This returns false if EOF.
 static bool
 peek_token(Dentaku *dentaku, Token *tok)
 {
@@ -123,11 +124,14 @@ get_primary_expression(Dentaku *dentaku, Token *result)
 
     if (result->type == TOK_DIGIT) {
         // <DOUBLE_LITERAL>
+        return;
     }
     else if (result->type == TOK_LPAREN) {
         // <YYTOK_LP> <expression> <YYTOK_RP>
         get_expression(dentaku, result);
+        dentaku_printf_d(dentaku, "get_expression()...done");
 
+        // Remove ')'
         Token rp;
         assert(get_token(dentaku, &rp));
         assert(rp.type == TOK_RPAREN);
@@ -135,10 +139,12 @@ get_primary_expression(Dentaku *dentaku, Token *result)
     else if (result->type == TOK_PLUS) {
         // <YYTOK_ADD> <primary expression>
         get_primary_expression(dentaku, result);
+        dentaku_printf_d(dentaku, "get_primary_expression()...done");
     }
     else if (result->type == TOK_MINUS) {
         // <YYTOK_SUB> <primary expression>
         get_primary_expression(dentaku, result);
+        dentaku_printf_d(dentaku, "get_primary_expression()...done");
 
         Digit d;
         token2digit(result, &d, 10);
@@ -157,6 +163,7 @@ get_term(Dentaku *dentaku, Token *result)
 {
     dentaku_printf_d(dentaku, "get_term()");
     get_primary_expression(dentaku, result);
+    dentaku_printf_d(dentaku, "get_primary_expression()...done");
     Token tok;
 
     if (! peek_token(dentaku, &tok)) {
@@ -164,13 +171,13 @@ get_term(Dentaku *dentaku, Token *result)
         return;
     }
     else if (tok.type == TOK_MULTIPLY || tok.type == TOK_DIVIDE) {
-        // <term> <YYTOK_MUL> <term>
+        // <term> <YYTOK_MUL> <primary expression>
         //      or
-        // <term> <YYTOK_DIV> <term>
+        // <term> <YYTOK_DIV> <primary expression>
         Token n, op, m;
         // Get 'n'
         token_copy(&n, result, 0);
-        // Get '+' or '-'
+        // Get '*' or '/'
         assert(get_token(dentaku, &op));
         // Get 'm'
         get_term(dentaku, &m);
@@ -197,6 +204,7 @@ get_expression(Dentaku *dentaku, Token *result)
 {
     dentaku_printf_d(dentaku, "get_expression()");
     get_term(dentaku, result);
+    dentaku_printf_d(dentaku, "get_term()...done");
     Token tok;
 
     if (! peek_token(dentaku, &tok)) {
@@ -213,6 +221,7 @@ get_expression(Dentaku *dentaku, Token *result)
         assert(get_token(dentaku, &op));
         // Get 'm'
         get_term(dentaku, &m);
+        dentaku_printf_d(dentaku, "get_term()...done");
         // result = n <op> m
         assert(dentaku_calc_expr(dentaku, &op, &n, &m, result));
 
@@ -220,6 +229,7 @@ get_expression(Dentaku *dentaku, Token *result)
             // Not the end of <expression>.
             unget_token(dentaku, result);
             get_expression(dentaku, result);
+            dentaku_printf_d(dentaku, "get_expression()...done");
         }
     }
     else if (tok.type == TOK_RPAREN) {
@@ -236,6 +246,7 @@ get_line(Dentaku *dentaku, Token *result)
 {
     dentaku_printf_d(dentaku, "get_line()");
     get_expression(dentaku, result);
+    dentaku_printf_d(dentaku, "get_expression()...done");
     // No more token
     assert(! peek_token(dentaku, NULL));
 }
@@ -248,6 +259,7 @@ dentaku_recursion_run(Dentaku *dentaku)
     Token result;
 
     get_line(dentaku, &result);
+    dentaku_printf_d(dentaku, "get_line()...done");
     stack_push(dentaku->data_stack, &result);
     siglongjmp(*dentaku->main_jmp_buf, JMP_RET_OK);
 }
