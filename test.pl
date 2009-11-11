@@ -126,6 +126,9 @@ my @tests = (
     sub {
         calc_int("-(1+2)+(3+4)", -(1+2)+(3+4));
     },
+    sub {
+        calc_int("3^3", 3**3);
+    },
 );
 plan tests => scalar @tests;
 $_->() for @tests;
