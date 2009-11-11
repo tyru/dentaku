@@ -60,10 +60,10 @@ dentaku_calc_expr(Dentaku *dentaku, Token *tok_op, Token *tok_n, Token *tok_m, T
 
 
 Dentaku*
-dentaku_alloc();
+dentaku_alloc(void);
 
 void
-dentaku_init();
+dentaku_init(Dentaku *dentaku);
 
 void
 dentaku_destroy(Dentaku *dentaku);

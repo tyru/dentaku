@@ -232,7 +232,7 @@ dentaku_stack_elements_are(Dentaku *dentaku, ...)
 
 
 Dentaku*
-dentaku_alloc()
+dentaku_alloc(void)
 {
     Dentaku *dentaku = malloc(sizeof(Dentaku));
     if (! dentaku) {

@@ -22,10 +22,10 @@ dentaku_exit(Dentaku *dentaku, int status);
 
 
 Dentaku*
-dentaku_alloc();
+dentaku_alloc(void);
 
 void
-dentaku_init();
+dentaku_init(Dentaku *dentaku);
 
 void
 dentaku_destroy(Dentaku *dentaku);
