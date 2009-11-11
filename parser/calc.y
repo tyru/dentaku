@@ -12,6 +12,7 @@ stack_t *parser_result_stack;
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 #define YYDEBUG 1
 %}
@@ -20,7 +21,7 @@ stack_t *parser_result_stack;
     double       double_value;
 }
 %token <double_value>      DOUBLE_LITERAL
-%token YYTOK_ADD YYTOK_SUB YYTOK_MUL YYTOK_DIV YYTOK_LP YYTOK_RP YYTOK_NL
+%token YYTOK_ADD YYTOK_SUB YYTOK_MUL YYTOK_DIV YYTOK_POW YYTOK_LP YYTOK_RP YYTOK_NL
 %type <double_value> expression term primary_expression
  %%
 line_list
@@ -60,6 +61,10 @@ term
     | term YYTOK_DIV primary_expression
     {
         $$ = $1 / $3;
+    }
+    | term YYTOK_POW primary_expression
+    {
+        $$ = pow($1, $3);
     }
     ;
 primary_expression

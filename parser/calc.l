@@ -14,9 +14,10 @@ yywrap(void)
 "+"     return YYTOK_ADD;
 "-"     return YYTOK_SUB;
 "*"     return YYTOK_MUL;
+"/"     return YYTOK_DIV;
+"^"     return YYTOK_POW;
 "("     return YYTOK_LP;
 ")"     return YYTOK_RP;
-"/"     return YYTOK_DIV;
 "\n"    return YYTOK_NL;
 ([1-9][0-9]*)|([0-9]*\.[0-9]*)|0 {
     double temp;
