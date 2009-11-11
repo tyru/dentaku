@@ -170,7 +170,7 @@ get_term(Dentaku *dentaku, Token *result)
         // <primary expression>
         return;
     }
-    else if (tok.type == TOK_MULTIPLY || tok.type == TOK_DIVIDE) {
+    else if (TOKEN_HAS_HIGHER_PRIORITY(tok)) {
         // <term> <YYTOK_MUL> <primary expression>
         //      or
         // <term> <YYTOK_DIV> <primary expression>
@@ -180,14 +180,16 @@ get_term(Dentaku *dentaku, Token *result)
         // Get '*' or '/'
         assert(get_token(dentaku, &op));
         // Get 'm'
-        get_term(dentaku, &m);
+        get_primary_expression(dentaku, &m);
+        dentaku_printf_d(dentaku, "get_primary_expression()...done");
         // result = n <op> m
         assert(dentaku_calc_expr(dentaku, &op, &n, &m, result));
 
         if (peek_token(dentaku, &tok) && tok.type != TOK_RPAREN) {
             // Not the end of <term>.
             unget_token(dentaku, result);
-            get_expression(dentaku, result);
+            get_term(dentaku, result);
+            dentaku_printf_d(dentaku, "get_term()...done");
         }
     }
     else if (tok.type == TOK_RPAREN) {
@@ -210,7 +212,7 @@ get_expression(Dentaku *dentaku, Token *result)
     if (! peek_token(dentaku, &tok)) {
         // <term>
     }
-    else if (tok.type == TOK_PLUS || tok.type == TOK_MINUS) {
+    else if (TOKEN_IS_OPERATOR(tok) && ! TOKEN_HAS_HIGHER_PRIORITY(tok)) {
         // <expression> <YYTOK_ADD> <term>
         //      or
         // <expression> <YYTOK_SUB> <term>
