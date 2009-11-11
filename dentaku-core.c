@@ -3,7 +3,7 @@
  * dentaku-core.c - calculator
  *
  * Written By: tyru <tyru.exe@gmail.com>
- * Last Change: 2009-11-08.
+ * Last Change: 2009-11-11.
  *
  */
 
@@ -23,6 +23,7 @@
 
 #include "dentaku-stack.h"
 #include "dentaku-parser.h"
+#include "dentaku-recursion.h"
 
 #include "util.h"
 #include "op.h"
@@ -443,8 +444,7 @@ dentaku_dispatch(Dentaku *dentaku)
     assert(dentaku->main_jmp_buf);
 
     if (STREQ(dentaku->arg_f, "recursion")) {
-        // TODO
-        siglongjmp(*dentaku->main_jmp_buf, JMP_RET_ERR);
+        dentaku_recursion_run(dentaku);
     }
     else if (STREQ(dentaku->arg_f, "stack")) {
         dentaku_stack_run(dentaku);

@@ -42,7 +42,7 @@ sub calc_float {
 }
 
 
-my @f_opts = qw(stack parser);
+my @f_opts = qw(stack parser recursion);
 my @tests = (
     sub {
         calc_int("1", 1);

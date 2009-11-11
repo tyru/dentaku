@@ -13,6 +13,8 @@
     warn(msg, arg1, arg2)
 #define WARN4(msg, arg1, arg2, arg3) \
     warn(msg, arg1, arg2, arg3)
+#define WARN5(msg, arg1, arg2, arg3, arg4) \
+    warn(msg, arg1, arg2, arg3, arg4)
 
 void
 warn(const char *fmt, ...);

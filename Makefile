@@ -10,7 +10,7 @@ LEX = lex
 
 
 SRC_DIR = .
-SRC = main.c dentaku-core.c dentaku-stack.c dentaku-parser.c lexer.c token.c util.c op.c alloc-list.c
+SRC = main.c dentaku-core.c dentaku-stack.c dentaku-parser.c dentaku-recursion.c lexer.c token.c util.c op.c alloc-list.c
 
 STACK_SRC = libdatastruct/stack.c libdatastruct/common.c
 STACK_OBJS = $(STACK_SRC:.c=.o)
@@ -68,12 +68,15 @@ clean:
 main.o: dentaku.h common.h digit.h
 dentaku-core.o: dentaku-core.h common.h digit.h libdatastruct/stack.h
 dentaku-core.o: libdatastruct/common_public.h dentaku-stack.h
-dentaku-core.o: dentaku-parser.h util.h op.h alloc-list.h token.h
+dentaku-core.o: dentaku-parser.h dentaku-recursion.h util.h op.h alloc-list.h
+dentaku-core.o: token.h
 dentaku-stack.o: dentaku-stack.h common.h digit.h dentaku-core.h util.h
 dentaku-stack.o: lexer.h op.h token.h libdatastruct/stack.h
 dentaku-stack.o: libdatastruct/common_public.h
 dentaku-parser.o: dentaku-parser.h common.h digit.h dentaku-core.h
 dentaku-parser.o: libdatastruct/stack.h libdatastruct/common_public.h
+dentaku-recursion.o: dentaku-recursion.h common.h digit.h dentaku-core.h
+dentaku-recursion.o: lexer.h
 lexer.o: lexer.h common.h digit.h token.h util.h
 token.o: token.h common.h digit.h alloc-list.h
 util.o: util.h common.h digit.h token.h
