@@ -26,7 +26,7 @@
 
 
 static bool
-get_token(Dentaku *dentaku, Token *tok_result, bool allow_signed);
+get_token(Dentaku *dentaku, Token *tok_result);
 
 static bool
 peek_token(Dentaku *dentaku, Token *tok);
@@ -51,7 +51,7 @@ get_line(Dentaku *dentaku, Token *result);
 //
 // This returns false if EOF.
 static bool
-get_token(Dentaku *dentaku, Token *tok_result, bool allow_signed)
+get_token(Dentaku *dentaku, Token *tok_result)
 {
     bool syntax_error;
     char *cur_pos;
@@ -66,7 +66,7 @@ get_token(Dentaku *dentaku, Token *tok_result, bool allow_signed)
     cur_pos = dentaku->src + dentaku->src_pos;
     // Allow '+' or '-' before digit
     // when stack is empty or '(' is on the top.
-    got_tok = lexer_get_token(cur_pos, &next_pos, allow_signed, &syntax_error);
+    got_tok = lexer_get_token(cur_pos, &next_pos, false, &syntax_error);
 
     if (got_tok == NULL) {
         // set to EOF.
@@ -86,10 +86,11 @@ get_token(Dentaku *dentaku, Token *tok_result, bool allow_signed)
 }
 
 
-// static void
-// unget_token(Dentaku *dentaku)
-// {
-// }
+static void
+unget_token(Dentaku *dentaku, Token *tok)
+{
+    assert(stack_push(dentaku->data_stack, tok) == STACK_SUCCESS);
+}
 
 
 static bool
@@ -97,7 +98,7 @@ peek_token(Dentaku *dentaku, Token *tok)
 {
     if (stack_empty(dentaku->data_stack)) {
         Token tmp;
-        if (get_token(dentaku, &tmp, false)) {
+        if (get_token(dentaku, &tmp)) {
             assert(stack_push(dentaku->data_stack, &tmp) == STACK_SUCCESS);
         }
         else {
@@ -117,7 +118,7 @@ static void
 get_primary_expression(Dentaku *dentaku, Token *result)
 {
     dentaku_printf_d(dentaku, "get_primary_expression()");
-    assert(get_token(dentaku, result, false));
+    assert(get_token(dentaku, result));
     assert(result);
 
     if (result->type == TOK_DIGIT) {
@@ -128,7 +129,7 @@ get_primary_expression(Dentaku *dentaku, Token *result)
         get_expression(dentaku, result);
 
         Token rp;
-        assert(get_token(dentaku, &rp, false));
+        assert(get_token(dentaku, &rp));
         assert(rp.type == TOK_RPAREN);
     }
     else if (result->type == TOK_PLUS) {
@@ -169,7 +170,7 @@ get_term(Dentaku *dentaku, Token *result)
         // Get 'n'
         token_copy(&n, result, 0);
         // Get '+' or '-'
-        assert(get_token(dentaku, &op, false));
+        assert(get_token(dentaku, &op));
         // Get 'm'
         get_term(dentaku, &m);
         // result = n <op> m
@@ -202,7 +203,7 @@ get_expression(Dentaku *dentaku, Token *result)
         // Get 'n'
         token_copy(&n, result, 0);
         // Get '+' or '-'
-        assert(get_token(dentaku, &op, false));
+        assert(get_token(dentaku, &op));
         // Get 'm'
         get_term(dentaku, &m);
         // result = n <op> m
