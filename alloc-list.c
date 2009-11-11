@@ -22,8 +22,8 @@ static void
 release_func(void *ptr)
 {
     void *item = *(void**)ptr;
-    if (item)
-        free(item);
+    free(item);
+    item = NULL;
 }
 static void*
 copy_func(void *dest, const void *src, size_t n)
@@ -67,8 +67,6 @@ al_free_pointers(void)
 void
 al_destroy(void)
 {
-    if (pointers_list) {
-        free(pointers_list);
-        pointers_list = NULL;
-    }
+    free(pointers_list);
+    pointers_list = NULL;
 }

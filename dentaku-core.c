@@ -297,16 +297,15 @@ void
 dentaku_destroy(Dentaku *dentaku)
 {
     dentaku_printf_d(dentaku, "destroying dentaku...");
+
     // dentaku->data_stack
     stack_release(dentaku->data_stack);
     // dentaku->src
-    if (dentaku->src) {
-        free(dentaku->src);
-        dentaku->src = NULL;
-    }
+    free(dentaku->src);
+    dentaku->src = NULL;
     // dentaku
     free(dentaku);
-
+    // free() all allocated pointers
     al_destroy();
 }
 

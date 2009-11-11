@@ -28,10 +28,8 @@ token_alloc(Token *tok, size_t size)
 void
 token_destroy(Token *tok)
 {
-    if (tok->str) {
-        free(tok->str);
-        tok->str = NULL;
-    }
+    free(tok->str);
+    tok->str = NULL;
 }
 
 // copy constructor for stack_initialize().
