@@ -1,7 +1,3 @@
-/*
- * parser...?
- */
-
 #include "lexer.h"
 #include "token.h"
 #include "util.h"
