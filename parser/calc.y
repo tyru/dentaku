@@ -22,7 +22,7 @@ stack_t *parser_result_stack;
     double       double_value;
 }
 %token <double_value>      DOUBLE_LITERAL
-%token YYTOK_ADD YYTOK_SUB YYTOK_MUL YYTOK_DIV YYTOK_POW YYTOK_LP YYTOK_RP YYTOK_NL
+%token DENTAKU_ADD DENTAKU_SUB DENTAKU_MUL DENTAKU_DIV DENTAKU_POW DENTAKU_LP DENTAKU_RP DENTAKU_NL
 %type <double_value> expression term primary_expression
  %%
 line_list
@@ -30,7 +30,7 @@ line_list
     | line_list line
     ;
 line
-    : expression YYTOK_NL
+    : expression DENTAKU_NL
     {
         Token tok;
         Digit d;
@@ -44,41 +44,41 @@ line
     }
 expression
     : term
-    | expression YYTOK_ADD term
+    | expression DENTAKU_ADD term
     {
         $$ = $1 + $3;
     }
-    | expression YYTOK_SUB term
+    | expression DENTAKU_SUB term
     {
         $$ = $1 - $3;
     }
     ;
 term
     : primary_expression
-    | term YYTOK_MUL primary_expression
+    | term DENTAKU_MUL primary_expression
     {
         $$ = $1 * $3;
     }
-    | term YYTOK_DIV primary_expression
+    | term DENTAKU_DIV primary_expression
     {
         $$ = $1 / $3;
     }
-    | term YYTOK_POW primary_expression
+    | term DENTAKU_POW primary_expression
     {
         $$ = pow($1, $3);
     }
     ;
 primary_expression
     : DOUBLE_LITERAL
-    | YYTOK_LP expression YYTOK_RP
+    | DENTAKU_LP expression DENTAKU_RP
     {
         $$ = $2;
     }
-    | YYTOK_ADD primary_expression
+    | DENTAKU_ADD primary_expression
     {
         $$ = $2;
     }
-    | YYTOK_SUB primary_expression
+    | DENTAKU_SUB primary_expression
     {
         $$ = -$2;
     }

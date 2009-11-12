@@ -11,14 +11,14 @@ yywrap(void)
 }
 %}
 %%
-"+"     return YYTOK_ADD;
-"-"     return YYTOK_SUB;
-"*"     return YYTOK_MUL;
-"/"     return YYTOK_DIV;
-"^"     return YYTOK_POW;
-"("     return YYTOK_LP;
-")"     return YYTOK_RP;
-"\n"    return YYTOK_NL;
+"+"     return DENTAKU_ADD;
+"-"     return DENTAKU_SUB;
+"*"     return DENTAKU_MUL;
+"/"     return DENTAKU_DIV;
+"^"     return DENTAKU_POW;
+"("     return DENTAKU_LP;
+")"     return DENTAKU_RP;
+"\n"    return DENTAKU_NL;
 ([1-9][0-9]*)|([0-9]*\.[0-9]*)|0 {
     double temp;
     sscanf(yytext, "%lf", &temp);
