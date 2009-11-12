@@ -9,7 +9,7 @@
 
 
 struct Dentaku_tag {
-    stack_t *data_stack;
+    struct stack *data_stack;
     List    *syntax_tree;
 
     JMP_BUF *main_jmp_buf;

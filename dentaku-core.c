@@ -3,7 +3,7 @@
  * dentaku-core.c - calculator
  *
  * Written By: tyru <tyru.exe@gmail.com>
- * Last Change: 2009-11-11.
+ * Last Change: 2009-11-12.
  *
  */
 
@@ -17,9 +17,7 @@
 
 #include "dentaku-core.h"
 
-#define stack_t     stack_t__
-    #include "libdatastruct/stack.h"
-#undef stack_t
+#include "libdatastruct/stack.h"
 
 #include "dentaku-stack.h"
 #include "dentaku-parser.h"

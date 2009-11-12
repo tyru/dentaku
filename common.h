@@ -21,7 +21,7 @@ typedef struct Dentaku_tag      Dentaku;
 typedef struct Token_tag        Token;
 typedef struct List_tag         List;
 
-typedef struct stack            stack_t;
+// typedef struct stack            stack_t;
 typedef unsigned int            stack_ret;
 
 #include <setjmp.h>

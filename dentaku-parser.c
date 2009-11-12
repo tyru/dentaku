@@ -1,9 +1,7 @@
 #include "dentaku-parser.h"
 #include "dentaku-core.h"
 
-#define stack_t     stack_t__
-    #include "libdatastruct/stack.h"
-#undef stack_t
+#include "libdatastruct/stack.h"
 
 
 

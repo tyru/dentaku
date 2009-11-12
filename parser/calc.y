@@ -1,6 +1,7 @@
 /* via http://kmaebashi.com/programmer/devlang/yacclex.html */
 
 %{
+#include "libdatastruct/stack.h"
 
 #include "token.h"
 #include "util.h"
