@@ -3,7 +3,7 @@
  * dentaku-core.c - calculator
  *
  * Written By: tyru <tyru.exe@gmail.com>
- * Last Change: 2009-11-12.
+ * Last Change: 2009-11-13.
  *
  */
 
@@ -345,8 +345,8 @@ validate_arg_f(Dentaku *dentaku)
     0
     : STREQ(arg_f, "compile") ?
     0
-    // : STREQ(arg_f, "rpn") ?
-    // 0
+    : STREQ(arg_f, "rpn") ?
+    0
     : STREQ(arg_f, "parser") ?
     0
     : dentaku_dief(dentaku, "Unknown -f option: %s", arg_f)
@@ -456,10 +456,10 @@ dentaku_dispatch(Dentaku *dentaku)
         // TODO
         siglongjmp(*dentaku->main_jmp_buf, JMP_RET_ERR);
     }
-    // else if (STREQ(dentaku->arg_f, "rpn")) {
-    //     // TODO
-    //     siglongjmp(*dentaku->main_jmp_buf, JMP_RET_ERR);
-    // }
+    else if (STREQ(dentaku->arg_f, "rpn")) {
+        // TODO
+        siglongjmp(*dentaku->main_jmp_buf, JMP_RET_ERR);
+    }
     else if (STREQ(dentaku->arg_f, "parser")) {
         dentaku_parser_run(dentaku);
     }
