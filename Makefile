@@ -41,9 +41,9 @@ release: $(PROG)
 
 test: $(PROG)
 	-@\echo -n "\n\n"
-	$(PERL) test.pl ./$(PROG) -f stack -d
-	#$(PERL) test.pl ./$(PROG) -f parser
-	#$(PERL) test.pl ./$(PROG) -f recursion
+	$(PERL) test.pl ./$(PROG) -f stack
+	$(PERL) test.pl ./$(PROG) -f parser
+	$(PERL) test.pl ./$(PROG) -f recursion
 leak-test: $(PROG)
 	-@\echo -n "\n\n"
 	$(VALGRIND) --leak-check=full ./$(PROG) -f stack
