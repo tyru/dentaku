@@ -6,7 +6,7 @@
 void
 digit_init(Digit *d)
 {
-    mpf_init2(*d);
+    mpf_init2(*d, DIGIT_PREC_BITS);
 }
 
 

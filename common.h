@@ -37,6 +37,7 @@ typedef mpf_t                   Digit;
 #define MAX_IN_BUF          1024
 #define MAX_TOK_CHAR_BUF    32
 #define MAX_STACK_SIZE      128
+#define DIGIT_PREC_BITS     128
 
 #define JMP_RET_OK          1
 #define JMP_RET_ERR         2
