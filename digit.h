@@ -11,6 +11,9 @@ digit_init(Digit *d);
 Digit*
 digit_copy(Digit *dest, Digit *src);
 
+Digit*
+digit_destroy(Digit *d);
+
 
 
 #endif /* DENTAKU_DIGIT_H */

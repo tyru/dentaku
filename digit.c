@@ -16,3 +16,10 @@ digit_copy(Digit *dest, Digit *src)
     memmove(*dest, *src, sizeof(Digit));
     return dest;
 }
+
+
+Digit*
+digit_destroy(Digit *d)
+{
+    mpf_clear(*d);
+}

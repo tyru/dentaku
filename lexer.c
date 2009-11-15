@@ -1,6 +1,7 @@
 #include "lexer.h"
 #include "token.h"
 #include "util.h"
+#include "alloc-list.h"
 
 #include <ctype.h>
 
@@ -156,7 +157,7 @@ save_digit_to_tok_buf:
         return NULL;
     }
 
-    tok_result = malloc(sizeof(Token));
+    tok_result = al_malloc(sizeof(Token));
     if (! tok_result) {
         DIE("cannot allocate memory for Token!");
     }

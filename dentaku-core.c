@@ -153,7 +153,7 @@ dentaku_calc_expr(Dentaku *dentaku, Token *tok_op, Token *tok_n, Token *tok_m, T
     {
         WARN4("expression '%s %s %s' is invalid",
                 tok_n->str, tok_op->str, tok_m->str);
-        return false;
+        goto error;
     }
 
     /* Convert */
@@ -171,7 +171,7 @@ dentaku_calc_expr(Dentaku *dentaku, Token *tok_op, Token *tok_n, Token *tok_m, T
     case '^': op_power    (&result, &n, &m); break;
     default:
         WARN2("unknown op '%s'", tok_op->str);
-        return false;
+        goto error;
     }
 
 
@@ -182,7 +182,15 @@ dentaku_calc_expr(Dentaku *dentaku, Token *tok_op, Token *tok_n, Token *tok_m, T
     dentaku_printf_d(dentaku, "eval '%s %s %s' => '%s'",
         tok_n->str, tok_op->str, tok_m->str, tok_result->str);
 
+    digit_destroy(&n);
+    digit_destroy(&m);
+    digit_destroy(&result);
     return true;
+error:
+    digit_destroy(&n);
+    digit_destroy(&m);
+    digit_destroy(&result);
+    return false;
 }
 
 
