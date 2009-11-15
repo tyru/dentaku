@@ -8,8 +8,9 @@
 
 
 
+#define Stack   struct stack
 struct Dentaku_tag {
-    struct stack *data_stack;
+    Stack   *data_stack;
     List    *syntax_tree;
 
     JMP_BUF *main_jmp_buf;
@@ -27,6 +28,7 @@ struct Dentaku_tag {
     bool    quiet;
     bool    debug;
 };
+#undef Stack
 
 
 
