@@ -51,14 +51,14 @@ eval_stack_expr(Dentaku *dentaku)
 
             // m -> -m
             Digit d;
-            token2digit(&tok_m, &d, 10);
+            token2digit(&d, &tok_m, 10);
             op_unary_minus(&d, &d);
 
             // allocate for '-' and tok_m.str.
             size_t alloc_size = strlen(tok_m.str) + 2;
             token_alloc(&tok_m, alloc_size);
 
-            digit2token(&d, &tok_m, alloc_size, 10);
+            digit2token(&tok_m, &d, alloc_size, 10);
             goto push_result_return;
         }
         else if (tok_op.type == TOK_LPAREN) {

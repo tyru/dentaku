@@ -3,7 +3,7 @@
  * dentaku-core.c - calculator
  *
  * Written By: tyru <tyru.exe@gmail.com>
- * Last Change: 2009-11-13.
+ * Last Change: 2009-11-15.
  *
  */
 
@@ -157,8 +157,8 @@ dentaku_calc_expr(Dentaku *dentaku, Token *tok_op, Token *tok_n, Token *tok_m, T
     }
 
     /* Convert */
-    token2digit(tok_n, &n, 10);
-    token2digit(tok_m, &m, 10);
+    token2digit(&n, tok_n, 10);
+    token2digit(&m, tok_m, 10);
 
     /* Calculation */
     // TODO Use table for ops
@@ -176,7 +176,7 @@ dentaku_calc_expr(Dentaku *dentaku, Token *tok_op, Token *tok_n, Token *tok_m, T
 
 
     /* Convert result to Token */
-    digit2token(&result, tok_result, MAX_TOK_CHAR_BUF, 10);
+    digit2token(tok_result, &result, MAX_TOK_CHAR_BUF, 10);
     tok_result->type = TOK_DIGIT;
 
     dentaku_printf_d(dentaku, "eval '%s %s %s' => '%s'",

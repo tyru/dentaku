@@ -58,14 +58,14 @@ die(const char *filename, int line, const char *fmt, ...)
  *******************************/
 
 void
-token2digit(Token *tok, Digit *digit, int base)
+token2digit(Digit *digit, Token *tok, int base)
 {
     mpf_init_set_str(*digit, tok->str, base);
 }
 
 
 void
-digit2token(Digit *digit, Token *tok, size_t max_size, int base)
+digit2token(Token *tok, Digit *digit, size_t max_size, int base)
 {
     mp_exp_t exp;
     mpf_get_str(tok->str, &exp, base, max_size, *digit);

@@ -29,7 +29,7 @@ yywrap(void)
     token_init(&tok);
     token_alloc(&tok, MAX_TOK_CHAR_BUF);
     strncpy(tok.str, yytext, MAX_TOK_CHAR_BUF);
-    token2digit(&tok, &yylval.digit, 10);
+    token2digit(&yylval.digit, &tok, 10);
     return DOUBLE_LITERAL;
 }
 %%

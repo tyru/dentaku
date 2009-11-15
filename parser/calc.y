@@ -41,7 +41,7 @@ line
 
         token_init(&tok);
         token_alloc(&tok, MAX_TOK_CHAR_BUF);
-        digit2token(&$1, &tok, MAX_TOK_CHAR_BUF, 10);
+        digit2token(&tok, &$1, MAX_TOK_CHAR_BUF, 10);
 
         stack_push(parser_result_stack, &tok);
     }

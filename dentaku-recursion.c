@@ -148,9 +148,9 @@ get_primary_expression(Dentaku *dentaku, Token *result)
         dentaku_printf_d(dentaku, "get_primary_expression()...done");
 
         Digit d;
-        token2digit(result, &d, 10);
+        token2digit(&d, result, 10);
         op_unary_minus(&d, &d);
-        digit2token(&d, result, MAX_TOK_CHAR_BUF, 10);
+        digit2token(result, &d, MAX_TOK_CHAR_BUF, 10);
     }
     else {
         // syntax error

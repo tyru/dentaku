@@ -36,10 +36,10 @@ die(const char *filename, int line, const char *msg, ...);
 
 
 void
-token2digit(Token *, Digit *, int);
+token2digit(Digit *digit, Token *tok, int base);
 
 void
-digit2token(Digit *, Token *, size_t, int);
+digit2token(Token *tok, Digit *digit, size_t max_size, int base);
 
 
 
