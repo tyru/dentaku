@@ -5,6 +5,7 @@
 
 #include <stdarg.h>
 #include <assert.h>
+#include <alloca.h>
 #include <gmp.h>
 
 
@@ -68,12 +69,40 @@ digit2token(Digit *digit, Token *tok, size_t max_size, int base)
 {
     mp_exp_t exp;
     mpf_get_str(tok->str, &exp, base, max_size, *digit);
-    if (exp == 0) {
+    size_t unsigned_len;
+
+    if (tok->str[0] == '+' || tok->str[0] == '-') {
+        unsigned_len = strlen(&tok->str[1]);
+    }
+    else {
+        unsigned_len = strlen(tok->str);
+    }
+
+    if (tok->str[0] == '\0') {
         // From gmplib document:
         // When digit is zero, an empty string is produced
         // and the exponent returned is 0.
         assert(max_size >= 2);
         strcpy(tok->str, "0");
+    }
+    else if ((size_t)exp > unsigned_len) {
+        // Add zeroes of exp to tail of string.
+        for (; unsigned_len < exp; unsigned_len++) {
+            tok->str[unsigned_len] = '0';
+        }
+        tok->str[exp] = '\0';
+    }
+    else if ((size_t)exp < unsigned_len) {
+        // Insert '.' to head/middle of string.
+        char *lower = alloca(&tok->str[unsigned_len] - &tok->str[exp] + 1);
+        strcpy(lower, &tok->str[exp]);
+        if (exp == 0) {
+            tok->str[exp] = '0';
+            exp++;
+        }
+        tok->str[exp] = '.';
+        tok->str[exp + 1] = '\0';
+        strcpy(&tok->str[exp + 1], lower);
     }
 }
 
