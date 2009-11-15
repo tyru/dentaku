@@ -13,17 +13,18 @@
 static char*
 skip_space(char *src)
 {
-    while (*src)
+    while (*src) {
         if (*src == ' ' || *src == '\t' || *src == '\n')
             src++;
         else
             return src;
+    }
     return NULL;
 }
 
 // if not digit or EOF: return NULL
 static char*
-get_digit(char *src, char *buf, size_t maxsize)
+get_digit(char *src, char **buf)
 {
     int pos;
     int dot_pos = 0;
@@ -50,13 +51,9 @@ get_digit(char *src, char *buf, size_t maxsize)
         return NULL;
     }
 
-    if (pos > (int)maxsize) {
-        WARN("too large number");
-        return NULL;
-    }
-
-    strncpy(buf, src, pos);
-    buf[pos] = '\0';
+    *buf = al_malloc(pos + 1);
+    strncpy(*buf, src, pos);
+    (*buf)[pos] = '\0';
 
     return src + pos;
 }
@@ -70,7 +67,7 @@ Token*
 lexer_get_token(char *src, char **next_pos, bool allow_signed, bool *error)
 {
     char *after_pos = NULL;
-    char tok_buf[MAX_TOK_CHAR_BUF];
+    char *tok_buf = NULL;
     char *sign_pos = NULL;
     Token *tok_result;
     TokenType tok_type;
@@ -106,6 +103,7 @@ lexer_get_token(char *src, char **next_pos, bool allow_signed, bool *error)
         tok_type = TOK_UP_ALLOW;
 
 save_chr_to_tok_buf:
+        tok_buf = al_malloc(2);
         tok_buf[0] = src[0];
         tok_buf[1] = '\0';
 
@@ -128,6 +126,7 @@ save_digit_to_tok_buf:
             /* FALLTHROUGH */
         }
         else {
+            tok_buf = al_malloc(2);
             tok_buf[0] = src[0];
             tok_buf[1] = '\0';
 
@@ -137,16 +136,14 @@ save_digit_to_tok_buf:
 
     default:
         if (isdigit(*src)) {
-            after_pos = get_digit(src, tok_buf, MAX_TOK_CHAR_BUF);
+            after_pos = get_digit(src, &tok_buf);
             if (after_pos == NULL) {
                 WARN2("malformed digit [%s]", src);
                 *error = true;
                 return NULL;
             }
             src = after_pos;
-
             tok_type = TOK_DIGIT;
-
             break;
         }
 
@@ -157,6 +154,7 @@ save_digit_to_tok_buf:
         return NULL;
     }
 
+
     tok_result = al_malloc(sizeof(Token));
     if (! tok_result) {
         DIE("cannot allocate memory for Token!");
@@ -166,7 +164,6 @@ save_digit_to_tok_buf:
     token_alloc(tok_result, alloc_num);
 
     tok_result->type = tok_type;
-
     if (sign_pos == NULL) {
         strncpy(tok_result->str, tok_buf, alloc_num);
     }
