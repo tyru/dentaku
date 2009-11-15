@@ -68,6 +68,13 @@ digit2token(Digit *digit, Token *tok, size_t max_size, int base)
 {
     mp_exp_t exp;
     mpf_get_str(tok->str, &exp, base, max_size, *digit);
+    if (exp == 0) {
+        // From gmplib document:
+        // When digit is zero, an empty string is produced
+        // and the exponent returned is 0.
+        assert(max_size >= 2);
+        strcpy(tok->str, "0");
+    }
 }
 
 
