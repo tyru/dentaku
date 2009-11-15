@@ -138,7 +138,7 @@ error:
 
 // Get one token from dentaku->src if not eof.
 //
-// TODO make this independant with stack_t.
+// TODO separate this from stack_t.
 // and move it to dentaku-core.c
 static void
 push_got_token(Dentaku *dentaku)
