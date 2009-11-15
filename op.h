@@ -4,24 +4,23 @@
 #include "common.h"
 
 
+void
+op_plus(Digit *result, Digit *n, Digit *m);
 
-Digit
-op_plus(Digit *n, Digit *m);
+void
+op_minus(Digit *result, Digit *n, Digit *m);
 
-Digit
-op_minus(Digit *n, Digit *m);
+void
+op_multiply(Digit *result, Digit *n, Digit *m);
 
-Digit
-op_multiply(Digit *n, Digit *m);
+void
+op_divide(Digit *result, Digit *n, Digit *m);
 
-Digit
-op_divide(Digit *n, Digit *m);
+void
+op_power(Digit *result, Digit *n, Digit *m);
 
-Digit
-op_power(Digit *n, Digit *m);
-
-Digit
-op_unary_minus(Digit *n);
+void
+op_unary_minus(Digit *result, Digit *n);
 
 
 

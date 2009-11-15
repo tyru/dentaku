@@ -1,8 +1,13 @@
 /* via http://kmaebashi.com/programmer/devlang/yacclex.html */
 
 %{
-#include <stdio.h>
+#include "common.h" /* to see 'Digit' for next include. */
 #include "y.tab.h"
+
+#include "token.h"
+#include "util.h"
+
+#include <string.h>
 
 int
 yywrap(void)
@@ -20,9 +25,11 @@ yywrap(void)
 ")"     return DENTAKU_RP;
 "\n"    return DENTAKU_NL;
 ([1-9][0-9]*)|([0-9]*\.[0-9]*)|0 {
-    double temp;
-    sscanf(yytext, "%lf", &temp);
-    yylval.double_value = temp;
+    Token tok;
+    token_init(&tok);
+    token_alloc(&tok, MAX_TOK_CHAR_BUF);
+    strncpy(tok.str, yytext, MAX_TOK_CHAR_BUF);
+    token2digit(&tok, &yylval.digit, 10);
     return DOUBLE_LITERAL;
 }
 %%

@@ -149,7 +149,7 @@ get_primary_expression(Dentaku *dentaku, Token *result)
 
         Digit d;
         token2digit(result, &d, 10);
-        d = op_unary_minus(&d);
+        op_unary_minus(&d, &d);
         digit2token(&d, result, MAX_TOK_CHAR_BUF, 10);
     }
     else {

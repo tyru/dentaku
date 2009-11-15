@@ -1,12 +1,11 @@
 #ifndef DENTAKU_COMMON_H
 #define DENTAKU_COMMON_H
 
+// TODO Hide headers as possible
 
 
 // #define NDEBUG
 
-
-#include "digit.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,11 +20,13 @@ typedef struct Dentaku_tag      Dentaku;
 typedef struct Token_tag        Token;
 typedef struct List_tag         List;
 
-// typedef struct stack            stack_t;
 typedef unsigned int            stack_ret;
 
 #include <setjmp.h>
-#define JMP_BUF     sigjmp_buf
+#define JMP_BUF                 sigjmp_buf
+
+#include <gmp.h>
+typedef mpf_t                   Digit;
 
 
 

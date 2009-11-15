@@ -3,6 +3,9 @@
 %{
 #include "libdatastruct/stack.h"
 
+#include "common.h"
+#include "digit.h"
+#include "op.h"
 #include "token.h"
 #include "util.h"
 
@@ -17,13 +20,15 @@ stack_t *parser_result_stack;
 
 #define YYDEBUG 1
 %}
+
 %union {
-    int          int_value;
-    double       double_value;
+    Digit digit;
 }
-%token <double_value>      DOUBLE_LITERAL
+
+%token <digit>      DOUBLE_LITERAL
 %token DENTAKU_ADD DENTAKU_SUB DENTAKU_MUL DENTAKU_DIV DENTAKU_POW DENTAKU_LP DENTAKU_RP DENTAKU_NL
-%type <double_value> expression term primary_expression
+%type <digit> expression term primary_expression
+
  %%
 line_list
     : line
@@ -33,54 +38,52 @@ line
     : expression DENTAKU_NL
     {
         Token tok;
-        Digit d;
 
         token_init(&tok);
         token_alloc(&tok, MAX_TOK_CHAR_BUF);
+        digit2token(&$1, &tok, MAX_TOK_CHAR_BUF, 10);
 
-        double2digit($1, &d);
-        digit2token(&d, &tok, MAX_TOK_CHAR_BUF, 10);
         stack_push(parser_result_stack, &tok);
     }
 expression
     : term
     | expression DENTAKU_ADD term
     {
-        $$ = $1 + $3;
+        op_plus(&$$, &$1, &$3);
     }
     | expression DENTAKU_SUB term
     {
-        $$ = $1 - $3;
+        op_minus(&$$, &$1, &$3);
     }
     ;
 term
     : primary_expression
     | term DENTAKU_MUL primary_expression
     {
-        $$ = $1 * $3;
+        op_multiply(&$$, &$1, &$3);
     }
     | term DENTAKU_DIV primary_expression
     {
-        $$ = $1 / $3;
+        op_divide(&$$, &$1, &$3);
     }
     | term DENTAKU_POW primary_expression
     {
-        $$ = pow($1, $3);
+        op_power(&$$, &$1, &$3);
     }
     ;
 primary_expression
     : DOUBLE_LITERAL
     | DENTAKU_LP expression DENTAKU_RP
     {
-        $$ = $2;
+        digit_copy(&$$, &$2);
     }
     | DENTAKU_ADD primary_expression
     {
-        $$ = $2;
+        digit_copy(&$$, &$2);
     }
     | DENTAKU_SUB primary_expression
     {
-        $$ = -$2;
+        op_unary_minus(&$$, &$2);
     }
     ;
  %%

@@ -3,7 +3,7 @@
 CC = gcc
 PROG = dentaku
 CFLAGS = -g -O2 -Wall -std=gnu99
-LDFLAGS = -lm
+LDFLAGS = -lm -lgmp
 
 
 YACC = yacc
@@ -14,7 +14,7 @@ VALGRIND = valgrind
 
 
 SRC_DIR = .
-SRC = main.c dentaku-core.c dentaku-stack.c dentaku-parser.c dentaku-recursion.c lexer.c token.c util.c op.c alloc-list.c
+SRC = main.c dentaku-core.c dentaku-stack.c dentaku-parser.c dentaku-recursion.c lexer.c token.c util.c op.c alloc-list.c digit.c
 
 STACK_SRC = libdatastruct/stack.c libdatastruct/common.c
 STACK_OBJS = $(STACK_SRC:.c=.o)
@@ -41,9 +41,9 @@ release: $(PROG)
 
 test: $(PROG)
 	-@\echo -n "\n\n"
-	$(PERL) test.pl ./$(PROG) -f stack
-	$(PERL) test.pl ./$(PROG) -f parser
-	$(PERL) test.pl ./$(PROG) -f recursion
+	$(PERL) test.pl ./$(PROG) -f stack -d
+	#$(PERL) test.pl ./$(PROG) -f parser
+	#$(PERL) test.pl ./$(PROG) -f recursion
 leak-test: $(PROG)
 	-@\echo -n "\n\n"
 	$(VALGRIND) --leak-check=full ./$(PROG) -f stack

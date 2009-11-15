@@ -52,7 +52,7 @@ eval_stack_expr(Dentaku *dentaku)
             // m -> -m
             Digit d;
             token2digit(&tok_m, &d, 10);
-            d = op_unary_minus(&d);
+            op_unary_minus(&d, &d);
 
             // allocate for '-' and tok_m.str.
             size_t alloc_size = strlen(tok_m.str) + 2;

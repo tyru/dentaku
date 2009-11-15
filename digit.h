@@ -1,13 +1,15 @@
 #ifndef DENTAKU_DIGIT_H
 #define DENTAKU_DIGIT_H
 
+#include "common.h"
 
 
 
-typedef struct {
-    int     i;
-    double  d;
-} Digit;
+void
+digit_init(Digit *d);
+
+Digit*
+digit_copy(Digit *dest, Digit *src);
 
 
 

@@ -27,6 +27,7 @@
 #include "op.h"
 #include "alloc-list.h"
 #include "token.h"
+#include "digit.h"
 
 #include <assert.h>
 #include <getopt.h>
@@ -161,12 +162,13 @@ dentaku_calc_expr(Dentaku *dentaku, Token *tok_op, Token *tok_n, Token *tok_m, T
 
     /* Calculation */
     // TODO Use table for ops
+    digit_init(&result);
     switch (*tok_op->str) {
-    case '+': result = op_plus(&n, &m);       break;
-    case '-': result = op_minus(&n, &m);      break;
-    case '*': result = op_multiply(&n, &m);   break;
-    case '/': result = op_divide(&n, &m);     break;
-    case '^': result = op_power(&n, &m);      break;
+    case '+': op_plus     (&result, &n, &m); break;
+    case '-': op_minus    (&result, &n, &m); break;
+    case '*': op_multiply (&result, &n, &m); break;
+    case '/': op_divide   (&result, &n, &m); break;
+    case '^': op_power    (&result, &n, &m); break;
     default:
         WARN2("unknown op '%s'", tok_op->str);
         return false;
@@ -177,8 +179,8 @@ dentaku_calc_expr(Dentaku *dentaku, Token *tok_op, Token *tok_n, Token *tok_m, T
     digit2token(&result, tok_result, MAX_TOK_CHAR_BUF, 10);
     tok_result->type = TOK_DIGIT;
 
-    dentaku_printf_d(dentaku, "eval '%f %s %f' => '%s'",
-        digit2double(&n), tok_op->str, digit2double(&m), tok_result->str);
+    dentaku_printf_d(dentaku, "eval '%s %s %s' => '%s'",
+        tok_n->str, tok_op->str, tok_m->str, tok_result->str);
 
     return true;
 }

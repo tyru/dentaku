@@ -7,72 +7,53 @@
 #include "op.h"
 
 #include "util.h"
+#include "digit.h"
 #include <math.h>
+#include <gmp.h>
 
 
 
 
-Digit
-op_plus(Digit *n, Digit *m)
+void
+op_plus(Digit *result, Digit *n, Digit *m)
 {
-    Digit result;
-    bool success = double2digit(digit2double(n) + digit2double(m), &result);
-    if (! success)
-        DIE("can't convert double to digit");
-    return result;
+    mpf_add(*result, *n, *m);
 }
 
 
-Digit
-op_minus(Digit *n, Digit *m)
+void
+op_minus(Digit *result, Digit *n, Digit *m)
 {
-    Digit result;
-    bool success = double2digit(digit2double(n) - digit2double(m), &result);
-    if (! success)
-        DIE("can't convert double to digit");
-    return result;
+    mpf_sub(*result, *n, *m);
 }
 
 
-Digit
-op_multiply(Digit *n, Digit *m)
+void
+op_multiply(Digit *result, Digit *n, Digit *m)
 {
-    Digit result;
-    bool success = double2digit(digit2double(n) * digit2double(m), &result);
-    if (! success)
-        DIE("can't convert double to digit");
-    return result;
+    mpf_mul(*result, *n, *m);
 }
 
 
-Digit
-op_divide(Digit *n, Digit *m)
+void
+op_divide(Digit *result, Digit *n, Digit *m)
 {
-    Digit result;
-    bool success = double2digit(digit2double(n) / digit2double(m), &result);
-    if (! success)
-        DIE("can't convert double to digit");
-    return result;
+    mpf_div(*result, *n, *m);
 }
 
 
-Digit
-op_power(Digit *n, Digit *m)
+void
+op_power(Digit *result, Digit *n, Digit *m)
 {
-    Digit result;
-    bool success = double2digit(pow(digit2double(n), digit2double(m)), &result);
-    if (! success)
-        DIE("can't convert double to digit");
-    return result;
+    mpf_pow_ui(*result, *n, mpf_get_ui(*m));
 }
 
 
-Digit
-op_unary_minus(Digit *n)
+void
+op_unary_minus(Digit *result, Digit *n)
 {
-    Digit result;
-    bool success = double2digit(-digit2double(n), &result);
-    if (! success)
-        DIE("can't convert double to digit");
-    return result;
+    Digit tmp;
+    digit_init(&tmp);
+    mpf_neg(tmp, *n);
+    digit_copy(result, &tmp);
 }

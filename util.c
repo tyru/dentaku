@@ -1,8 +1,11 @@
 
 #include "util.h"
 #include "token.h"
+#include "digit.h"
 
 #include <stdarg.h>
+#include <assert.h>
+#include <gmp.h>
 
 
 
@@ -53,81 +56,18 @@ die(const char *filename, int line, const char *fmt, ...)
  * Conversion Functions        *
  *******************************/
 
-// on success, return true.
-bool
-double2digit(double val, Digit *digit)
-{
-    digit->i = (int)val;
-    digit->d = val - (double)digit->i;
-    return true;
-}
-
-double
-digit2double(Digit *digit)
-{
-    return (double)digit->i + digit->d;
-}
-
-
 void
 token2digit(Token *tok, Digit *digit, int base)
 {
-    char *end_ptr;
-    double val;
-    char *digit_str = tok->str;
-
-    UNUSED(base);
-
-    errno = 0;
-    val = strtod(digit_str, &end_ptr);
-
-    if (errno == ERANGE || (errno != 0 && val == 0)) {
-        DIE2("can't convert '%s' to digit", digit_str);
-    }
-    if (end_ptr == digit_str) {
-        DIE2("can't convert '%s' to digit", digit_str);
-    }
-    if (*end_ptr != '\0') {
-        DIE2("can't convert '%s' to digit", digit_str);
-    }
-
-    if (! double2digit(val, digit))
-        DIE2("can't convert '%s' to digit", digit_str);
+    mpf_init_set_str(*digit, tok->str, base);
 }
 
 
 void
 digit2token(Digit *digit, Token *tok, size_t max_size, int base)
 {
-    double val;
-    UNUSED(base);
-    char *ascii = tok->str;
-
-    val = digit2double(digit);
-    if (snprintf(ascii, max_size, "%f", val) < 0)
-        DIE2("can't convert '%f' to string", val);
-
-    // 1.00000 -> 1
-    char *head_zero = ascii;
-    // fprintf(stderr, "begin: ascii [%s]\n", ascii);
-    while ((head_zero = strchr(head_zero, '0')) != NULL) {
-        // fprintf(stderr, "head_zero [%s]\n", head_zero);
-        char *non_zero_pos = strchr_not(head_zero, '0');
-        // fprintf(stderr, "non_zero_pos [%s]\n", non_zero_pos);
-        if (non_zero_pos == NULL) {
-            *head_zero = '\0';
-            break;
-        }
-        else if (non_zero_pos[1] == '\0') {    // last is non zero
-            break;
-        }
-        else {
-            head_zero = non_zero_pos + 1;
-        }
-    }
-    char *last_pos;
-    if ((last_pos = last_chr(ascii)) != NULL && *last_pos == '.')
-        *last_pos = '\0';
+    mp_exp_t exp;
+    mpf_get_str(tok->str, &exp, base, max_size, *digit);
 }
 
 

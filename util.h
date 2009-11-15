@@ -34,19 +34,13 @@ die(const char *filename, int line, const char *msg, ...);
 
 
 
-bool
-double2digit(double val, Digit *digit);
-
-double
-digit2double(Digit *digit);
-
-
 
 void
 token2digit(Token *, Digit *, int);
 
 void
 digit2token(Digit *, Token *, size_t, int);
+
 
 
 
