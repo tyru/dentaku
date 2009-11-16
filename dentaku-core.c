@@ -3,7 +3,7 @@
  * dentaku-core.c - calculator
  *
  * Written By: tyru <tyru.exe@gmail.com>
- * Last Change: 2009-11-15.
+ * Last Change: 2009-11-16.
  *
  */
 
@@ -413,8 +413,7 @@ dentaku_read_src(Dentaku *dentaku)
     char buf[MAX_IN_BUF];
     size_t read_size;
 
-    // Input is from terminal.
-    if (isatty(fileno(dentaku->f_in))) {
+    if (isatty(fileno(dentaku->f_in)) && isatty(fileno(dentaku->f_out))) {
         if (! dentaku->quiet) {
             fputs(PROMPT_STR, dentaku->f_out);
             fflush(dentaku->f_out);
