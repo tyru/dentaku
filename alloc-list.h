@@ -15,6 +15,9 @@ al_init(void);
 void*
 al_malloc(size_t size);
 
+void*
+al_realloc(void *ptr, size_t size);
+
 void
 al_free_pointers(void);
 

@@ -56,6 +56,24 @@ al_malloc(size_t size)
     return p;
 }
 
+void*
+al_realloc(void *ptr, size_t size)
+{
+    void *new_ptr = realloc(ptr, size);
+    if (! new_ptr) {
+        return NULL;
+    }
+    if (new_ptr != ptr) {
+        if (list_remove(pointers_list, &ptr) != LIST_RET_SUCCESS) {
+            DIE("something wrong: list_remove()");
+        }
+        if (list_push_back(pointers_list, &new_ptr) != LIST_RET_SUCCESS) {
+            DIE("something wrong: list_push_back()");
+        }
+    }
+    return new_ptr;
+}
+
 
 void
 al_free_pointers(void)

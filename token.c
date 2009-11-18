@@ -26,6 +26,17 @@ token_alloc(Token *tok, size_t size)
 }
 
 void
+token_realloc(Token *tok, size_t size)
+{
+    void *new_str = al_realloc(tok->str, size);
+    if (! new_str) {
+        perror("al_realloc");
+        exit(EXIT_FAILURE);
+    }
+    tok->str = new_str;
+}
+
+void
 token_destroy(Token *tok)
 {
     free(tok->str);
