@@ -3,7 +3,7 @@
  * dentaku-core.c - calculator
  *
  * Written By: tyru <tyru.exe@gmail.com>
- * Last Change: 2009-11-16.
+ * Last Change: 2009-11-18.
  *
  */
 
@@ -168,6 +168,7 @@ dentaku_calc_expr(Dentaku *dentaku, Token *tok_op, Token *tok_n, Token *tok_m, T
     case '-': op_minus    (&result, &n, &m); break;
     case '*': op_multiply (&result, &n, &m); break;
     case '/': op_divide   (&result, &n, &m); break;
+    case '%': op_modulo   (&result, &n, &m); break;
     case '^': op_power    (&result, &n, &m); break;
     default:
         WARN2("unknown op '%s'", tok_op->str);

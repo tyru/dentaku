@@ -9,6 +9,7 @@
   || (tok).type == TOK_MINUS \
   || (tok).type == TOK_MULTIPLY \
   || (tok).type == TOK_DIVIDE \
+  || (tok).type == TOK_MODULO \
   || (tok).type == TOK_UP_ALLOW)
 
 /*
@@ -22,9 +23,8 @@
  * of each operator.
  */
 #define TOKEN_HAS_HIGHER_PRIORITY(tok) \
-    ((tok).type == TOK_MULTIPLY \
-  || (tok).type == TOK_DIVIDE \
-  || (tok).type == TOK_UP_ALLOW)
+    ((tok).type != TOK_PLUS \
+  && (tok).type != TOK_MINUS)
 
 
 
@@ -37,6 +37,7 @@ typedef enum {
     TOK_MINUS,
     TOK_MULTIPLY,
     TOK_DIVIDE,
+    TOK_MODULO,
     TOK_UP_ALLOW,
 } TokenType;
 

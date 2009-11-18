@@ -99,6 +99,9 @@ lexer_get_token(char *src, char **next_pos, bool allow_signed, bool *error)
     case '/':
         tok_type = TOK_DIVIDE;
         goto save_chr_to_tok_buf;
+    case '%':
+        tok_type = TOK_MODULO;
+        goto save_chr_to_tok_buf;
     case '^':
         tok_type = TOK_UP_ALLOW;
 
