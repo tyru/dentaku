@@ -2,7 +2,8 @@
 
 CC = gcc
 PROG = dentaku
-CFLAGS = -g -O2 -Wall -std=gnu99
+CFLAGS_RELEASE = -O2 -Wall -std=gnu99
+CFLAGS = -g -Wall -std=gnu99
 LDFLAGS = -lm -lgmp
 
 
@@ -33,9 +34,9 @@ ALL_OBJS = $(SRC:.c=.o) $(STACK_OBJS) $(LIST_OBJS) $(PARSER_OBJS)
 
 all: $(PROG)
 
-release: $(PROG)
+release:
 	-@\echo -n "\n\n"
-	$(STRIP) $(PROG)
+	CFLAGS=$(CFLAGS_RELEASE) make $(PROG)
 
 
 
