@@ -43,22 +43,32 @@ al_init(void)
 }
 
 
+/*
+ * You(who?) can use perror()
+ * if this function's return value is NULL.
+ */
 void*
 al_malloc(size_t size)
 {
     void *p = malloc(size);
-    if (p == NULL)
+    if (p == NULL) {
         return NULL;
-    if (list_push_back(pointers_list, &p) != LIST_RET_SUCCESS)
-        DIE("something wrong: list_push_back(ptr_list, p)\n");
+    }
+    if (list_push_back(pointers_list, &p) != LIST_RET_SUCCESS) {
+        DIE("something wrong: list_push_back()\n");
+    }
     return p;
 }
 
+/*
+ * You(who?) can use perror()
+ * if this function's return value is NULL.
+ */
 void*
 al_realloc(void *ptr, size_t size)
 {
     void *new_ptr = realloc(ptr, size);
-    if (! new_ptr) {
+    if (new_ptr == NULL) {
         return NULL;
     }
     if (new_ptr != ptr) {
