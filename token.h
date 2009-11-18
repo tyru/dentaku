@@ -14,12 +14,12 @@
 
 /*
  * Calculator (dentaku) has only
- * higher priority group (*, /, ^)
+ * higher priority group (*, /, %, ^)
  * and lower priority group (+, -),
- * So just calculate these operators
+ * So just calculate higher priority group
  * before lower priority operators.
  * If this is practical programming language,
- * I have to execute each operator by the order
+ * I have to calculate each operator by the order
  * of each operator.
  */
 #define TOKEN_HAS_HIGHER_PRIORITY(tok) \
