@@ -54,7 +54,6 @@ leak-test: $(PROG)
 
 $(PROG): $(ALL_OBJS)
 	-@\echo -n "\n\n"
-	-\rm -f y.tab.c y.tab.h y.output lex.yy.c    # clean up yacc&lex's garbages
 	$(CC) $(LDFLAGS) -o $@ $(ALL_OBJS)
 
 .c.o:
