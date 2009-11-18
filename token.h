@@ -54,6 +54,9 @@ void
 token_alloc(Token *tok, size_t size);
 
 void
+token_realloc(Token *tok, size_t size);
+
+void
 token_destroy(Token *tok);
 
 Token*
