@@ -20,6 +20,9 @@ void
 op_power(Digit *result, Digit *n, Digit *m);
 
 void
+op_modulo(Digit *result, Digit *n, Digit *m);
+
+void
 op_unary_minus(Digit *result, Digit *n);
 
 

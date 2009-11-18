@@ -39,7 +39,15 @@ op_divide(Digit *result, Digit *n, Digit *m)
 void
 op_power(Digit *result, Digit *n, Digit *m)
 {
-    mpf_pow_ui(*result, *n, mpf_get_ui(*m));
+    // 'm' must be positive number.
+    mpf_pow_ui(*result, *n, digit2ulong(m));
+}
+
+
+void
+op_modulo(Digit *result, Digit *n, Digit *m)
+{
+    double2digit(result, fmod(digit2double(n), digit2double(m)));
 }
 
 

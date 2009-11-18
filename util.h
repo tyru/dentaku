@@ -41,6 +41,15 @@ token2digit(Digit *digit, Token *tok, int base);
 void
 digit2token(Token *tok, Digit *digit, size_t max_size, int base);
 
+void
+double2digit(Digit *dest, double src);
+
+double
+digit2double(Digit *src);
+
+unsigned long
+digit2ulong(Digit *src);
+
 
 
 

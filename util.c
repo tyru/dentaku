@@ -107,6 +107,27 @@ digit2token(Token *tok, Digit *digit, size_t max_size, int base)
 }
 
 
+void
+double2digit(Digit *dest, double src)
+{
+    mpf_set_d(*dest, src);
+}
+
+
+double
+digit2double(Digit *src)
+{
+    return mpf_get_d(*src);
+}
+
+
+unsigned long
+digit2ulong(Digit *src)
+{
+    return mpf_get_ui(*src);
+}
+
+
 
 
 /*******************************
