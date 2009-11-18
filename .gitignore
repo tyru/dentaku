@@ -2,3 +2,5 @@ dentaku
 *.o
 *tags*
 *.bak
+y.*
+lex.yy.c
