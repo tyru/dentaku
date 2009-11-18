@@ -27,8 +27,10 @@ yywrap(void)
 ([1-9][0-9]*)|([0-9]*\.[0-9]*)|0 {
     Token tok;
     token_init(&tok);
-    token_alloc(&tok, MAX_TOK_CHAR_BUF);
-    strncpy(tok.str, yytext, MAX_TOK_CHAR_BUF);
+    const size_t alloc_byte = strlen(yytext) + 1;
+    token_alloc(&tok, alloc_byte);
+    strncpy(tok.str, yytext, alloc_byte);
+
     token2digit(&yylval.digit, &tok, 10);
     return DOUBLE_LITERAL;
 }
