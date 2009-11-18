@@ -26,7 +26,7 @@ stack_t *parser_result_stack;
 }
 
 %token <digit>      DOUBLE_LITERAL
-%token DENTAKU_ADD DENTAKU_SUB DENTAKU_MUL DENTAKU_DIV DENTAKU_POW DENTAKU_LP DENTAKU_RP DENTAKU_NL
+%token DENTAKU_ADD DENTAKU_SUB DENTAKU_MUL DENTAKU_DIV DENTAKU_MOD DENTAKU_POW DENTAKU_LP DENTAKU_RP DENTAKU_NL
 %type <digit> expression term primary_expression
 
  %%
@@ -65,6 +65,10 @@ term
     | term DENTAKU_DIV primary_expression
     {
         op_divide(&$$, &$1, &$3);
+    }
+    | term DENTAKU_MOD primary_expression
+    {
+        op_modulo(&$$, &$1, &$3);
     }
     | term DENTAKU_POW primary_expression
     {

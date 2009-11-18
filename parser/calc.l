@@ -21,6 +21,7 @@ yywrap(void)
 "*"     return DENTAKU_MUL;
 "/"     return DENTAKU_DIV;
 "^"     return DENTAKU_POW;
+"%"     return DENTAKU_MOD;
 "("     return DENTAKU_LP;
 ")"     return DENTAKU_RP;
 "\n"    return DENTAKU_NL;
