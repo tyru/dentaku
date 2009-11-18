@@ -11,7 +11,7 @@ digit_init(Digit *d);
 Digit*
 digit_copy(Digit *dest, Digit *src);
 
-Digit*
+void
 digit_destroy(Digit *d);
 
 

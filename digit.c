@@ -18,7 +18,7 @@ digit_copy(Digit *dest, Digit *src)
 }
 
 
-Digit*
+void
 digit_destroy(Digit *d)
 {
     mpf_clear(*d);
