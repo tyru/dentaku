@@ -1,16 +1,17 @@
+/*
+ * NSTL - list
+ * Written by tyru
+ *
+ * See LICENSE in NSTL's directory about the license.
+ */
 
 #include "list.h"
 
 #include <string.h>
 #include <assert.h>
-#include <stdbool.h>
 
-
-
-// TODO
-// - add length to List's member if required by macro.
-// - implement STL list's methods.
-
+#define COMPARE_EQ(lis, item1, item2) \
+    ((lis)->compare_func((item1), (item2), (lis)->elem_size) == 0)
 
 
 
@@ -20,21 +21,20 @@
  * Delete node from node's list.
  */
 static ListRVal
-free_node(Node *node, ListFunc func)
+free_node(Node *node, ListFreeFunc free_func)
 {
     assert(node);
 
     // Remove current node from chained other nodes.
-    if (node->prev)
+    if (node->prev) {
         node->prev->next = node->next;
-    if (node->next)
+    }
+    if (node->next) {
         node->next->prev = node->prev;
+    }
 
     // Call handler to destruct node->item.
-    if (func != 0)
-        func(node->item);
-    // Free node->item pointer.
-    free(node->item);
+    free_func(node->item);
     node->item = NULL;
     // Free node itself.
     free(node);
@@ -47,25 +47,35 @@ free_node(Node *node, ListFunc func)
  * Create node with src.
  */
 static Node*
-create_node(void *src, size_t item_size, Node *prev, Node *next, list_copy_func copy_func)
+create_node(
+    void *src,
+    size_t item_size,
+    Node *prev,
+    Node *next,
+    ListCopyFunc copy_func,
+    ListAllocFunc alloc_func)
 {
     Node *node;
     void *dest;
 
     node = malloc(sizeof(Node));
-    if (! node)
+    if (node == NULL) {
         return NULL;
+    }
     // Chain like prev -> node -> next.
     node->prev = prev;
     node->next = next;
-    if (prev)
+    if (prev) {
         prev->next = node;
-    if (next)
+    }
+    if (next) {
         next->prev = node;
+    }
 
-    dest = malloc(item_size);
-    if (! dest)
+    dest = alloc_func(item_size);
+    if (dest == NULL) {
         return NULL;
+    }
     // Copy with copy_func. This is default to 'memcpy'.
     copy_func(dest, src, item_size);
     node->item = dest;
@@ -86,41 +96,58 @@ List*
 list_init(size_t elem_size)
 {
     List *lis = malloc(sizeof(List));
-    if (! lis)
+    if (lis == NULL) {
         return NULL;
+    }
 
-    lis->head      = NULL;
-    lis->tail      = NULL;
-    lis->elem_size = elem_size;
-    lis->rel_func  = 0;
-    lis->copy_func = memcpy;
+    list_front(lis) = NULL;
+    list_back(lis)  = NULL;
+    lis->elem_size  = elem_size;
+
+    lis->copy_func    = memcpy;
+    lis->alloc_func   = malloc;
+    lis->free_func    = free;
+    lis->compare_func = memcmp;
 
     return lis;
 }
 
 
+/*
+ * Set functions for element.
+ * If you don't want to change the default function,
+ * You can use 0 not to change it.
+ */
 List*
-list_init_with_func(size_t  elem_size,
-        list_release_func   rel_func,
-        list_copy_func      copy_func)
+list_init_func(
+    size_t          elem_size,
+    ListCopyFunc    copy_func,
+    ListAllocFunc   alloc_func,
+    ListFreeFunc    free_func,
+    ListCompareFunc compare_func)
 {
     List *lis = list_init(elem_size);
-    if (! lis)
+    if (lis == NULL) {
         return NULL;
-    lis->rel_func  = rel_func;
-    lis->copy_func = copy_func;
+    }
+
+    list_set_copy_func(lis, copy_func);
+    list_set_alloc_func(lis, alloc_func);
+    list_set_free_func(lis, free_func);
+    list_set_compare_func(lis, compare_func);
     return lis;
 }
 
 
-ListRVal
-list_destruct_func(List *lis, ListFunc func)
+void
+list_destruct(List *lis)
 {
     assert(lis);
 
-    if (lis->head == NULL)
-        return LIST_RET_SUCCESS;
-    return list_erase_func(lis, lis->head, NULL, func);
+    if (list_front(lis)) {
+        list_clear(lis);
+    }
+    free(lis);
 }
 
 
@@ -129,13 +156,13 @@ list_destruct_func(List *lis, ListFunc func)
 
 
 /*
- * TODO Return length in constant time if required
+ * TODO Return size in constant time if required
  */
 size_t
-list_length(List *lis)
+list_size(List *lis)
 {
     size_t count = 0;
-    Node *begin = lis->head;
+    Node *begin  = list_front(lis);
     while (begin) {
         begin = begin->next;
         count++;
@@ -146,22 +173,40 @@ list_length(List *lis)
 
 /*
  * Get node of idx.
- * This is same as lis->next->next->next ... to idx.
- *
- * NOTE: I want Lisp's macro...
+ * This is same as lis->next->next->next ... as idx.
  */
 Node*
-list_get_node_idx(List *lis, size_t idx)
+list_find_idx(List *lis, size_t idx)
 {
     size_t i = 0;
-    Node *begin = lis->head;
+    Node *begin = list_front(lis);
     while (i < idx) {
-        if (! begin)
+        if (begin == NULL) {
             return NULL;
+        }
         begin = begin->next;
         i++;
     }
     return begin;
+}
+
+
+/*
+ * Get node matching ptr.
+ *
+ * XXX: not tested yet.
+ */
+Node*
+list_find(List *lis, void *ptr)
+{
+    Node *begin = list_front(lis);
+    while (begin) {
+        if (COMPARE_EQ(lis, ptr, begin->item)) {
+            return begin;
+        }
+        begin = begin->next;
+    }
+    return NULL;
 }
 
 
@@ -170,69 +215,134 @@ list_get_node_idx(List *lis, size_t idx)
 
 
 /*
- * Free all nodes in range [begin, end).
+ * Remove
+ * - n elements (at most or as possible if n == 0)
+ * - matching ptr (Any element if ptr == NULL)
+ * - in ascending/descending order
+ *
+ * NOTE: begin must NOT be NULL !
  */
-
 ListRVal
-list_erase_func(List *lis, Node *begin, Node *end, ListFunc func)
+list_remove_range_n(
+    List *lis,
+    Node *begin,
+    Node *end,
+    void *ptr,
+    size_t n,
+    bool ascending)
 {
     Node *next_node;
-    ListRVal tmp, ret_val = LIST_RET_SUCCESS;
-    Node *begin_orig, *begin_prev;
-    bool head_deleted = false, tail_deleted = false;
+    ListRVal ret_val;
+    Node *node_before_range, **top_node, **bottom_node;
 
     assert(lis);
     assert(begin);
 
-    begin_orig = begin;
-    begin_prev = begin->prev;
+    // If ascending:
+    //      Advance to begin->next
+    // If not ascending:
+    //      Advance to begin->prev
+    if (ascending) {
+        node_before_range = begin->prev;
+        top_node          = &list_front(lis);
+        bottom_node       = &list_back(lis);
+    }
+    else {
+        node_before_range = begin->next;
+        top_node          = &list_back(lis);
+        bottom_node       = &list_front(lis);
+    }
 
-    while (begin && begin != end) {
-        next_node = begin->next;
+    while (begin != end) {
+        next_node = ascending ? begin->next : begin->prev;
 
-        if (lis->head == begin)
-            head_deleted = true;
-        if (lis->tail == begin)
-            tail_deleted = true;
+        if (ptr == NULL || (ptr && COMPARE_EQ(lis, ptr, begin->item))) {
+            if (*top_node == begin) {
+                *top_node = next_node;
+            }
+            if (*bottom_node == begin && end == NULL) {
+                *bottom_node = node_before_range;
+            }
 
-        // do not return on failure.
-        tmp = free_node(begin, func);
-        if (tmp != LIST_RET_SUCCESS)
-            ret_val = tmp;
+            ret_val = free_node(begin, lis->free_func);
+            if (ret_val != LIST_RET_SUCCESS) {
+                return ret_val;
+            }
+            if (n != 0 && --n == 0) {
+                return ret_val;
+            }
+        }
 
         begin = next_node;
     }
 
-    if (head_deleted)
-        lis->head = NULL;
+    return LIST_RET_SUCCESS;
+}
 
-    // I assume that all right elems
-    // including current node of begin are deleted.
-    // Because no tail is in range.
-    //
-    // Set last valid node to lis->tail.
-    if (tail_deleted)
-        lis->tail = begin_prev;
 
-    return ret_val;
+/*
+ * Remove all elements in range [begin, end).
+ */
+ListRVal
+list_erase(List *lis, Node *begin, Node *end)
+{
+    assert(lis);
+    if (begin == NULL) {
+        // May I return success code here?
+        return LIST_RET_SUCCESS;
+    }
+    return list_remove_range_n(lis, begin, end, NULL, 0, true);
+}
+
+
+/*
+ * Remove
+ * - n elements (at most or as possible if n == 0)
+ * - matching ptr (Any element if ptr == NULL)
+ */
+ListRVal
+list_remove_front_n(List *lis, void *ptr, size_t n)
+{
+    assert(lis);
+    if (list_front(lis) == NULL) {
+        // May I return success code here?
+        return LIST_RET_SUCCESS;
+    }
+    // Iterate from front to back.
+    return list_remove_range_n(lis, list_front(lis), NULL, ptr, n, true);
+}
+
+
+ListRVal
+list_remove_back_n(List *lis, void *ptr, size_t n)
+{
+    assert(lis);
+    if (list_back(lis) == NULL) {
+        // May I return success code here?
+        return LIST_RET_SUCCESS;
+    }
+    // Iterate from back to front.
+    return list_remove_range_n(lis, list_back(lis), NULL, ptr, n, false);
 }
 
 
 ListRVal
 list_push_front(List *lis, void *ptr)
 {
-    Node *tmp;
+    Node *node;
     assert(lis);
 
-    tmp = create_node(ptr, lis->elem_size, NULL, lis->head, lis->copy_func);
-    if (! tmp)
+    node = create_node(ptr, lis->elem_size, NULL, list_front(lis),
+                      lis->copy_func, lis->alloc_func);
+    if (node == NULL) {
         return LIST_RET_ALLOC;
+    }
 
     if (list_empty(lis)) {
-        lis->head = lis->tail = tmp;
+        list_front(lis) = list_back(lis) = node;
     }
     else {
-        lis->head = tmp;
+        list_front(lis) = node;
     }
 
     return LIST_RET_SUCCESS;
@@ -242,18 +352,20 @@ list_push_front(List *lis, void *ptr)
 ListRVal
 list_push_back(List *lis, void *ptr)
 {
-    Node *tmp;
+    Node *node;
     assert(lis);
 
-    tmp = create_node(ptr, lis->elem_size, lis->tail, NULL, lis->copy_func);
-    if (! tmp)
+    node = create_node(ptr, lis->elem_size, list_back(lis), NULL,
+                      lis->copy_func, lis->alloc_func);
+    if (node == NULL) {
         return LIST_RET_ALLOC;
+    }
 
     if (list_empty(lis)) {
-        lis->head = lis->tail = tmp;
+        list_front(lis) = list_back(lis) = node;
     }
     else {
-        lis->tail = tmp;
+        list_back(lis) = node;
     }
 
     return LIST_RET_SUCCESS;
@@ -264,24 +376,26 @@ ListRVal
 list_pop_front(List *lis, void *ptr)
 {
     ListRVal ret_val;
-    Node *head_next;
+    Node *front_next;
 
     assert(lis);
     if (list_empty(lis))
         return LIST_RET_EMPTY;
-    head_next = lis->head->next;
+    front_next = list_front(lis)->next;
 
     if (ptr)    // Pop to ptr.
-        lis->copy_func(ptr, lis->head->item, lis->elem_size);
+        lis->copy_func(ptr, list_front(lis)->item, lis->elem_size);
 
-    ret_val = free_node(lis->head, lis->rel_func);
+    ret_val = free_node(list_front(lis), lis->free_func);
     if (ret_val != LIST_RET_SUCCESS)
         return ret_val;
 
-    if (lis->head == lis->tail)    // There was only 1 element.
-        lis->head = lis->tail = NULL;
-    else
-        lis->head = head_next;
+    if (list_front(lis) == list_back(lis)) {    // There was only 1 element.
+        list_front(lis) = list_back(lis) = NULL;
+    }
+    else {
+        list_front(lis) = front_next;
+    }
 
 
     return LIST_RET_SUCCESS;
@@ -292,24 +406,42 @@ ListRVal
 list_pop_back(List *lis, void *ptr)
 {
     ListRVal ret_val;
-    Node *tail_prev;
+    Node *back_prev;
 
     assert(lis);
-    if (list_empty(lis))
+    if (list_empty(lis)) {
         return LIST_RET_EMPTY;
-    tail_prev = lis->tail->prev;
+    }
+    back_prev = list_back(lis)->prev;
 
-    if (ptr)    // Pop to ptr.
-        lis->copy_func(ptr, lis->tail->item, lis->elem_size);
+    if (ptr) {    // Pop to ptr.
+        lis->copy_func(ptr, list_back(lis)->item, lis->elem_size);
+    }
 
-    ret_val = free_node(lis->tail, lis->rel_func);
-    if (ret_val != LIST_RET_SUCCESS)
+    ret_val = free_node(list_back(lis), lis->free_func);
+    if (ret_val != LIST_RET_SUCCESS) {
         return ret_val;
+    }
 
-    if (lis->head == lis->tail)    // There was only 1 element.
-        lis->head = lis->tail = NULL;
-    else
-        lis->tail = tail_prev;
+    if (list_front(lis) == list_back(lis)) {    // There was only 1 element.
+        list_front(lis) = list_back(lis) = NULL;
+    }
+    else {
+        list_back(lis) = back_prev;
+    }
 
+    return LIST_RET_SUCCESS;
+}
+
+
+/*
+ * XXX: not tested yet.
+ */
+ListRVal
+list_swap(List *to, List *from)
+{
+    List temp = *to;
+    *to       = *from;
+    *from     = temp;
     return LIST_RET_SUCCESS;
 }

@@ -13,17 +13,17 @@
     #include "mylib/list/list.h"
 #undef List
 
-static List    *pointers_list;
+static List    *pointers_list = NULL;
 
 
 
 
 static void
-release_func(void *ptr)
+free_func(void *ptr)
 {
-    void *item = *(void**)ptr;
-    free(item);
-    item = NULL;
+    free(*(void**)ptr);
+    *(void**)ptr = NULL;
+    free(ptr);
 }
 static void*
 copy_func(void *dest, const void *src, size_t n)
@@ -37,11 +37,9 @@ copy_func(void *dest, const void *src, size_t n)
 void
 al_init(void)
 {
-    pointers_list = list_init_with_func(
-        sizeof(void*),
-        release_func,
-        copy_func
-    );
+    pointers_list = list_init(sizeof(void*));
+    list_set_free_func(pointers_list, free_func);
+    list_set_copy_func(pointers_list, copy_func);
 }
 
 
@@ -60,13 +58,12 @@ al_malloc(size_t size)
 void
 al_free_pointers(void)
 {
-    list_destruct(pointers_list);
+    list_clear(pointers_list);
 }
 
 
 void
 al_destroy(void)
 {
-    free(pointers_list);
-    pointers_list = NULL;
+    list_destruct(pointers_list);
 }
