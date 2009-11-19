@@ -4,3 +4,4 @@ dentaku
 *.bak
 y.*
 lex.yy.c
+deps
