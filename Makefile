@@ -1,4 +1,4 @@
-.PHONY: all release test leak-test depend clean
+.PHONY: all release test leak-test deps clean tags
 
 CC = gcc
 PROG = dentaku
@@ -12,6 +12,7 @@ LEX = lex
 STRIP = strip
 PERL = perl
 VALGRIND = valgrind
+CTAGS = ctags
 
 
 SRC_DIR = .
@@ -32,11 +33,13 @@ ALL_OBJS = $(SRC:.c=.o) $(STACK_OBJS) $(LIST_OBJS) $(PARSER_OBJS)
 
 
 
-all: $(PROG)
 
-release:
+all: deps tags $(PROG)
+
+release: clean
 	-@\echo -n "\n\n"
 	CFLAGS=$(CFLAGS_RELEASE) make $(PROG)
+	$(STRIP) $(PROG)
 
 
 
@@ -69,30 +72,16 @@ $(PARSER_OBJS): $(PARSER_SRC)
 	$(CC) $(CFLAGS) -c lex.yy.c -o lex.yy.o
 
 
-depend:
+deps:
 	-@\echo -n "\n\n"
-	\makedepend -Y$(SRC_DIR) -- $(CFLAGS) -- $(SRC) 2>/dev/null
+	$(CC) -MM $(SRC) > deps
 
 clean:
 	-@\echo -n "\n\n"
 	-\rm -f $(PROG) $(ALL_OBJS) y.tab.c y.tab.h lex.yy.c
-# DO NOT DELETE
 
-main.o: dentaku.h common.h digit.h
-dentaku-core.o: dentaku-core.h common.h digit.h libdatastruct/stack.h
-dentaku-core.o: libdatastruct/common_public.h dentaku-stack.h
-dentaku-core.o: dentaku-parser.h dentaku-recursion.h util.h op.h alloc-list.h
-dentaku-core.o: token.h
-dentaku-stack.o: dentaku-stack.h common.h digit.h dentaku-core.h util.h
-dentaku-stack.o: lexer.h op.h token.h libdatastruct/stack.h
-dentaku-stack.o: libdatastruct/common_public.h
-dentaku-parser.o: dentaku-parser.h common.h digit.h dentaku-core.h
-dentaku-parser.o: libdatastruct/stack.h libdatastruct/common_public.h
-dentaku-recursion.o: dentaku-recursion.h common.h digit.h
-dentaku-recursion.o: libdatastruct/stack.h libdatastruct/common_public.h
-dentaku-recursion.o: dentaku-core.h lexer.h token.h util.h op.h
-lexer.o: lexer.h common.h digit.h token.h util.h
-token.o: token.h common.h digit.h alloc-list.h
-util.o: util.h common.h digit.h token.h
-op.o: op.h common.h digit.h util.h
-alloc-list.o: alloc-list.h common.h digit.h util.h mylib/list/list.h
+tags:
+	$(CTAGS)
+
+
+include deps
