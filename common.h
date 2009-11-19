@@ -43,6 +43,14 @@ typedef mpf_t                   Digit;
 #define JMP_RET_ERR         2
 
 
+// Should not allocate memory on stack more than this.
+// (I don't know proper number for this...)
+#define MAX_ALLOCA_SIZE     1024
+// Use alloca() if possible so it is faster than malloc().
+// NOTE: Call al_init() at first.
+#define ALLOCA(size) \
+    ((size) > MAX_ALLOCA_SIZE ? al_malloc(size) : alloca(size))
+
 
 
 #define STREQ(s1, s2)       (*(s1) == *(s2) && strcmp((s1), (s2)) == 0)

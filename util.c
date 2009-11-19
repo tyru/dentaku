@@ -94,7 +94,7 @@ digit2token(Token *tok, Digit *digit, size_t max_size, int base)
     }
     else if ((size_t)exp < unsigned_len) {
         // Insert '.' to head/middle of string.
-        char *lower = alloca(&tok->str[unsigned_len] - &tok->str[exp] + 1);
+        char *lower = ALLOCA(&tok->str[unsigned_len] - &tok->str[exp] + 1);
         strcpy(lower, &tok->str[exp]);
         if (exp == 0) {
             tok->str[exp] = '0';

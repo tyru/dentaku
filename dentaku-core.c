@@ -3,7 +3,7 @@
  * dentaku-core.c - calculator
  *
  * Written By: tyru <tyru.exe@gmail.com>
- * Last Change: 2009-11-18.
+ * Last Change: 2009-11-19.
  *
  */
 
@@ -63,6 +63,13 @@ dentaku_show_stack(Dentaku *dentaku)
 {
     stack_t *stk = dentaku->data_stack;
     size_t stk_len = stack_size(stk);
+
+    if (sizeof(stack_t) * stk_len > MAX_ALLOCA_SIZE) {
+        dentaku_printf_d(dentaku,
+                "too large number to do alloca()."
+                " skip showing debug message...");
+        return;
+    }
     Token *tokens = alloca(sizeof(stack_t) * stk_len);
 
     if (! dentaku->debug)
@@ -192,48 +199,6 @@ error:
     digit_destroy(&m);
     digit_destroy(&result);
     return false;
-}
-
-
-// XXX not tested.
-bool
-dentaku_stack_elements_are(Dentaku *dentaku, ...)
-{
-    va_list ap;
-    TokenType type;
-    int pop_size;
-    stack_t *stk;
-    Token *popped_elem;
-    stack_ret ret;
-    bool ret_val = true;
-
-    stk = dentaku->data_stack;
-    popped_elem = alloca(sizeof(Token) * stack_size(stk));
-
-    va_start(ap, dentaku);
-    for (pop_size = 0; (type = va_arg(ap, TokenType)) != TOK_UNDEF; pop_size++) {
-        ret = stack_pop(stk, popped_elem + pop_size);
-        if (ret == STACK_EMPTY) {
-            ret_val = false;
-        }
-        else if (ret != STACK_SUCCESS) {
-            fprintf(stderr, "stack_pop(stk, popped_elem + pop_size) == %d\n", ret);
-            DIE("something wrong");
-        }
-
-        if (popped_elem[pop_size].type != type)    // does not match!
-            return false;
-    }
-    // I can't use stack_push_many_elements(),
-    // Because of reverse sequence.
-    for (; pop_size; pop_size--) {
-        if (stack_push(stk, popped_elem + pop_size - 1) != STACK_SUCCESS) {
-            DIE("internal error: something wrong");
-        }
-    }
-    va_end(ap);
-
-    return ret_val;
 }
 
 
