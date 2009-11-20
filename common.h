@@ -56,6 +56,14 @@ typedef mpf_t                   Digit;
 #define STREQ(s1, s2)       (*(s1) == *(s2) && strcmp((s1), (s2)) == 0)
 #define UNUSED(x)           ((void)x)
 
+#define assert(x)           assert2(x, #x)
+#define assert2(x, msg) \
+    do { \
+        if (!(x)) { \
+            DIE("Assertion failed: " msg); \
+        } \
+    } while (0)
+
 
 
 

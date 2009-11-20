@@ -17,7 +17,6 @@
 #include "util.h"
 #include "op.h"
 
-#include <assert.h>
 
 
 

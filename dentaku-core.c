@@ -3,7 +3,7 @@
  * dentaku-core.c - calculator
  *
  * Written By: tyru <tyru.exe@gmail.com>
- * Last Change: 2009-11-19.
+ * Last Change: 2009-11-21.
  *
  */
 
@@ -29,7 +29,6 @@
 #include "token.h"
 #include "digit.h"
 
-#include <assert.h>
 #include <getopt.h>
 #include <stdarg.h>
 #include <unistd.h>

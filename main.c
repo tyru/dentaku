@@ -30,8 +30,6 @@ main(int argc, char *argv[])
             }
             // Evaluation
             dentaku_dispatch(d);
-            /* NOTREACHED */
-            assert(0);
 
         case JMP_RET_OK:
             dentaku_show_result(d);
