@@ -2,6 +2,7 @@
 #include "util.h"
 #include "token.h"
 #include "digit.h"
+#include "alloc-list.h"
 
 #include <stdarg.h>
 #include <assert.h>
