@@ -10,7 +10,7 @@
 // But I don't want to see typedef of List
 // to avoid multiple List's typedef definition.
 #define List    List__
-    #include "mylib/list/list.h"
+    #include "nstl/list/list.h"
 #undef List
 
 static List    *pointers_list = NULL;
@@ -54,7 +54,7 @@ al_malloc(size_t size)
     if (p == NULL) {
         return NULL;
     }
-    if (list_push_back(pointers_list, &p) != LIST_RET_SUCCESS) {
+    if (list_push_back(pointers_list, &p) != NSTL_OK) {
         DIE("something wrong: list_push_back()\n");
     }
     return p;
@@ -72,10 +72,10 @@ al_realloc(void *ptr, size_t size)
         return NULL;
     }
     if (new_ptr != ptr) {
-        if (list_remove(pointers_list, &ptr) != LIST_RET_SUCCESS) {
+        if (list_remove(pointers_list, &ptr) != NSTL_OK) {
             DIE("something wrong: list_remove()");
         }
-        if (list_push_back(pointers_list, &new_ptr) != LIST_RET_SUCCESS) {
+        if (list_push_back(pointers_list, &new_ptr) != NSTL_OK) {
             DIE("something wrong: list_push_back()");
         }
     }

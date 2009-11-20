@@ -1,21 +1,25 @@
 #ifndef NSTL_LIST_H
 #define NSTL_LIST_H
 
-
-#include <stdlib.h>
-/* This library requires C99 compiler.
- * (I'm working on compiling in also C89 mode now)
- */
-#include <stdbool.h>
+#include "../common.h"
 
 
+
+/* Feature Macros */
+#ifndef LIST_SIZE_CONST_TIME
+    #define LIST_SIZE_CONST_TIME 0
+#endif
+
+
+
+/* Macros */
 #define list_front(lis) \
     ((lis)->front)
 
 #define list_back(lis) \
     ((lis)->back)
 
-/* If list is empty, Both lis->front and lis->back are NULL. */
+// If list is empty, Both lis->front and lis->back are NULL.
 #define list_empty(lis) \
     ((lis)->front == NULL)
 
@@ -25,8 +29,13 @@
 #define list_remove(lis, ptr) \
     list_remove_front_n((lis), (ptr), 0)
 
+#if LIST_SIZE_CONST_TIME
+    #define list_size(lis) \
+        (lis)->size
+#endif
 
-/* XXX Not tested these list_set_*_func() macros. */
+
+
 #define list_set_copy_func(lis, func)                  \
     do {                                               \
         if ((ListCopyFunc)(func) != (ListCopyFunc)0) { \
@@ -56,8 +65,30 @@
     } while (0)                                              \
 
 
+
+/* Accessors */
 #define LIST_GET_NODE(node, type)   (*(type*)(node)->item)
 
+
+
+/* Iterators */
+#define list_iter_begin(lis) \
+    list_front(lis)
+
+#define list_iter_end(lis) \
+    NULL
+
+#define list_iter_next(node) \
+    (node)->next
+
+#define list_iter_prev(node) \
+    (node)->prev
+
+#define list_iter_incl(node) \
+    ((node) = (node)->next)
+
+#define list_iter_decl(node) \
+    ((node) = (node)->prev)
 
 
 
@@ -66,14 +97,6 @@ typedef void *(*ListAllocFunc)(size_t);
 typedef void (*ListFreeFunc)(void *);
 typedef int  (*ListCompareFunc)(const void *, const void *, size_t);
 
-
-
-typedef enum {
-    LIST_RET_SUCCESS,
-    LIST_RET_ARGS,
-    LIST_RET_ALLOC,
-    LIST_RET_EMPTY,
-} ListRVal;
 
 
 typedef struct Node_tag {
@@ -86,6 +109,9 @@ typedef struct List_tag {
     Node                *front;
     Node                *back;
     size_t              elem_size;
+#if LIST_SIZE_CONST_TIME
+    size_t              size;
+#endif
     ListCopyFunc        copy_func;
     ListAllocFunc       alloc_func;
     ListFreeFunc        free_func;
@@ -109,8 +135,10 @@ list_init_func(
 void
 list_destruct(List *lis);
 
+#if !LIST_SIZE_CONST_TIME
 size_t
 list_size(List *lis);
+#endif
 
 Node*
 list_find_idx(List *lis, size_t idx);
@@ -118,7 +146,7 @@ list_find_idx(List *lis, size_t idx);
 Node*
 list_find(List *lis, void *ptr);
 
-ListRVal
+NstlErrno
 list_remove_range_n(
         List *lis,
         Node *begin,
@@ -127,25 +155,25 @@ list_remove_range_n(
         size_t n,
         bool ascending);
 
-ListRVal
+NstlErrno
 list_erase(List *lis, Node *begin, Node *end);
 
-ListRVal
+NstlErrno
 list_remove_front_n(List *lis, void *ptr, size_t n);
 
-ListRVal
+NstlErrno
 list_remove_back_n(List *lis, void *ptr, size_t n);
 
-ListRVal
+NstlErrno
 list_push_front(List *lis, void *ptr);
 
-ListRVal
+NstlErrno
 list_push_back(List *lis, void *ptr);
 
-ListRVal
+NstlErrno
 list_pop_front(List *lis, void *ptr);
 
-ListRVal
+NstlErrno
 list_pop_back(List *lis, void *ptr);
 
 

@@ -20,7 +20,7 @@
 /*
  * Delete node from node's list.
  */
-static ListRVal
+static NstlErrno
 free_node(Node *node, ListFreeFunc free_func)
 {
     assert(node);
@@ -39,7 +39,7 @@ free_node(Node *node, ListFreeFunc free_func)
     // Free node itself.
     free(node);
 
-    return LIST_RET_SUCCESS;
+    return NSTL_OK;
 }
 
 
@@ -104,6 +104,10 @@ list_init(size_t elem_size)
     list_back(lis)  = NULL;
     lis->elem_size  = elem_size;
 
+#if LIST_SIZE_CONST_TIME
+    lis->size = 0;
+#endif
+
     lis->copy_func    = memcpy;
     lis->alloc_func   = malloc;
     lis->free_func    = free;
@@ -155,9 +159,7 @@ list_destruct(List *lis)
 
 
 
-/*
- * TODO Return size in constant time if required
- */
+#if !LIST_SIZE_CONST_TIME
 size_t
 list_size(List *lis)
 {
@@ -169,6 +171,7 @@ list_size(List *lis)
     }
     return count;
 }
+#endif
 
 
 /*
@@ -222,7 +225,7 @@ list_find(List *lis, void *ptr)
  *
  * NOTE: begin must NOT be NULL !
  */
-ListRVal
+NstlErrno
 list_remove_range_n(
     List *lis,
     Node *begin,
@@ -232,8 +235,11 @@ list_remove_range_n(
     bool ascending)
 {
     Node *next_node;
-    ListRVal ret_val;
+    NstlErrno ret_val;
     Node *node_before_range, **top_node, **bottom_node;
+#if LIST_SIZE_CONST_TIME
+    size_t count = 0;
+#endif
 
     assert(lis);
     assert(begin);
@@ -265,10 +271,16 @@ list_remove_range_n(
             }
 
             ret_val = free_node(begin, lis->free_func);
-            if (ret_val != LIST_RET_SUCCESS) {
+            if (ret_val != NSTL_OK) {
                 return ret_val;
             }
+#if LIST_SIZE_CONST_TIME
+            count--;
+#endif
             if (n != 0 && --n == 0) {
+#if LIST_SIZE_CONST_TIME
+                lis->size -= count;
+#endif
                 return ret_val;
             }
         }
@@ -276,20 +288,20 @@ list_remove_range_n(
         begin = next_node;
     }
 
-    return LIST_RET_SUCCESS;
+    return NSTL_OK;
 }
 
 
 /*
  * Remove all elements in range [begin, end).
  */
-ListRVal
+NstlErrno
 list_erase(List *lis, Node *begin, Node *end)
 {
     assert(lis);
     if (begin == NULL) {
         // May I return success code here?
-        return LIST_RET_SUCCESS;
+        return NSTL_OK;
     }
     return list_remove_range_n(lis, begin, end, NULL, 0, true);
 }
@@ -300,33 +312,33 @@ list_erase(List *lis, Node *begin, Node *end)
  * - n elements (at most or as possible if n == 0)
  * - matching ptr (Any element if ptr == NULL)
  */
-ListRVal
+NstlErrno
 list_remove_front_n(List *lis, void *ptr, size_t n)
 {
     assert(lis);
     if (list_front(lis) == NULL) {
         // May I return success code here?
-        return LIST_RET_SUCCESS;
+        return NSTL_OK;
     }
     // Iterate from front to back.
     return list_remove_range_n(lis, list_front(lis), NULL, ptr, n, true);
 }
 
 
-ListRVal
+NstlErrno
 list_remove_back_n(List *lis, void *ptr, size_t n)
 {
     assert(lis);
     if (list_back(lis) == NULL) {
         // May I return success code here?
-        return LIST_RET_SUCCESS;
+        return NSTL_OK;
     }
     // Iterate from back to front.
     return list_remove_range_n(lis, list_back(lis), NULL, ptr, n, false);
 }
 
 
-ListRVal
+NstlErrno
 list_push_front(List *lis, void *ptr)
 {
     Node *node;
@@ -335,7 +347,7 @@ list_push_front(List *lis, void *ptr)
     node = create_node(ptr, lis->elem_size, NULL, list_front(lis),
                       lis->copy_func, lis->alloc_func);
     if (node == NULL) {
-        return LIST_RET_ALLOC;
+        return NSTL_ALLOC;
     }
 
     if (list_empty(lis)) {
@@ -345,11 +357,14 @@ list_push_front(List *lis, void *ptr)
         list_front(lis) = node;
     }
 
-    return LIST_RET_SUCCESS;
+#if LIST_SIZE_CONST_TIME
+    lis->size++;
+#endif
+    return NSTL_OK;
 }
 
 
-ListRVal
+NstlErrno
 list_push_back(List *lis, void *ptr)
 {
     Node *node;
@@ -358,7 +373,7 @@ list_push_back(List *lis, void *ptr)
     node = create_node(ptr, lis->elem_size, list_back(lis), NULL,
                       lis->copy_func, lis->alloc_func);
     if (node == NULL) {
-        return LIST_RET_ALLOC;
+        return NSTL_ALLOC;
     }
 
     if (list_empty(lis)) {
@@ -368,26 +383,29 @@ list_push_back(List *lis, void *ptr)
         list_back(lis) = node;
     }
 
-    return LIST_RET_SUCCESS;
+#if LIST_SIZE_CONST_TIME
+    lis->size++;
+#endif
+    return NSTL_OK;
 }
 
 
-ListRVal
+NstlErrno
 list_pop_front(List *lis, void *ptr)
 {
-    ListRVal ret_val;
+    NstlErrno ret_val;
     Node *front_next;
 
     assert(lis);
     if (list_empty(lis))
-        return LIST_RET_EMPTY;
+        return NSTL_EMPTY;
     front_next = list_front(lis)->next;
 
     if (ptr)    // Pop to ptr.
         lis->copy_func(ptr, list_front(lis)->item, lis->elem_size);
 
     ret_val = free_node(list_front(lis), lis->free_func);
-    if (ret_val != LIST_RET_SUCCESS)
+    if (ret_val != NSTL_OK)
         return ret_val;
 
     if (list_front(lis) == list_back(lis)) {    // There was only 1 element.
@@ -397,20 +415,22 @@ list_pop_front(List *lis, void *ptr)
         list_front(lis) = front_next;
     }
 
-
-    return LIST_RET_SUCCESS;
+#if LIST_SIZE_CONST_TIME
+    lis->size--;
+#endif
+    return NSTL_OK;
 }
 
 
-ListRVal
+NstlErrno
 list_pop_back(List *lis, void *ptr)
 {
-    ListRVal ret_val;
+    NstlErrno ret_val;
     Node *back_prev;
 
     assert(lis);
     if (list_empty(lis)) {
-        return LIST_RET_EMPTY;
+        return NSTL_EMPTY;
     }
     back_prev = list_back(lis)->prev;
 
@@ -419,7 +439,7 @@ list_pop_back(List *lis, void *ptr)
     }
 
     ret_val = free_node(list_back(lis), lis->free_func);
-    if (ret_val != LIST_RET_SUCCESS) {
+    if (ret_val != NSTL_OK) {
         return ret_val;
     }
 
@@ -430,18 +450,21 @@ list_pop_back(List *lis, void *ptr)
         list_back(lis) = back_prev;
     }
 
-    return LIST_RET_SUCCESS;
+#if LIST_SIZE_CONST_TIME
+    lis->size--;
+#endif
+    return NSTL_OK;
 }
 
 
 /*
  * XXX: not tested yet.
  */
-ListRVal
+NstlErrno
 list_swap(List *to, List *from)
 {
     List temp = *to;
     *to       = *from;
     *from     = temp;
-    return LIST_RET_SUCCESS;
+    return NSTL_OK;
 }

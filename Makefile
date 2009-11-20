@@ -21,7 +21,7 @@ SRC = main.c dentaku-core.c dentaku-stack.c dentaku-parser.c dentaku-recursion.c
 STACK_SRC = libdatastruct/stack.c libdatastruct/common.c
 STACK_OBJS = $(STACK_SRC:.c=.o)
 
-LIST_SRC = mylib/list/list.c
+LIST_SRC = nstl/list/list.c
 LIST_OBJS = $(LIST_SRC:.c=.o)
 
 PARSER_YACC_SRC = parser/calc.y
